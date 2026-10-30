@@ -7,7 +7,8 @@ The first step covers:
 - the Atlas shell, with a left nav for Home, New chat, and chat history
 - a home page with the chat hero, three quick actions, and an attention pane
 - a mocked chat that streams replies with reasoning and tool calls
-- a scripted "Show recent regulatory changes" reply that renders regulatory change cards
+- a scripted "Show recent regulatory changes" reply that renders compact regulatory change cards, each showing its project (with an AI status summary) or a Create project button
+- Projects: a Create project screen that drafts the project and plan from a change, a project page, and a Projects section in the left nav
 
 All chat responses are mocked client-side. There's no backend.
 

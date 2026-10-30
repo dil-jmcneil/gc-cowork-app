@@ -8,7 +8,8 @@ import { DemoSettingsDialog } from "./DemoSettingsDialog";
  * Fixed bottom-right control that opens the Demo settings dialog.
  * Only intended for the prototype's Command Center home page.
  */
-export function DemoSettingsFab() {
+/** `offsetBottom` lifts the button clear of a composer pinned to the bottom of the page. */
+export function DemoSettingsFab({ offsetBottom = 24 }: { offsetBottom?: number }) {
   const { tokens } = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -23,7 +24,7 @@ export function DemoSettingsFab() {
           sx={{
             position: "fixed",
             right: 24,
-            bottom: 24,
+            bottom: offsetBottom,
             zIndex: (theme) => theme.zIndex.fab,
             width: 48,
             height: 48,

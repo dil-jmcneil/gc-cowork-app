@@ -53,6 +53,10 @@ Do not use font sizes smaller than `textSm` (`Semantic/Font/Text/Sm`). Avoid `la
 - **`textSm` + emphasis** — only for secondary labels that need emphasis (section tags, table column headers, status badges, detail-row labels).
 - **`textSm` without emphasis** — do not use for body copy; use `textMd` instead.
 
+### No AI sparkle icons
+
+Never use the Atlas `AiSparkle` icon or any other `Ai*` icon that renders pink/purple. We're moving away from that treatment. A grayscale icon is fine only where an icon really helps. Don't mark content as AI-generated vs deterministic: no "AI-generated" captions or sparkle markers on summaries, drafts, or plans.
+
 ## Layouts
 
 Use `<Container>` for setting up basic rules such as max width and alignment of the page. This is already done in the `PageLayout` component.

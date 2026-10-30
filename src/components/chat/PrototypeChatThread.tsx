@@ -12,6 +12,8 @@ import { useChatRuntime } from "@/runtime/useChatRuntime";
 type PrototypeChatThreadProps = {
   chatId: string;
   header?: ReactNode;
+  /** Page surface behind the thread: "subtle" (main chat) or "default" (white side panel). */
+  surface?: "subtle" | "default";
 };
 
 // Shared content box so message bubbles and the composer share the same
@@ -24,6 +26,7 @@ const CHAT_CONTENT_PX = { xs: 2, sm: 3 };
 export function PrototypeChatThread({
   chatId,
   header,
+  surface = "subtle",
 }: PrototypeChatThreadProps) {
   const { messages, sendMessage, stop, isStreaming } = useChatRuntime(chatId);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -55,14 +58,14 @@ export function PrototypeChatThread({
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          backgroundColor: tokens.semantic.color.surface.subtle.value,
+          backgroundColor: tokens.semantic.color.surface[surface].value,
         })}
       >
         {header ? (
           <Box
             sx={({ tokens }) => ({
               flexShrink: 0,
-              backgroundColor: tokens.semantic.color.surface.subtle.value,
+              backgroundColor: tokens.semantic.color.surface[surface].value,
             })}
           >
             <Box
@@ -107,7 +110,7 @@ export function PrototypeChatThread({
             flexShrink: 0,
             pb: 2,
             pt: 1,
-            backgroundColor: tokens.semantic.color.surface.subtle.value,
+            backgroundColor: tokens.semantic.color.surface[surface].value,
           })}
         >
           <Box
