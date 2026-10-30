@@ -49,7 +49,7 @@ export function TaskTable({
           {tasks.map((task) => (
             <TableRow key={task.id}>
               <TableCell>{task.description}</TableCell>
-              <TableCell sx={{ minWidth: 260 }}>
+              <TableCell sx={{ minWidth: 220 }}>
                 {onOwnerChange ? (
                   <OwnerTypeahead
                     value={task.delegate}

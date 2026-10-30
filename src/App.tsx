@@ -1,6 +1,6 @@
 import { AppLayout } from "@diligentcorp/atlas-react-bundle";
 import { useEffect, useLayoutEffect } from "react";
-import { Outlet, Route, Routes } from "react-router";
+import { Outlet, Route, Routes, useLocation } from "react-router";
 import "./styles.css";
 
 import CommandCenterNavigation from "./CommandCenterNavigation.js";
@@ -51,6 +51,7 @@ export default function App() {
 
 function Shell() {
   useSideNavAppKey("launchpad");
+  const hasSideChat = useLocation().pathname === "/projects/new";
 
   return (
     <AppLayout
@@ -60,7 +61,7 @@ function Shell() {
       navigation={<CommandCenterNavigation />}
     >
       <Outlet />
-      <DemoSettingsFab />
+      <DemoSettingsFab offsetBottom={hasSideChat ? 120 : 24} />
     </AppLayout>
   );
 }
