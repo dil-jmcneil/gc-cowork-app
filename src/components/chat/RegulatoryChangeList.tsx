@@ -67,7 +67,7 @@ function RegulatoryChangeCard({ change }: { change: RegulatoryChange }) {
               </Typography>
             ))}
           </Detail>
-          <Detail label="Why it matters">
+          <Detail label="Why It Matters">
             {change.reasonsRelevant.map((reason) => (
               <Typography key={reason} variant="textMd">
                 {reason}

@@ -88,7 +88,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
           <Grid {...presets.GridPresets.page}>
             <Grid item sm={4} md={8} lg={5} xl={8}>
               <Stack gap={2}>
-                <SectionCard title="Project details">
+                <SectionCard title="Project Details">
                   <Stack gap={2}>
                     <FormControl fullWidth>
                       <FormLabel htmlFor="project-name">Name</FormLabel>
@@ -129,7 +129,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
           </Grid>
 
           <SectionCard
-            title="Proposed plan"
+            title="Proposed Plan"
             action={<StatusIndicator color="subtle" label="Draft" />}
           >
             <Stack gap={2}>

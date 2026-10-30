@@ -112,7 +112,7 @@ export function ComplianceCalendar({
             component={variant === "page" ? "h1" : "h2"}
             sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
           >
-            Compliance calendar
+            Compliance Calendar
           </Typography>
           <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
             {DESCRIPTION}

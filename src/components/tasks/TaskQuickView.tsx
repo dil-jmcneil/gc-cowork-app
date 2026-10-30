@@ -93,7 +93,7 @@ export function TaskQuickView({
             }}
           >
             <Stack gap={0.5}>
-              <SectionLabel>Status summary</SectionLabel>
+              <SectionLabel>Status Summary</SectionLabel>
               <Typography variant="textMd">{summarizeTask(task, now)}</Typography>
             </Stack>
           </Box>
@@ -116,7 +116,7 @@ export function TaskQuickView({
           </Box>
 
           {latest ? (
-            <Field label="Latest message">
+            <Field label="Latest Message">
               <Typography variant="textMd" sx={{ color: muted }}>
                 {latest.authorName} · {CHANNEL_LABEL[latest.channel]} · {WHEN.format(new Date(latest.sentAt))}
               </Typography>

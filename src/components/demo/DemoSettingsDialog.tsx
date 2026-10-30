@@ -64,7 +64,7 @@ export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
             color: tokens.semantic.color.type.default.value,
           }}
         >
-          Demo settings
+          Demo Settings
         </Typography>
         <IconButton
           size="small"

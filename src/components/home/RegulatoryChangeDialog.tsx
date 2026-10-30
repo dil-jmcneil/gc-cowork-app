@@ -98,7 +98,7 @@ export function RegulatoryChangeDialog({
           </Box>
 
           <Stack gap={1}>
-            <SectionLabel>Reasons relevant</SectionLabel>
+            <SectionLabel>Reasons Relevant</SectionLabel>
             <Stack gap={0.75}>
               {change.reasonsRelevant.map((reason) => (
                 <Stack key={reason} direction="row" gap={1} alignItems="flex-start">
@@ -113,7 +113,7 @@ export function RegulatoryChangeDialog({
           </Stack>
 
           <Stack gap={1}>
-            <SectionLabel>Key deadlines</SectionLabel>
+            <SectionLabel>Key Deadlines</SectionLabel>
             <Stack gap={1.25}>
               {change.deadlines.map((deadline) => (
                 <Stack key={deadline.label} gap={0.25}>
@@ -136,7 +136,7 @@ export function RegulatoryChangeDialog({
           <Stack gap={1}>
             <Stack direction="row" alignItems="center" gap={1}>
               <OpenFileIcon aria-hidden style={{ width: 16, height: 16, color: muted }} />
-              <SectionLabel>Linked projects</SectionLabel>
+              <SectionLabel>Linked Projects</SectionLabel>
             </Stack>
             {project ? (
               <Link component={RouterLink} to={`/projects/${project.id}`} onClick={onClose} underline="hover">

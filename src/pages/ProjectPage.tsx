@@ -58,10 +58,10 @@ export default function ProjectPage() {
         <Grid {...presets.GridPresets.page}>
           <Grid item sm={4} md={8} lg={5} xl={8}>
             <Stack gap={2}>
-              <SectionCard title="Status summary">
+              <SectionCard title="Status Summary">
                 <Typography variant="textMd">{project.statusSummary}</Typography>
               </SectionCard>
-              <SectionCard title="About this change">
+              <SectionCard title="About This Change">
                 <Typography variant="textMd">{project.description}</Typography>
                 <Stack gap={0.5}>
                   <FieldLabel>Why it's relevant</FieldLabel>
