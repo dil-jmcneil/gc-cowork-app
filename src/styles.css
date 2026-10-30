@@ -1,0 +1,7 @@
+@import "@diligentcorp/atlas-react-bundle/styles";
+@import "@diligentcorp/atlas-react-bundle/global-nav.css";
+
+/* Flat surface.subtle canvas behind page content instead of AppLayout's gradient. */
+.AtlasPrototypeAppLayout {
+  background: var(--lens-semantic-color-surface-subtle) !important;
+}
