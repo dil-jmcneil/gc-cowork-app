@@ -69,3 +69,43 @@
 body.atlas-gn-panel--collapsed .cc-q2-nav-compact {
   display: flex;
 }
+
+/*
+ * Composer (AI chat box) — Figma composer redesign. Lift the box with a soft
+ * elevation shadow and restore the Atlas AI glow behind it (previously hidden).
+ * The animated gradient border still plays on focus.
+ */
+.AtlasAIChatBox-container {
+  box-shadow: var(--lens-core-shadow-medium);
+  border-radius: var(--lens-semantic-radius-lg);
+}
+
+/* Disclaimer removed from the composer — collapse its empty container. */
+.AtlasAIChatBox-disclaimer {
+  display: none !important;
+}
+
+/*
+ * Atlas AI chat messages — prototype overrides to match the next component
+ * version: timestamp-only headers (no avatar or participant name) and flat
+ * user bubbles with a slightly darker outline and no drop shadow.
+ *
+ * Note: the bundle does not assign `AtlasAIChatMessageHeader-content-name` to
+ * the name Typography, so we hide it via the content wrapper instead.
+ */
+.AtlasAIChatContent .AtlasAIChatMessageAvatar {
+  display: none !important;
+}
+
+.AtlasAIChatContent
+  .AtlasAIChatMessageHeader-content-wrapper
+  > :not(.AtlasAIChatMessageHeader-content-time) {
+  display: none !important;
+}
+
+.AtlasAIChatContent
+  .AtlasAIChatUserMessage
+  > .MuiStack-root:not(.AtlasAIChatMessageHeader) {
+  box-shadow: none !important;
+  border: 1px solid var(--lens-component-divider-colors-default-border-color) !important;
+}
