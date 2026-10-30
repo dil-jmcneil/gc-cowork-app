@@ -14,6 +14,8 @@ type PrototypeChatThreadProps = {
   header?: ReactNode;
   /** Page surface behind the thread: "subtle" (main chat) or "default" (white side panel). */
   surface?: "subtle" | "default";
+  /** Runs when the user sends a message; a returned string becomes the assistant's reply. */
+  onUserMessage?: (text: string) => string | undefined;
 };
 
 // Shared content box so message bubbles and the composer share the same
@@ -27,6 +29,7 @@ export function PrototypeChatThread({
   chatId,
   header,
   surface = "subtle",
+  onUserMessage,
 }: PrototypeChatThreadProps) {
   const { messages, sendMessage, stop, isStreaming } = useChatRuntime(chatId);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -127,7 +130,7 @@ export function PrototypeChatThread({
                 onSubmit={(prompt) => {
                   const text = prompt.trim();
                   if (!text) return false;
-                  sendMessage(text);
+                  sendMessage(text, isStreaming ? undefined : onUserMessage?.(text));
                 }}
                 onStop={() => stop()}
               />

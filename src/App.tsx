@@ -18,6 +18,7 @@ import CreateProjectPage from "./pages/CreateProjectPage.js";
 import IndexPage from "./pages/IndexPage.js";
 import NewChatPage from "./pages/NewChatPage.js";
 import ProjectPage from "./pages/ProjectPage.js";
+import TaskPage from "./pages/TaskPage.js";
 import { LOGGED_IN_USER } from "./user.js";
 
 /** Body class the "Refreshed" CSS token overrides in styles.css key off. */
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="chats/:chatId" element={<ChatPage />} />
         <Route path="projects/new" element={<CreateProjectPage />} />
         <Route path="projects/:projectId" element={<ProjectPage />} />
+        <Route path="projects/:projectId/tasks/:taskId" element={<TaskPage />} />
         <Route path="compliance-calendar" element={<ComplianceCalendarPage />} />
       </Route>
       </Routes>
@@ -56,7 +58,8 @@ export default function App() {
 
 function Shell() {
   useSideNavAppKey("launchpad");
-  const hasSideChat = useLocation().pathname === "/projects/new";
+  const { pathname } = useLocation();
+  const hasSideChat = pathname === "/projects/new" || /^\/projects\/[^/]+\/tasks\//.test(pathname);
 
   return (
     <AppLayout

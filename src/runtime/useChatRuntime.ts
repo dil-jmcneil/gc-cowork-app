@@ -6,7 +6,8 @@ const EMPTY_MESSAGES: ChatMessage[] = [];
 
 export type ChatRuntime = {
   messages: ChatMessage[];
-  sendMessage: (text: string) => void;
+  /** `replyText` overrides the mock reply. */
+  sendMessage: (text: string, replyText?: string) => void;
   stop: () => void;
   isStreaming: boolean;
 };
@@ -18,8 +19,8 @@ export function useChatRuntime(chatId: string): ChatRuntime {
   return {
     messages,
     isStreaming,
-    sendMessage: (text) => {
-      sendUserMessage(chatId, text);
+    sendMessage: (text, replyText) => {
+      sendUserMessage(chatId, text, replyText);
     },
     stop: () => stopAssistantReply(chatId),
   };

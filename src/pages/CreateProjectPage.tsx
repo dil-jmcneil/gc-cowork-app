@@ -14,7 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 
-import { PrototypeChatThread } from "@/components/chat/PrototypeChatThread";
+import { SideChatLayout } from "@/components/chat/SideChatLayout";
 import { FieldLabel, SectionCard } from "@/components/projects/SectionCard";
 import { SourceChangeCard } from "@/components/projects/SourceChangeCard";
 import { TaskTable } from "@/components/projects/TaskTable";
@@ -73,129 +73,100 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
   };
 
   return (
-    <Box sx={{ display: "flex", height: "calc(100vh - 64px)", minHeight: 0 }}>
-      <Box sx={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Stack gap={3}>
-            <Stack gap={0.5}>
-              <Typography variant="h4" component="h1">
-                Create project
-              </Typography>
-              <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-                Cowork drafted this from the regulatory change. Review it, then create the project.
-              </Typography>
-            </Stack>
-
-            <Grid {...presets.GridPresets.page}>
-              <Grid item sm={4} md={8} lg={5} xl={8}>
-                <Stack gap={2}>
-                  <SectionCard title="Project details">
-                    <Stack gap={2}>
-                      <FormControl fullWidth>
-                        <FormLabel htmlFor="project-name">Name</FormLabel>
-                        <TextField
-                          value={draft.name}
-                          onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                          slotProps={{ input: { id: "project-name" } }}
-                        />
-                      </FormControl>
-                      <FormControl fullWidth>
-                        <FormLabel htmlFor="project-description">Description of change</FormLabel>
-                        <TextField
-                          multiline
-                          minRows={2}
-                          value={draft.description}
-                          onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-                          slotProps={{ input: { id: "project-description" } }}
-                        />
-                      </FormControl>
-                      <Stack gap={0.5}>
-                        <FieldLabel>Why it's relevant</FieldLabel>
-                        <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
-                          {draft.reasonsRelevant.map((reason) => (
-                            <Typography component="li" variant="textMd" key={reason}>
-                              {reason}
-                            </Typography>
-                          ))}
-                        </Box>
-                      </Stack>
-                    </Stack>
-                  </SectionCard>
-
-                </Stack>
-              </Grid>
-              <Grid item sm={4} md={8} lg={3} xl={4}>
-                <SourceChangeCard change={change} />
-              </Grid>
-            </Grid>
-
-            <SectionCard
-              title="Proposed plan"
-              action={<StatusIndicator color="subtle" label="Draft" />}
-            >
-              <Stack gap={2}>
-                <FormControl fullWidth>
-                  <FormLabel htmlFor="plan-approach">Proposed approach</FormLabel>
-                  <TextField
-                    multiline
-                    minRows={2}
-                    value={draft.plan.proposedApproach}
-                    onChange={(e) => setPlan({ proposedApproach: e.target.value })}
-                    slotProps={{ input: { id: "plan-approach" } }}
-                  />
-                </FormControl>
-                <Stack gap={0.5}>
-                  <FieldLabel>Tasks</FieldLabel>
-                  <TaskTable
-                    tasks={draft.plan.tasks}
-                    onOwnerChange={(taskId, owner) =>
-                      setPlan({
-                        tasks: draft.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
-                      })
-                    }
-                  />
-                </Stack>
-              </Stack>
-            </SectionCard>
-
-            <Stack direction="row" justifyContent="flex-end" gap={1.5}>
-              <Button variant="outlined" onClick={() => navigate(-1)}>
-                Cancel
-              </Button>
-              <Button variant="contained" onClick={handleCreate}>
-                Accept plan and start project
-              </Button>
-            </Stack>
-          </Stack>
-        </Container>
-      </Box>
-      <Box
-        component="aside"
-        aria-label="Chat with Cowork"
-        sx={{
-          display: { xs: "none", md: "flex" },
-          flexDirection: "column",
-          width: { md: "38%", lg: "32%" },
-          minWidth: 340,
-          maxWidth: 520,
-          borderLeft: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
-          bgcolor: tokens.semantic.color.surface.default.value,
-        }}
-      >
-        <PrototypeChatThread
-          chatId={draftChatId(change.id)}
-          surface="default"
-          header={
-            <Typography
-              variant="textMd"
-              component="h2"
-              sx={{ py: 1.5, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
-            >
-              Chat with Cowork
+    <SideChatLayout chatId={draftChatId(change.id)}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Stack gap={3}>
+          <Stack gap={0.5}>
+            <Typography variant="h4" component="h1">
+              Create project
             </Typography>
-          }
-        />
-      </Box>
-    </Box>
+            <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+              Cowork drafted this from the regulatory change. Review it, then create the project.
+            </Typography>
+          </Stack>
+
+          <Grid {...presets.GridPresets.page}>
+            <Grid item sm={4} md={8} lg={5} xl={8}>
+              <Stack gap={2}>
+                <SectionCard title="Project details">
+                  <Stack gap={2}>
+                    <FormControl fullWidth>
+                      <FormLabel htmlFor="project-name">Name</FormLabel>
+                      <TextField
+                        value={draft.name}
+                        onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                        slotProps={{ input: { id: "project-name" } }}
+                      />
+                    </FormControl>
+                    <FormControl fullWidth>
+                      <FormLabel htmlFor="project-description">Description of change</FormLabel>
+                      <TextField
+                        multiline
+                        minRows={2}
+                        value={draft.description}
+                        onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+                        slotProps={{ input: { id: "project-description" } }}
+                      />
+                    </FormControl>
+                    <Stack gap={0.5}>
+                      <FieldLabel>Why it's relevant</FieldLabel>
+                      <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                        {draft.reasonsRelevant.map((reason) => (
+                          <Typography component="li" variant="textMd" key={reason}>
+                            {reason}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Stack>
+                  </Stack>
+                </SectionCard>
+
+              </Stack>
+            </Grid>
+            <Grid item sm={4} md={8} lg={3} xl={4}>
+              <SourceChangeCard change={change} />
+            </Grid>
+          </Grid>
+
+          <SectionCard
+            title="Proposed plan"
+            action={<StatusIndicator color="subtle" label="Draft" />}
+          >
+            <Stack gap={2}>
+              <FormControl fullWidth>
+                <FormLabel htmlFor="plan-approach">Proposed approach</FormLabel>
+                <TextField
+                  multiline
+                  minRows={2}
+                  value={draft.plan.proposedApproach}
+                  onChange={(e) => setPlan({ proposedApproach: e.target.value })}
+                  slotProps={{ input: { id: "plan-approach" } }}
+                />
+              </FormControl>
+              <Stack gap={0.5}>
+                <FieldLabel>Tasks</FieldLabel>
+                <TaskTable
+                  tasks={draft.plan.tasks}
+                  onOwnerChange={(taskId, owner) =>
+                    setPlan({
+                      tasks: draft.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
+                    })
+                  }
+                />
+              </Stack>
+            </Stack>
+          </SectionCard>
+
+          <Stack direction="row" justifyContent="flex-end" gap={1.5}>
+            <Button variant="outlined" onClick={() => navigate(-1)}>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleCreate}>
+              Accept plan and start project
+            </Button>
+          </Stack>
+        </Stack>
+      </Container>
+    </SideChatLayout>
   );
 }

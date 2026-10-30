@@ -52,15 +52,16 @@ export function RegulatoryChangeDialog({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      aria-labelledby="regulatory-change-dialog-title"
     >
       <DialogTitle component="div" sx={{ pr: 6 }}>
-        <Typography id="regulatory-change-dialog-title" variant="h4" component="h2">
-          {change.title}
-        </Typography>
-        <Typography variant="textMd" sx={{ color: muted }}>
-          {change.regulatoryBody}
-        </Typography>
+        <Stack gap={0.5} sx={{ minWidth: 0 }}>
+          <Typography variant="h4" component="h2">
+            {change.title}
+          </Typography>
+          <Typography variant="textMd" sx={{ color: muted }}>
+            {change.regulatoryBody}
+          </Typography>
+        </Stack>
         <IconButton
           aria-label="Close"
           onClick={onClose}

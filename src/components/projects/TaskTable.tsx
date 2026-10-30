@@ -1,4 +1,5 @@
 import {
+  Link,
   Stack,
   Table,
   TableBody,
@@ -26,9 +27,12 @@ const STATUS_COLOR: Record<TaskStatus, "subtle" | "information" | "success"> = {
 export function TaskTable({
   tasks,
   onOwnerChange,
+  onOpenTask,
 }: {
   tasks: ProjectTask[];
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
+  /** Makes each task's description open it, e.g. in the quick view. */
+  onOpenTask?: (taskId: string) => void;
 }) {
   const { presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
@@ -48,7 +52,21 @@ export function TaskTable({
         <TableBody>
           {tasks.map((task) => (
             <TableRow key={task.id}>
-              <TableCell>{task.description}</TableCell>
+              <TableCell>
+                {onOpenTask ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    underline="hover"
+                    onClick={() => onOpenTask(task.id)}
+                    sx={{ textAlign: "left", font: "inherit" }}
+                  >
+                    {task.description}
+                  </Link>
+                ) : (
+                  task.description
+                )}
+              </TableCell>
               <TableCell sx={{ minWidth: 220 }}>
                 {onOwnerChange ? (
                   <OwnerTypeahead

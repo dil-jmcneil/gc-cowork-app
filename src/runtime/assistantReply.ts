@@ -14,8 +14,11 @@ export function isChatStreaming(chatId: string): boolean {
   return Boolean(useChatMessagesStore.getState().streamingChatIds[chatId]);
 }
 
-/** Streams a mock reply to `prompt`. Returns false if a reply is already streaming. */
-export function startAssistantReply(chatId: string, prompt: string): boolean {
+/**
+ * Streams a mock reply to `prompt`, or `replyText` when the caller supplies its
+ * own. Returns false if a reply is already streaming.
+ */
+export function startAssistantReply(chatId: string, prompt: string, replyText?: string): boolean {
   if (isChatStreaming(chatId)) return false;
   const store = useChatMessagesStore.getState();
   const assistantId = makeMessageId();
@@ -35,7 +38,7 @@ export function startAssistantReply(chatId: string, prompt: string): boolean {
   void streamAssistantMessage(
     chatId,
     assistantId,
-    streamMockReply(prompt, controller.signal),
+    streamMockReply(prompt, controller.signal, replyText),
     controller.signal,
   ).finally(() => {
     if (controllers.get(chatId) === controller) controllers.delete(chatId);
@@ -45,11 +48,11 @@ export function startAssistantReply(chatId: string, prompt: string): boolean {
 }
 
 /** Appends the user's message and starts a reply. False when blank or busy. */
-export function sendUserMessage(chatId: string, text: string): boolean {
+export function sendUserMessage(chatId: string, text: string, replyText?: string): boolean {
   const trimmed = text.trim();
   if (!trimmed || isChatStreaming(chatId)) return false;
   useChatMessagesStore.getState().appendUserText(chatId, trimmed);
-  return startAssistantReply(chatId, trimmed);
+  return startAssistantReply(chatId, trimmed, replyText);
 }
 
 export function stopAssistantReply(chatId: string): void {

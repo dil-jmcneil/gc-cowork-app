@@ -20,9 +20,12 @@ function buildGenericReply(prompt: string): string {
 export async function* streamMockReply(
   promptText: string,
   signal: AbortSignal,
+  replyText?: string,
 ): AsyncGenerator<ChatStreamChunk> {
   try {
-    if (isRegulatoryChangesPrompt(promptText)) {
+    if (replyText) {
+      yield* streamText(replyText, signal);
+    } else if (isRegulatoryChangesPrompt(promptText)) {
       yield* streamRegulatoryChanges(signal);
     } else {
       yield* streamText(buildGenericReply(promptText), signal);

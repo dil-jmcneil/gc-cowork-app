@@ -1,6 +1,6 @@
 import { Alert, Box, Link, Snackbar, Stack, Typography, useTheme } from "@mui/material";
 import { useMemo, useState, type ReactNode } from "react";
-import { Link as RouterLink } from "react-router";
+import { Link as RouterLink, useSearchParams } from "react-router";
 
 import { deriveCalendarEvents, type CalendarEvent } from "@/calendar/complianceEvents";
 import {
@@ -14,7 +14,10 @@ import {
   startOfWeek,
   workWeekDates,
 } from "@/calendar/weeks";
+import { RegulatoryChangeDialog } from "@/components/home/RegulatoryChangeDialog";
+import { TaskQuickView, type TaskRef } from "@/components/tasks/TaskQuickView";
 import { useProjectStore } from "@/projects/projectStore";
+import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
 
 import { CalendarCell } from "./CalendarCell";
 import { CalendarViewToggle, type CalendarView } from "./CalendarViewToggle";
@@ -72,18 +75,31 @@ export function ComplianceCalendar({
   const today = todayIso();
   const events = useMemo(() => deriveCalendarEvents(projects, new Date()), [projects]);
 
+  const [searchParams] = useSearchParams();
+  // "View on calendar" links pass ?date= so the page opens on that month.
+  const linkedDate = variant === "page" ? searchParams.get("date") : null;
   const [view, setView] = useState<CalendarView>(variant === "page" ? "calendar" : "timeline");
-  const [anchor, setAnchor] = useState(today);
+  const [anchor, setAnchor] = useState(linkedDate && /^\d{4}-\d{2}-\d{2}$/.test(linkedDate) ? linkedDate : today);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const [openTask, setOpenTask] = useState<TaskRef | null>(null);
+  const [openChangeId, setOpenChangeId] = useState<string | null>(null);
+  const nudgeTask = useProjectStore((s) => s.nudgeTask);
 
   const range = rangeFor(variant, view, anchor);
   const inRange = events.filter((e) => e.date >= range.start && e.date <= range.end);
   const unit = variant === "page" ? "month" : view === "timeline" ? "five weeks" : "two weeks";
 
   const handleNudge = (event: CalendarEvent) => {
+    if (event.kind === "task") nudgeTask(event.projectId, event.taskId);
     setNudged((prev) => new Set(prev).add(event.id));
     setToast(event.owner ? `Nudge sent to ${event.owner}.` : "Nudge sent.");
+  };
+
+  /** Tasks open the task quick view; external deadlines open their regulatory change. */
+  const handleOpen = (event: CalendarEvent) => {
+    if (event.kind === "task") setOpenTask({ projectId: event.projectId, taskId: event.taskId });
+    else setOpenChangeId(event.changeId);
   };
 
   return (
@@ -145,14 +161,25 @@ export function ComplianceCalendar({
               groupBy={variant === "page" ? weekHeading(today) : (date) => relativeBucket(date, today)}
               nudged={nudged}
               onNudge={handleNudge}
+              onOpen={handleOpen}
             />
           ) : variant === "page" ? (
-            <MonthGrid monthStart={range.start} events={events} todayIso={today} />
+            <MonthGrid monthStart={range.start} events={events} todayIso={today} onOpen={handleOpen} />
           ) : (
-            <WeekdayGrid start={range.start} events={events} todayIso={today} />
+            <WeekdayGrid start={range.start} events={events} todayIso={today} onOpen={handleOpen} />
           )}
         </Box>
       </Box>
+
+      <TaskQuickView
+        taskRef={openTask}
+        onClose={() => setOpenTask(null)}
+        onNudge={(owner) => setToast(`Nudge sent to ${owner}.`)}
+      />
+      <RegulatoryChangeDialog
+        change={REGULATORY_CHANGES.find((c) => c.id === openChangeId) ?? null}
+        onClose={() => setOpenChangeId(null)}
+      />
 
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
         <Alert severity="success" aria-live="polite" onClose={() => setToast(null)}>
@@ -178,12 +205,14 @@ function TimelineBody({
   groupBy,
   nudged,
   onNudge,
+  onOpen,
 }: {
   events: CalendarEvent[];
   todayIso: string;
   groupBy: (date: string) => string;
   nudged: Set<string>;
   onNudge: (event: CalendarEvent) => void;
+  onOpen: (event: CalendarEvent) => void;
 }) {
   const { tokens } = useTheme();
   const groups = useMemo(() => {
@@ -231,6 +260,7 @@ function TimelineBody({
               todayIso={todayIso}
               nudged={nudged.has(event.id)}
               onNudge={onNudge}
+              onOpen={onOpen}
             />
           ))}
         </Box>
@@ -244,7 +274,17 @@ function eventsOn(events: CalendarEvent[], date: string) {
 }
 
 /** Figma Calendar view: Mon–Fri cells for each week in range. */
-function WeekdayGrid({ start, events, todayIso }: { start: string; events: CalendarEvent[]; todayIso: string }) {
+function WeekdayGrid({
+  start,
+  events,
+  todayIso,
+  onOpen,
+}: {
+  start: string;
+  events: CalendarEvent[];
+  todayIso: string;
+  onOpen: (event: CalendarEvent) => void;
+}) {
   const weeks = Array.from({ length: WIDGET_CALENDAR_WEEKS }, (_, i) => addDays(start, i * 7));
   return (
     <Stack gap={1} sx={{ px: 2 }}>
@@ -257,6 +297,7 @@ function WeekdayGrid({ start, events, todayIso }: { start: string; events: Calen
               events={eventsOn(events, date)}
               todayIso={todayIso}
               showMonth={(weekIndex === 0 && dayIndex === 0) || date.endsWith("-01")}
+              onOpen={onOpen}
             />
           ))}
         </Box>
@@ -272,10 +313,12 @@ function MonthGrid({
   monthStart,
   events,
   todayIso,
+  onOpen,
 }: {
   monthStart: string;
   events: CalendarEvent[];
   todayIso: string;
+  onOpen: (event: CalendarEvent) => void;
 }) {
   const { tokens } = useTheme();
   const dates = monthGridDates(monthStart);
@@ -313,6 +356,7 @@ function MonthGrid({
             minHeight={128}
             maxEvents={3}
             showWeekday={false}
+            onOpen={onOpen}
           />
         ))}
       </Box>
