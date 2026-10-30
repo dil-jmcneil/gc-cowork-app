@@ -5,3 +5,55 @@
 .AtlasPrototypeAppLayout {
   background: var(--lens-semantic-color-surface-subtle) !important;
 }
+
+/* Reuse the installed Atlas font files with a standard woff2 source declaration. */
+@font-face { font-family: "Atlas Refresh Jakarta"; src: url("./assets/refreshed/jakarta-latin.woff2") format("woff2"); font-style: normal; font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Atlas Refresh Inter"; src: url("./assets/refreshed/inter-latin.woff2") format("woff2"); font-style: normal; font-weight: 100 900; font-display: swap; }
+
+/* Figma: proposed typography 3653:7707; bubbles 3652:7576 / 3655:7744;
+   surface 3739:4574. Separate tokens preserve the Current theme. */
+.refreshed-tokens {
+  --lens-semantic-font-family-body: "Atlas Refresh Inter", "Inter Variable", sans-serif;
+  --refresh-type-default: #232429;
+  --refresh-type-muted: #6e7182;
+  --refresh-type-hover: #575a67;
+  --refresh-bubble: #f5f5fa;
+  --refresh-bubble-hover: #f1f1f8;
+  --refresh-bubble-border: #ecedf4;
+  --refresh-bubble-border-hover: #e8eaf2;
+  --refresh-nav: #fafafb;
+  --refresh-canvas: #fcfcfd;
+  --lens-semantic-color-type-default: var(--refresh-type-default);
+  --lens-semantic-color-type-muted: var(--refresh-type-muted);
+  --lens-semantic-color-surface-subtle: var(--refresh-canvas);
+  --lens-semantic-color-action-secondary-outline: var(--lens-core-color-concrete-90);
+  --lens-semantic-color-outline-default: var(--lens-core-color-concrete-90);
+  --lens-semantic-color-action-primary-default: var(--lens-core-color-indigo-40);
+  --lens-semantic-color-action-primary-default-gradient-start: var(--lens-core-color-indigo-40);
+  --lens-semantic-color-action-primary-default-gradient-end: var(--lens-core-color-indigo-40);
+  --lens-semantic-color-action-primary-hover: var(--lens-core-color-indigo-30);
+  --lens-semantic-color-action-primary-hover-gradient-start: var(--lens-core-color-indigo-30);
+  --lens-semantic-color-action-primary-hover-gradient-end: var(--lens-core-color-indigo-30);
+  --lens-semantic-color-action-primary-active: var(--lens-core-color-indigo-25);
+  --lens-semantic-color-action-primary-active-gradient-start: var(--lens-core-color-indigo-25);
+  --lens-semantic-color-action-primary-active-gradient-end: var(--lens-core-color-indigo-25);
+
+  /*
+   * Left nav. Atlas's own `global-nav.css` paints the real nav chrome
+   * (the `<nav>` wrapper around `atlas-global-nav`, and `atlas-gn-side-nav`'s
+   * own `:host` border) from these two semantic vars — found by tracing the
+   * "Inherited from mock-hb-global-navigator" rule in DevTools. They default
+   * to plain white (#ffffff) / transparent, which is why earlier attempts to
+   * color `.nav-container` directly (a different, lower element) never
+   * showed: this `nav{}` rule's white background painted over it. Custom
+   * properties pierce shadow boundaries via normal inheritance, so
+   * redefining these on `.refreshed-tokens` (body) is all that's needed —
+   * no shadow-DOM stylesheet injection required.
+   */
+  --lens-semantic-color-global-nav-container-background-color: var(--refresh-nav);
+  --lens-semantic-color-global-nav-container-border-right-color: #eeeff5;
+}
+
+.refreshed-tokens .AtlasPrototypeAppLayout { background: var(--refresh-nav) !important; }
+.refreshed-tokens main { background: var(--refresh-canvas); }
+
