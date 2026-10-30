@@ -1,4 +1,3 @@
-import AiSparkleIcon from "@diligentcorp/atlas-react-bundle/icons/AiSparkle";
 import {
   Box,
   Button,
@@ -56,11 +55,8 @@ export default function ProjectPage() {
         <Grid {...presets.GridPresets.page}>
           <Grid item sm={4} md={8} lg={5} xl={8}>
             <Stack gap={2}>
-              <SectionCard title="Status summary" icon={<AiSparkleIcon aria-hidden />}>
+              <SectionCard title="Status summary">
                 <Typography variant="textMd">{project.statusSummary}</Typography>
-                <Typography variant="textSm" sx={{ color: muted }}>
-                  AI-generated from the plan and task progress.
-                </Typography>
               </SectionCard>
               <SectionCard title="About this change">
                 <Typography variant="textMd">{project.description}</Typography>

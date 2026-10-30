@@ -1,4 +1,3 @@
-import AiSparkleIcon from "@diligentcorp/atlas-react-bundle/icons/AiSparkle";
 import ArrowRightIcon from "@diligentcorp/atlas-react-bundle/icons/ArrowRight";
 import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
 import {
@@ -96,12 +95,9 @@ function ProjectSummary({ project }: { project: Project }) {
             {project.name}
           </Typography>
         </Stack>
-        <Stack direction="row" alignItems="flex-start" gap={0.75} sx={{ color: muted }}>
-          <AiSparkleIcon aria-label="AI-generated summary" style={{ width: 16, height: 16, flexShrink: 0, marginTop: 3 }} />
-          <Typography variant="textMd" sx={{ color: "inherit" }}>
-            {project.statusSummary}
-          </Typography>
-        </Stack>
+        <Typography variant="textMd" sx={{ color: muted }}>
+          {project.statusSummary}
+        </Typography>
       </Stack>
       <Button
         component={RouterLink}

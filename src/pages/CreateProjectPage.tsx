@@ -1,4 +1,3 @@
-import AiSparkleIcon from "@diligentcorp/atlas-react-bundle/icons/AiSparkle";
 import {
   Box,
   Button,
@@ -76,12 +75,9 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
           <Typography variant="h4" component="h1">
             Create project
           </Typography>
-          <Stack direction="row" alignItems="center" gap={0.75} sx={{ color: tokens.semantic.color.type.muted.value }}>
-            <AiSparkleIcon aria-hidden style={{ width: 16, height: 16 }} />
-            <Typography variant="textMd" sx={{ color: "inherit" }}>
-              Cowork drafted this from the regulatory change. Review it, then create the project.
-            </Typography>
-          </Stack>
+          <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+            Cowork drafted this from the regulatory change. Review it, then create the project.
+          </Typography>
         </Stack>
 
         <Grid {...presets.GridPresets.page}>
@@ -129,7 +125,6 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
 
         <SectionCard
           title="Proposed plan"
-          icon={<AiSparkleIcon aria-hidden />}
           action={<StatusIndicator color="subtle" label="Draft" />}
         >
           <Stack gap={2}>

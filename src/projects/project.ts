@@ -32,7 +32,7 @@ export type ProjectDraft = {
 
 export type Project = ProjectDraft & {
   id: string;
-  /** AI-generated, one or two sentences on where the project stands. */
+  /** One or two sentences on where the project stands, from plan and task progress. */
   statusSummary: string;
   createdAt: string;
 };
