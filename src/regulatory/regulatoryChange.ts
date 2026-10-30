@@ -4,6 +4,8 @@ export type RegulatoryDeadline = {
   label: string;
   /** ISO date, yyyy-mm-dd. */
   date: string;
+  /** One line on what the deadline requires. */
+  description?: string;
 };
 
 /** A subset of the OOUX regulatory change object; later work extends it. */

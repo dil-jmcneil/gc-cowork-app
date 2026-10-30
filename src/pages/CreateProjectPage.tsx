@@ -68,7 +68,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
     setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
 
   const handleCreate = () => {
-    const project = createProject(draft);
+    const project = createProject({ ...draft, plan: { ...draft.plan, status: "accepted" } });
     navigate(`/projects/${project.id}`);
   };
 
@@ -163,7 +163,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
                 Cancel
               </Button>
               <Button variant="contained" onClick={handleCreate}>
-                Create project
+                Accept plan and start project
               </Button>
             </Stack>
           </Stack>

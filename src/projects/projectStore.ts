@@ -39,9 +39,15 @@ export const SEED_PROJECTS: Project[] = [
     (draft) => ({
       ...draft,
       name: "Automated hiring decisions",
-      plan: { ...draft.plan, tasks: draft.plan.tasks.map((t, i) => ({ ...t, status: i === 0 ? "In progress" : t.status })) },
+      plan: {
+        ...draft.plan,
+        // The gap review slipped past its date, so the calendar shows it Blocked with a Nudge.
+        tasks: draft.plan.tasks.map((t, i) =>
+          i === 0 ? { ...t, status: "In progress" as const, deadline: "2026-10-27" } : t,
+        ),
+      },
     }),
-    "Needs attention. Public comment closes Nov 20 and the gap review with HR is still in progress. The plan hasn't been accepted yet.",
+    "Needs attention. Maya's gap review with HR was due Oct 27 and hasn't come back. Public comment closes Nov 20, and the plan hasn't been accepted yet.",
   ),
 ];
 

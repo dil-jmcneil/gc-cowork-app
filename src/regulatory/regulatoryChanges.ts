@@ -9,10 +9,24 @@ export const CYBER_RULE_CHANGE: RegulatoryChange = {
   regulatoryBody: "SEC",
   effectiveDate: "2026-12-18",
   status: "New",
-  deadlines: [{ label: "File Form 8-K, Item 1.05", date: "2026-11-06" }],
+  deadlines: [
+    {
+      label: "Update Incident Response Plan §4.2 to a four-business-day window",
+      date: "2026-10-30",
+      description:
+        "Section 4.2 still says five business days. Bring it in line with the rule before the next filing.",
+    },
+    {
+      label: "File Form 8-K, Item 1.05",
+      date: "2026-11-06",
+      description:
+        "Report a material cyber-attack within four business days of deciding it's material.",
+    },
+  ],
   reasonsRelevant: [
     "Incident Response Plan §4.2 sets the same four-business-day window",
     "You file 8-Ks with the SEC",
+    "Nobody is named to sign an 8-K cyber filing — that needs settling before an attack",
   ],
 };
 

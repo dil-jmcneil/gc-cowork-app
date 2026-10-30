@@ -1,5 +1,6 @@
 import { Box, Container, Divider, Stack, Typography, useTheme } from "@mui/material";
 
+import { ComplianceCalendar, FullCalendarLink } from "@/components/calendar/ComplianceCalendar";
 import { PrototypeHomeComposer } from "@/components/chat/PrototypeHomeComposer";
 import { AttentionPane } from "@/components/home/AttentionPane";
 import { HomeQuickActions } from "@/components/home/HomeQuickActions";
@@ -16,6 +17,7 @@ export default function IndexPage() {
         </Stack>
         <Divider sx={{ mt: 1 }} />
         <AttentionPane />
+        <ComplianceCalendar variant="widget" headerAction={<FullCalendarLink />} />
       </Stack>
     </Container>
   );

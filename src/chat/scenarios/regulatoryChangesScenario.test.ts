@@ -48,6 +48,15 @@ test("first change is the SEC cyber rule", () => {
   }
 });
 
+test("the cyber rule has two deadlines with descriptions, in date order", () => {
+  expect(CYBER_RULE_CHANGE.deadlines).toHaveLength(2);
+  expect(CYBER_RULE_CHANGE.deadlines[0].date <= CYBER_RULE_CHANGE.deadlines[1].date).toBe(true);
+  for (const deadline of CYBER_RULE_CHANGE.deadlines) {
+    expect(deadline.description?.length).toBeGreaterThan(0);
+  }
+  expect(CYBER_RULE_CHANGE.reasonsRelevant.length).toBeGreaterThanOrEqual(3);
+});
+
 test("streams reasoning, then resolving tools, then intro, then the list", async () => {
   const collected: ChatStreamChunk[] = [];
   for await (const chunk of streamRegulatoryChanges(new AbortController().signal, 0)) {

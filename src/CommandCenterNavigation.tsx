@@ -7,6 +7,7 @@ import ForumIcon from "@mui/icons-material/ForumOutlined";
 import { AINavLink, AINavSection } from "@diligentcorp/atlas-react-bundle/global-nav";
 
 import AddCircleIcon from "@diligentcorp/atlas-react-bundle/icons/AddCircle";
+import CalendarIcon from "@diligentcorp/atlas-react-bundle/icons/Calendar";
 import HomeIcon from "@diligentcorp/atlas-react-bundle/icons/Home";
 import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
 import SearchIcon from "@diligentcorp/atlas-react-bundle/icons/Search";
@@ -106,6 +107,11 @@ export default function CommandCenterNavigation() {
         <RoutedAINavLink to="/" label="Home" end icon={<HomeIcon slot="icon" />} />
         <ProjectsNavSection />
         <RoutedAINavLink
+          to="/compliance-calendar"
+          label="Compliance calendar"
+          icon={<CalendarIcon slot="icon" />}
+        />
+        <RoutedAINavLink
           to="/chats/new"
           label="New chat"
           end
@@ -140,6 +146,11 @@ export default function CommandCenterNavigation() {
           label="Projects"
           icon={<ProjectsIcon aria-hidden fontSize="small" />}
           onClick={() => expandPrototypeSideNav()}
+        />
+        <CommandCenterCompactNavButton
+          label="Compliance calendar"
+          icon={<CalendarIcon aria-hidden fontSize="small" />}
+          onClick={() => navigate("/compliance-calendar")}
         />
         <CommandCenterCompactNavButton
           label="New chat"
