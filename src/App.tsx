@@ -13,6 +13,7 @@ import {
 import { DemoSettingsFab } from "./components/demo/DemoSettingsFab.js";
 import { useThemeVariantStore } from "./demo/themeVariantStore.js";
 import ChatPage from "./pages/ChatPage.js";
+import ComplianceCalendarPage from "./pages/ComplianceCalendarPage.js";
 import CreateProjectPage from "./pages/CreateProjectPage.js";
 import IndexPage from "./pages/IndexPage.js";
 import NewChatPage from "./pages/NewChatPage.js";
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="chats/:chatId" element={<ChatPage />} />
         <Route path="projects/new" element={<CreateProjectPage />} />
         <Route path="projects/:projectId" element={<ProjectPage />} />
+        <Route path="compliance-calendar" element={<ComplianceCalendarPage />} />
       </Route>
       </Routes>
     </LoginGate>
