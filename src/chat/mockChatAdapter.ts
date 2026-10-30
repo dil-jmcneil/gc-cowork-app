@@ -1,4 +1,8 @@
 import type { ChatStreamChunk } from "@/chat/chatTypes";
+import {
+  isRegulatoryChangesPrompt,
+  streamRegulatoryChanges,
+} from "@/chat/scenarios/regulatoryChangesScenario";
 import { streamText } from "@/chat/scenarios/streamHelpers";
 
 function buildGenericReply(prompt: string): string {
@@ -18,7 +22,11 @@ export async function* streamMockReply(
   signal: AbortSignal,
 ): AsyncGenerator<ChatStreamChunk> {
   try {
-    yield* streamText(buildGenericReply(promptText), signal);
+    if (isRegulatoryChangesPrompt(promptText)) {
+      yield* streamRegulatoryChanges(signal);
+    } else {
+      yield* streamText(buildGenericReply(promptText), signal);
+    }
     yield signal.aborted ? { type: "abort" } : { type: "finish" };
   } catch {
     yield { type: "abort" };
