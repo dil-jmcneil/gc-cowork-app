@@ -11,22 +11,41 @@ export const CYBER_RULE_CHANGE: RegulatoryChange = {
   status: "New",
   deadlines: [
     {
-      label: "Update Incident Response Plan §4.2 to a four-business-day window",
-      date: "2026-10-30",
+      label: "Item 1.05 compliance date",
+      date: "2026-12-18",
       description:
-        "Section 4.2 still says five business days. Bring it in line with the rule before the next filing.",
+        "From this date, large accelerated filers must report a material cyber-attack within four business days of deciding it's material.",
     },
     {
-      label: "File Form 8-K, Item 1.05",
-      date: "2026-11-06",
-      description:
-        "Report a material cyber-attack within four business days of deciding it's material.",
+      label: "Fiscal 2026 10-K due",
+      date: "2027-03-01",
+      description: "The annual report must describe the updated incident disclosure process.",
     },
   ],
   reasonsRelevant: [
-    "Incident Response Plan §4.2 sets the same four-business-day window",
+    "Incident Response Plan §4.2 still says five business days, not four",
     "You file 8-Ks with the SEC",
     "Nobody is named to sign an 8-K cyber filing — that needs settling before an attack",
+  ],
+  taskTemplates: [
+    {
+      id: "irp",
+      description: "Update Incident Response Plan §4.2 to four business days",
+      ownerEmail: "pete.lin@acme.com",
+      due: "2026-11-03",
+    },
+    {
+      id: "signoff",
+      description: "Confirm who signs an 8-K cyber filing",
+      ownerEmail: "pete.lin@acme.com",
+      due: "2026-10-30",
+    },
+    {
+      id: "preread",
+      description: "Add the updated plan to the Audit Committee pre-read",
+      ownerEmail: "alex.kim@acme.com",
+      due: "2026-11-13",
+    },
   ],
 };
 
@@ -41,12 +60,36 @@ export const REGULATORY_CHANGES: RegulatoryChange[] = [
     effectiveDate: "2027-03-01",
     status: "Upcoming",
     deadlines: [
-      { label: "Update online cancellation flow", date: "2027-02-15" },
+      {
+        label: "Online cancellation required",
+        date: "2027-02-15",
+        description: "Customers who sign up online must be able to cancel online.",
+      },
       { label: "Rule takes effect", date: "2027-03-01" },
     ],
     reasonsRelevant: [
       "Your software products are sold on auto-renewing plans",
       "Customer terms §7 describes a phone-only cancellation path",
+    ],
+    taskTemplates: [
+      {
+        id: "gap",
+        description: "Compare the rule against our policies and list the gaps",
+        ownerEmail: "sam.ortiz@acme.com",
+        due: "2027-01-15",
+      },
+      {
+        id: "flow",
+        description: "Build the online cancellation flow",
+        ownerEmail: "chris.okafor@acme.com",
+        due: "2027-02-10",
+      },
+      {
+        id: "terms",
+        description: "Update customer terms §7",
+        ownerEmail: "jordan.lee@acme.com",
+        due: "2027-02-12",
+      },
     ],
   },
   {
@@ -61,6 +104,26 @@ export const REGULATORY_CHANGES: RegulatoryChange[] = [
     reasonsRelevant: [
       "HR uses automated screening for job applicants in California",
       "Your privacy notice doesn't cover automated decisions yet",
+    ],
+    taskTemplates: [
+      {
+        id: "review",
+        description: "Review automated screening tools with HR",
+        ownerEmail: "priya.natarajan@acme.com",
+        due: "2026-11-10",
+      },
+      {
+        id: "comment",
+        description: "Draft our public comment",
+        ownerEmail: "jordan.lee@acme.com",
+        due: "2026-11-17",
+      },
+      {
+        id: "notice",
+        description: "Update the privacy notice for automated decisions",
+        ownerEmail: "jordan.lee@acme.com",
+        due: "2026-12-15",
+      },
     ],
   },
   {
@@ -79,6 +142,20 @@ export const REGULATORY_CHANGES: RegulatoryChange[] = [
       "Your EU subsidiaries deploy AI features in customer products",
       "AI Use Policy §2 doesn't yet assign an owner for model documentation",
     ],
+    taskTemplates: [
+      {
+        id: "inventory",
+        description: "Build the AI model inventory",
+        ownerEmail: "chris.okafor@acme.com",
+        due: "2027-01-25",
+      },
+      {
+        id: "owner",
+        description: "Name an owner for model documentation",
+        ownerEmail: "maya.chen@acme.com",
+        due: "2027-03-01",
+      },
+    ],
   },
   {
     id: "finra-remote-supervision",
@@ -88,9 +165,17 @@ export const REGULATORY_CHANGES: RegulatoryChange[] = [
     regulatoryBody: "FINRA",
     effectiveDate: "2027-01-15",
     status: "In review",
-    deadlines: [{ label: "Update written supervisory procedures", date: "2027-01-15" }],
+    deadlines: [{ label: "Updated procedures in effect", date: "2027-01-15" }],
     reasonsRelevant: [
       "Your broker-dealer subsidiary has registered staff working remotely",
+    ],
+    taskTemplates: [
+      {
+        id: "wsp",
+        description: "Update written supervisory procedures",
+        ownerEmail: "sam.ortiz@acme.com",
+        due: "2027-01-08",
+      },
     ],
   },
 ];

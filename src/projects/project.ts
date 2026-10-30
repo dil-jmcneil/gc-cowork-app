@@ -1,4 +1,5 @@
 import type { TaskOwner } from "./people";
+import type { TaskMessage } from "./thread";
 
 /** Project, Plan and Task follow the GC Cowork OOUX object model. */
 export type TaskStatus = "Not started" | "In progress" | "Done";
@@ -14,6 +15,10 @@ export type ProjectTask = {
   /** ISO date, yyyy-mm-dd. */
   deadline: string;
   status: TaskStatus;
+  /** Delegator ↔ delegate back-and-forth, oldest first. */
+  thread: TaskMessage[];
+  /** Hand-written summary for a scripted story; otherwise one is generated. */
+  statusSummary?: string;
 };
 
 export type PlanStatus = "draft" | "accepted";

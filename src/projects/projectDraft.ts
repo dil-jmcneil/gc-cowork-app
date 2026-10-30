@@ -1,10 +1,8 @@
 import type { RegulatoryChange } from "@/regulatory/regulatoryChange";
 import { LOGGED_IN_USER } from "@/user";
 
-import { DIRECTORY, ownerShortName } from "./people";
+import { findPerson, ownerShortName } from "./people";
 import type { Project, ProjectDraft, ProjectTask } from "./project";
-
-const SUGGESTED_OWNERS = DIRECTORY.slice(0, 3);
 
 const dateFormat = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -16,38 +14,28 @@ function formatShortDate(iso: string): string {
   return dateFormat.format(new Date(`${iso}T00:00:00Z`));
 }
 
-/** The ISO date `days` before another ISO date. */
-function daysBefore(iso: string, days: number): string {
-  const date = new Date(`${iso}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() - days);
-  return date.toISOString().slice(0, 10);
+const COMPLIANCE_LEAD = "sam.ortiz@acme.com";
+const PRIVACY_COUNSEL = "jordan.lee@acme.com";
+
+/** The compliance lead stays informed on every task, unless they own it. */
+function defaultCcs(ownerEmail: string) {
+  return [findPerson(ownerEmail === COMPLIANCE_LEAD ? PRIVACY_COUNSEL : COMPLIANCE_LEAD)];
 }
 
-/** Mocked "AI" draft: name, description, and a plan with tasks from the rule's deadlines. */
+/** Mocked "AI" draft: name, description, and a plan built from the change's task templates. */
 export function draftProjectFromChange(change: RegulatoryChange): ProjectDraft {
   const firstDeadline = [...change.deadlines].sort((a, b) => a.date.localeCompare(b.date))[0];
-  const owner = (i: number) => SUGGESTED_OWNERS[i % SUGGESTED_OWNERS.length];
 
-  const tasks: ProjectTask[] = [
-    {
-      id: `${change.id}-gap`,
-      description: `Compare the rule against our policies and list the gaps`,
-      delegator: LOGGED_IN_USER.firstName,
-      delegate: owner(0),
-      ccs: [owner(2)],
-      deadline: daysBefore(firstDeadline.date, 3),
-      status: "Not started",
-    },
-    ...change.deadlines.map((deadline, i) => ({
-      id: `${change.id}-deadline-${i}`,
-      description: deadline.label,
-      delegator: LOGGED_IN_USER.firstName,
-      delegate: owner(i + 1),
-      ccs: [owner(0)],
-      deadline: deadline.date,
-      status: "Not started" as const,
-    })),
-  ];
+  const tasks: ProjectTask[] = change.taskTemplates.map((template) => ({
+    id: `${change.id}-${template.id}`,
+    description: template.description,
+    delegator: LOGGED_IN_USER.firstName,
+    delegate: findPerson(template.ownerEmail),
+    ccs: defaultCcs(template.ownerEmail),
+    deadline: template.due,
+    status: "Not started",
+    thread: [],
+  }));
 
   return {
     name: change.title,

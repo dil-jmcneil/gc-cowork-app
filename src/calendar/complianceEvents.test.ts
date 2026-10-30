@@ -1,8 +1,10 @@
 import { deriveCalendarEvents } from "@/calendar/complianceEvents";
 import type { Project } from "@/projects/project";
-import { CYBER_RULE_CHANGE } from "@/regulatory/regulatoryChanges";
+import { DIRECTORY } from "@/projects/people";
+import { CYBER_RULE_CHANGE, REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
 
 const NOW = new Date("2026-11-01T00:00:00Z");
+const owner = (name: string) => DIRECTORY.find((p) => p.label === name)!;
 
 const PROJECT: Project = {
   id: "project-1",
@@ -20,113 +22,109 @@ const PROJECT: Project = {
         id: "t1",
         description: "Compare the rule against our policies",
         delegator: "Peter",
-        delegate: { id: "a", label: "Maya Chen", detail: "CISO · maya.chen@acme.com", kind: "directory" },
+        delegate: owner("Maya Chen"),
         ccs: [],
         deadline: "2026-10-20",
         status: "Done",
+        thread: [],
       },
       {
         id: "t2",
-        description: "Update online cancellation flow",
+        description: "Build the online cancellation flow",
         delegator: "Peter",
-        delegate: { id: "b", label: "Jordan Lee", detail: "Privacy counsel", kind: "directory" },
+        delegate: owner("Jordan Lee"),
         ccs: [],
         deadline: "2026-10-25",
         status: "In progress",
+        thread: [],
       },
       {
         id: "t3",
-        description: "Rule takes effect",
+        description: "Update customer terms §7",
         delegator: "Peter",
-        delegate: { id: "c", label: "Sam Ortiz", detail: "Compliance lead", kind: "directory" },
+        delegate: owner("Sam Ortiz"),
+        ccs: [],
+        deadline: "2026-12-01",
+        status: "In progress",
+        thread: [],
+      },
+      {
+        id: "t4",
+        description: "Brief the board",
+        delegator: "Peter",
+        delegate: owner("Alex Kim"),
         ccs: [],
         deadline: "2027-03-01",
         status: "Not started",
+        thread: [],
       },
     ],
   },
 };
 
-test("a task that's done is Complete regardless of its date", () => {
-  const events = deriveCalendarEvents([PROJECT], NOW);
-  const task = events.find((e) => e.id === "t1")!;
-  expect(task.status).toBe("Complete");
+const events = () => deriveCalendarEvents([PROJECT], NOW);
+const byId = (id: string) => events().find((e) => e.id === id)!;
+
+test("every regulatory deadline shows as an external deadline, with or without a project", () => {
+  const externals = events().filter((e) => e.kind === "external");
+  const expected = REGULATORY_CHANGES.reduce((n, c) => n + c.deadlines.length, 0);
+  expect(externals).toHaveLength(expected);
+  for (const event of externals) {
+    expect(event.status).toBe("External");
+    expect(event.changeId).toBeDefined();
+  }
 });
 
-test("an unfinished task past its deadline is Blocked", () => {
-  const events = deriveCalendarEvents([PROJECT], NOW);
-  const task = events.find((e) => e.id === "t2")!;
-  expect(task.status).toBe("Blocked");
-  expect(task.href).toBe("/projects/project-1");
+test("a change with no project yet has no tasks on the calendar, only its external deadlines", () => {
+  const cyber = deriveCalendarEvents([], NOW).filter((e) => e.source === CYBER_RULE_CHANGE.title);
+  expect(cyber.length).toBe(CYBER_RULE_CHANGE.deadlines.length);
+  expect(cyber.every((e) => e.kind === "external")).toBe(true);
 });
 
-test("an unfinished task not yet due is Assigned", () => {
-  const events = deriveCalendarEvents([PROJECT], NOW);
-  const task = events.find((e) => e.id === "t3")!;
-  expect(task.status).toBe("Assigned");
+test("an external deadline whose change has no project is awaiting your response", () => {
+  const event = deriveCalendarEvents([], NOW).find((e) => e.kind === "external")!;
+  expect(event.attention).toBe("awaiting-response");
 });
 
-test("a regulatory deadline with no project yet appears, linking to create one", () => {
-  const events = deriveCalendarEvents([], NOW);
-  const deadline = events.find((e) => e.title === "File Form 8-K, Item 1.05")!;
-  expect(deadline).toBeDefined();
-  expect(deadline.href).toBe(`/projects/new?change=${CYBER_RULE_CHANGE.id}`);
-  expect(deadline.status).toBe("Assigned");
+test("an external deadline whose change has a project needs no attention", () => {
+  const ftc = events().filter((e) => e.kind === "external" && e.changeId === "ftc-click-to-cancel");
+  expect(ftc.length).toBeGreaterThan(0);
+  for (const event of ftc) expect(event.attention).toBeUndefined();
 });
 
-test("a past regulatory deadline with no project is Blocked", () => {
-  const events = deriveCalendarEvents([], NOW);
-  const deadline = events.find((e) => e.title.startsWith("Update Incident Response Plan"))!;
-  expect(deadline.status).toBe("Blocked");
+test("task events point at their project and task", () => {
+  const event = byId("t3");
+  expect(event).toMatchObject({ kind: "task", projectId: "project-1", taskId: "t3" });
+  expect(event.owner).toBe("Sam Ortiz");
 });
 
-test("once a change has a project, its own deadline events are replaced by that project's tasks", () => {
-  const events = deriveCalendarEvents([PROJECT], NOW);
-  expect(events.some((e) => e.title === "Update online cancellation flow")).toBe(true);
-  expect(events.some((e) => e.title === "Rule takes effect" && e.description.includes("FTC"))).toBe(false);
+test("a done task is Complete regardless of its date", () => {
+  expect(byId("t1").status).toBe("Complete");
+  expect(byId("t1").attention).toBeUndefined();
 });
 
-test("events are sorted by date, earliest first", () => {
-  const events = deriveCalendarEvents([PROJECT], NOW);
-  const dates = events.map((e) => e.date);
-  expect(dates).toEqual([...dates].sort());
-});
-
-test("an overdue, unfinished task asks for a nudge and says who hasn't responded", () => {
-  const event = deriveCalendarEvents([PROJECT], NOW).find((e) => e.id === "t2")!;
-  expect(event.attention).toBe("nudge");
-  expect(event.owner).toBe("Jordan Lee");
-  expect(event.description).toContain("Jordan Lee");
-  expect(event.description).toContain("past due");
+test("an unfinished task past its deadline is Blocked and asks for a nudge", () => {
+  expect(byId("t2")).toMatchObject({ status: "Blocked", attention: "nudge" });
+  expect(byId("t2").description).toContain("Jordan Lee");
 });
 
 test("an in-progress task that isn't overdue shows a new status", () => {
-  const inProgress = {
-    ...PROJECT,
-    plan: {
-      ...PROJECT.plan,
-      tasks: [{ ...PROJECT.plan.tasks[1], id: "t4", deadline: "2026-12-01" }],
-    },
-  };
-  const event = deriveCalendarEvents([inProgress], NOW).find((e) => e.id === "t4")!;
-  expect(event.attention).toBe("new-status");
-  expect(event.status).toBe("Assigned");
+  expect(byId("t3")).toMatchObject({ status: "Assigned", attention: "new-status" });
 });
 
-test("a regulatory deadline with no project is awaiting your response", () => {
-  const event = deriveCalendarEvents([], NOW).find((e) => e.title === "File Form 8-K, Item 1.05")!;
-  expect(event.attention).toBe("awaiting-response");
-  expect(event.source).toBe("New cyber-attack reporting rule");
-});
-
-test("a completed task needs no attention", () => {
-  const event = deriveCalendarEvents([PROJECT], NOW).find((e) => e.id === "t1")!;
-  expect(event.attention).toBeUndefined();
+test("a not-started task that isn't due yet is Assigned with no attention", () => {
+  expect(byId("t4")).toMatchObject({ status: "Assigned" });
+  expect(byId("t4").attention).toBeUndefined();
 });
 
 test("every event says what it links to and suggests a next step", () => {
-  for (const event of deriveCalendarEvents([PROJECT], NOW)) {
+  for (const event of events()) {
     expect(event.linkLabel.length).toBeGreaterThan(0);
     expect(event.nextStep.length).toBeGreaterThan(0);
   }
+});
+
+test("events are sorted by date, earliest first", () => {
+  const dates = events().map((e) => e.date);
+  expect(dates).toEqual([...dates].sort());
 });

@@ -52,3 +52,11 @@ test("stopping mid-tool does not mark the running tool as succeeded", async () =
   expect(reply().status).toBe("done");
   expect(isChatStreaming(chat.id)).toBe(false);
 });
+
+test("a caller-supplied reply streams instead of the mock reply", async () => {
+  sendUserMessage("custom-chat", "Loop in legal ops.", "Got it — I passed that on.");
+  await vi.runAllTimersAsync();
+  const reply = messages("custom-chat").find((m) => m.role === "assistant")!;
+  const text = reply.parts.find((p) => p.type === "text");
+  expect(text?.type === "text" && text.text).toBe("Got it — I passed that on.");
+});

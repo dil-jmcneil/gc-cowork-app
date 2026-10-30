@@ -1,5 +1,4 @@
 import { Box, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { Link as RouterLink } from "react-router";
 
 import type { CalendarEvent } from "@/calendar/complianceEvents";
 import { dateTense } from "@/calendar/weeks";
@@ -24,6 +23,7 @@ export function CalendarCell({
   minHeight = 140,
   maxEvents,
   showWeekday = true,
+  onOpen,
 }: {
   date: string;
   events: CalendarEvent[];
@@ -36,6 +36,7 @@ export function CalendarCell({
   maxEvents?: number;
   /** Month grids label weekdays in a header row instead. */
   showWeekday?: boolean;
+  onOpen: (event: CalendarEvent) => void;
 }) {
   const { tokens } = useTheme();
   const { color } = tokens.semantic;
@@ -93,7 +94,7 @@ export function CalendarCell({
         </Stack>
         <Stack gap={0.5}>
           {shown.map((event) => (
-            <CalendarEventChip key={event.id} event={event} past={tense === "past"} />
+            <CalendarEventChip key={event.id} event={event} past={tense === "past"} onOpen={onOpen} />
           ))}
           {hidden > 0 ? (
             <Typography variant="textSm" sx={{ color: color.type.muted.value, px: 1 }}>
@@ -106,18 +107,32 @@ export function CalendarCell({
   );
 }
 
-function CalendarEventChip({ event, past }: { event: CalendarEvent; past: boolean }) {
+function CalendarEventChip({
+  event,
+  past,
+  onOpen,
+}: {
+  event: CalendarEvent;
+  past: boolean;
+  onOpen: (event: CalendarEvent) => void;
+}) {
   const { tokens } = useTheme();
   const { color } = tokens.semantic;
   return (
     <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
       <Stack
-        component={RouterLink}
-        to={event.href}
+        component="button"
+        type="button"
+        onClick={() => onOpen(event)}
         direction="row"
         alignItems="flex-start"
         gap={0.75}
         sx={{
+          width: "100%",
+          border: "none",
+          font: "inherit",
+          textAlign: "left",
+          cursor: "pointer",
           px: 1,
           py: 0.75,
           borderRadius: tokens.semantic.radius.md.value,

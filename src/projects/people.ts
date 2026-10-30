@@ -21,7 +21,16 @@ export const DIRECTORY: TaskOwner[] = [
   person("Priya Natarajan", "Head of HR", "priya.natarajan@acme.com"),
   person("Alex Kim", "Corporate secretary", "alex.kim@acme.com"),
   person("Chris Okafor", "VP, Product", "chris.okafor@acme.com"),
+  person("Pete Lin", "Associate General Counsel", "pete.lin@acme.com"),
+  person("Raj Patel", "Controller", "raj.patel@acme.com"),
 ];
+
+/** A directory person by email; throws for an unknown email so bad seed data fails loudly. */
+export function findPerson(email: string): TaskOwner {
+  const found = DIRECTORY.find((p) => p.id === email);
+  if (!found) throw new Error(`No directory person with email ${email}`);
+  return found;
+}
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HANDLE = /^@[\w.-]+$/;

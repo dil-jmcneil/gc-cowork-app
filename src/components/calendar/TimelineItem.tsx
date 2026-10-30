@@ -1,5 +1,4 @@
 import { Box, Button, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { Link as RouterLink } from "react-router";
 
 import type { CalendarEvent, CalendarEventAttention } from "@/calendar/complianceEvents";
 import { dateTense } from "@/calendar/weeks";
@@ -26,11 +25,13 @@ export function TimelineItem({
   todayIso,
   nudged,
   onNudge,
+  onOpen,
 }: {
   event: CalendarEvent;
   todayIso: string;
   nudged: boolean;
   onNudge: (event: CalendarEvent) => void;
+  onOpen: (event: CalendarEvent) => void;
 }) {
   const { tokens } = useTheme();
   const tense = dateTense(event.date, todayIso);
@@ -52,12 +53,24 @@ export function TimelineItem({
     >
       <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
         <Stack
-          component={RouterLink}
-          to={event.href}
+          component="button"
+          type="button"
+          onClick={() => onOpen(event)}
           direction="row"
           alignItems="center"
           gap={2}
-          sx={{ flex: 1, minWidth: 0, textDecoration: "none", color: "inherit", outlineOffset: 2 }}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            p: 0,
+            border: "none",
+            bgcolor: "transparent",
+            font: "inherit",
+            textAlign: "left",
+            cursor: "pointer",
+            color: "inherit",
+            outlineOffset: 2,
+          }}
         >
           <DateChip date={event.date} tense={tense} />
           <StatusDot status={event.status} />

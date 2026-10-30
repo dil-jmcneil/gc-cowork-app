@@ -8,12 +8,14 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { FieldLabel, SectionCard } from "@/components/projects/SectionCard";
 import { SourceChangeCard } from "@/components/projects/SourceChangeCard";
 import { TaskTable } from "@/components/projects/TaskTable";
+import { TaskQuickView } from "@/components/tasks/TaskQuickView";
 import { useProjectStore } from "@/projects/projectStore";
 import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
 
@@ -24,6 +26,7 @@ export default function ProjectPage() {
   const project = useProjectStore((s) => s.projects.find((p) => p.id === projectId));
   const acceptPlan = useProjectStore((s) => s.acceptPlan);
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
 
   if (!project) {
     return (
@@ -55,10 +58,10 @@ export default function ProjectPage() {
         <Grid {...presets.GridPresets.page}>
           <Grid item sm={4} md={8} lg={5} xl={8}>
             <Stack gap={2}>
-              <SectionCard title="Status summary">
+              <SectionCard title="Status Summary">
                 <Typography variant="textMd">{project.statusSummary}</Typography>
               </SectionCard>
-              <SectionCard title="About this change">
+              <SectionCard title="About This Change">
                 <Typography variant="textMd">{project.description}</Typography>
                 <Stack gap={0.5}>
                   <FieldLabel>Why it's relevant</FieldLabel>
@@ -97,7 +100,7 @@ export default function ProjectPage() {
           </Stack>
           <Stack gap={0.5}>
             <FieldLabel>Tasks</FieldLabel>
-            <TaskTable tasks={project.plan.tasks} />
+            <TaskTable tasks={project.plan.tasks} onOpenTask={setOpenTaskId} />
           </Stack>
           <Stack direction="row" gap={1.5} justifyContent="flex-end">
             <Button
@@ -114,6 +117,10 @@ export default function ProjectPage() {
           </Stack>
         </SectionCard>
       </Stack>
+      <TaskQuickView
+        taskRef={openTaskId ? { projectId: project.id, taskId: openTaskId } : null}
+        onClose={() => setOpenTaskId(null)}
+      />
     </Container>
   );
 }

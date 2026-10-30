@@ -9,6 +9,10 @@ The first step covers:
 - a mocked chat that streams replies with reasoning and tool calls
 - a scripted "Show recent regulatory changes" reply that renders compact regulatory change cards, each showing its project (with an AI status summary) or a Create project button
 - Projects: a Create project screen that drafts the project and plan from a change, a project page, and a Projects section in the left nav
+- Tasks: a quick-view overlay (status summary, badges, owner, key details) and a full task view with the communication thread — Cowork's emails, owners' replies, and notes added through chat — plus a chat panel
+- A compliance calendar on the home page and as a full page, showing project tasks and external regulatory deadlines
+
+Starting the project for the cyber-attack reporting rule is a demo shortcut: its tasks jump ahead to where they'd be after a few days of work, with replies from Pete Lin and Raj Patel already in their threads.
 
 All chat responses are mocked client-side. There's no backend.
 
