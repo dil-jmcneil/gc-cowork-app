@@ -1,32 +1,38 @@
-# React + TypeScript + Vite
+# GC Cowork
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A prototype surface for a company's general counsel, built on the Atlas design system and the same stack as the generic supervisor chat surface ([d1-integrated](https://github.com/dil-jmcneil/d1-integrated)).
 
-Currently, two official plugins are available:
+The first step covers:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- the Atlas shell, with a left nav for Home, New chat, and chat history
+- a home page with the chat hero, three quick actions, and an attention pane
+- a mocked chat that streams replies with reasoning and tool calls
+- a scripted "Show recent regulatory changes" reply that renders regulatory change cards
 
-## React Compiler
+All chat responses are mocked client-side. There's no backend.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+See `docs/superpowers/specs/2026-10-30-gc-home-foundation-design.md` for the design and `AGENTS.md` for the Atlas rules that apply to this repo.
 
-## Expanding the Oxlint configuration
+## Run it
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The install fetches `@diligentcorp/atlas-react-bundle` from atlas.diligent.com, so you need network access to it. A postinstall script patches the bundle's mock navigator so the app title reads "GC Cowork".
+
+```bash
+npm run dev
+```
+
+```bash
+npm test
+```
+
+```bash
+npm run build
+```
+
+## Theme toggle
+
+The lightbulb button in the bottom-right corner opens demo settings, where you can switch between the **Default** and **Refreshed** looks. The choice is saved in localStorage under `gc-cowork-theme-variant`.

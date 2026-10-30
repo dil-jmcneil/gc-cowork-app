@@ -45,7 +45,7 @@ export function observeAtlasPrototypeNavTweaks(): () => void {
 /**
  * Atlas `AINavSection` shares one leading slot between the section icon and the
  * expand caret: the icon shows at rest and, on hover/focus, is swapped out for
- * the caret in the same spot. The Agent Studio design instead wants the icon
+ * the caret in the same spot. The design instead wants the icon
  * pinned on the LEFT and the caret on the RIGHT at all times (matching the rest
  * of the nav). We adopt a constructable stylesheet into each section's shadow
  * root to always show both, reorder the caret to the trailing edge, and rotate

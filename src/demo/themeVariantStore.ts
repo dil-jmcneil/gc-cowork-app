@@ -8,8 +8,8 @@ import { create } from "zustand";
  *   visual design review (lighter muted text, flatter primary action color,
  *   summarized reasoning, and simplified tool-call/user-bubble presentation).
  *
- * Exposed through the Demo settings FAB and persists in localStorage so the
- * prototype is sticky across reloads, matching `studioUserTypeStore.ts`.
+ * Exposed through the Demo settings FAB and persisted in localStorage so the
+ * choice survives reloads.
  */
 export type ThemeVariant = "current" | "refreshed";
 
@@ -52,7 +52,3 @@ export const useThemeVariantStore = create<ThemeVariantState>((set) => ({
   },
 }));
 
-/** Human-readable label for the currently selected theme variant. */
-export function themeVariantLabel(variant: ThemeVariant): string {
-  return variant === "refreshed" ? "Refreshed" : "Default";
-}

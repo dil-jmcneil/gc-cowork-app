@@ -209,8 +209,7 @@ function buildSegments(parts: ChatPart[]): MessageSegment[] {
  *     click/Enter to expand back to the same summaries + tool groups —
  *     still no raw reasoning trace, just what was already shown.
  *   - `keepExpanded` overrides the collapse when a tool is paused awaiting
- *     the user's approval (e.g. the Singapore director-form online-search
- *     gate): the message is "done" streaming at that point, but the
+ *     the user's approval: the message is "done" streaming at that point, but the
  *     Approve/Deny controls must stay visible rather than hiding behind a
  *     "Worked for Ns" row the user hasn't chosen to expand.
  */
@@ -360,12 +359,9 @@ function CopyMessageAction({ text }: { text: string }) {
 
 export function AtlasChatMessage({
   message,
-  title,
   showWorkingIndicator = false,
 }: {
   message: ChatMessage;
-  /** Optional emphasized header rendered inside the message, under the time. */
-  title?: string;
   /** The conversation owns which single Working/Thinking block gets the mark. */
   showWorkingIndicator?: boolean;
 }) {
@@ -479,19 +475,6 @@ export function AtlasChatMessage({
         ) : undefined
       }
     >
-      {title ? (
-        <Typography
-          sx={(theme) => ({
-            mb: `${theme.tokens.core.spacing[2].value}`,
-            fontSize: theme.typography.body1.fontSize,
-            lineHeight: theme.typography.body1.lineHeight,
-            fontWeight: theme.tokens.semantic.fontWeight.emphasis.value,
-            color: theme.tokens.semantic.color.type.default.value,
-          })}
-        >
-          {title}
-        </Typography>
-      ) : null}
       {segments.map((segment, index) => {
         // Refreshed collapses the leading reasoning/tool run into one
         // WorkGroup, rendered once at the first work segment's position;

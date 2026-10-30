@@ -1,4 +1,3 @@
-import { makeMessageId } from "@/chat/chatMessageUtils";
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import type {
   ChatPart,
@@ -70,18 +69,6 @@ export async function streamAssistantMessage(
         }
         case "reasoning-delta":
           appendDelta("reasoning", chunk.delta);
-          flush();
-          break;
-        case "tool":
-          parts.push({
-            type: "tool",
-            id: makeMessageId(),
-            toolName: chunk.toolName,
-            toolKind: "generic",
-            status: "success",
-            input: chunk.input,
-            output: chunk.output,
-          });
           flush();
           break;
         case "tool-start":

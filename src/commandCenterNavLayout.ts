@@ -18,8 +18,3 @@ export function commandCenterNavSearchAlignedRowSx(tokens: Theme["tokens"]) {
     paddingInlineStart: `calc(${tokens.core.spacing[1].value} + 1px + ${tokens.core.spacing["1_5"].value})`,
   };
 }
-
-/** Fixed-width trailing column so +, arrow, and status dots share a right edge. */
-export function commandCenterNavTrailingSlotWidth(tokens: Theme["tokens"]) {
-  return tokens.semantic.iconSize.lg.value;
-}

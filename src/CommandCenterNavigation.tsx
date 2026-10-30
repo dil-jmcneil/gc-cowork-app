@@ -91,7 +91,7 @@ export default function CommandCenterNavigation() {
       }}
     >
       <Box
-        className="cc-q2-nav-expanded"
+        className="cc-nav-expanded"
         sx={{
           display: "var(--label-display, flex)",
           flexDirection: "column",
@@ -118,7 +118,7 @@ export default function CommandCenterNavigation() {
         />
       </Box>
       <Box
-        className="cc-q2-nav-compact"
+        className="cc-nav-compact"
         sx={{
           flexDirection: "column",
           alignItems: "center",
@@ -182,7 +182,7 @@ function AiNavHistorySection({
       onClose={() => setOpen(false)}
     >
       {icon}
-      <Q2NavSearchField value={query} onChange={setQuery} />
+      <NavSearchField value={query} onChange={setQuery} />
       {filteredItems.length === 0 ? (
         <CommandCenterEmptyHint
           message={isSearching ? searchEmptyMessage : emptyMessage}
@@ -243,7 +243,7 @@ function RoutedAINavLink({
  * `AINavSection` child area (above the chat links), filtering the full history
  * data set as the user types.
  */
-function Q2NavSearchField({
+function NavSearchField({
   value,
   onChange,
 }: {

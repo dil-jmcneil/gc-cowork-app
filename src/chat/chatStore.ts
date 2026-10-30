@@ -21,7 +21,6 @@ type ChatStoreState = {
   setActiveChatId: (id: string | null) => void;
   getChat: (id: string) => ChatRecord | undefined;
   updateChat: (id: string, patch: Partial<ChatRecord>) => void;
-  touchChat: (id: string, preview: string) => void;
 };
 
 /** Placeholder preview for a chat the user hasn't typed into yet. */
@@ -71,13 +70,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set((state) => ({
       chats: state.chats.map((c) =>
         c.id === id ? { ...c, ...patch, lastActivity: new Date() } : c,
-      ),
-    })),
-
-  touchChat: (id, preview) =>
-    set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === id ? { ...c, preview, lastActivity: new Date() } : c,
       ),
     })),
 }));

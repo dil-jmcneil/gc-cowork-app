@@ -100,8 +100,6 @@ export type ChatMessage = {
 export type ChatStreamChunk =
   | { type: "reasoning-delta"; delta: string }
   | { type: "reasoning-summary"; summary: string }
-  // Legacy one-shot tool chunk (treated as start + success).
-  | { type: "tool"; toolName: string; input?: unknown; output?: unknown }
   | {
       type: "tool-start";
       id: string;

@@ -11,10 +11,6 @@ export function extractTextFromParts(parts: ChatPart[]): string {
     .join("\n\n");
 }
 
-export function extractTextFromMessage(message: ChatMessage): string {
-  return extractTextFromParts(message.parts);
-}
-
 export function createTextMessage(
   role: ChatRole,
   text: string,
