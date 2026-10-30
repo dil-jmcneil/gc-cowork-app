@@ -99,6 +99,34 @@ function findSideNavElement(): Element | null {
 }
 
 /**
+ * `atlas-gn-side-nav` renders its product title as
+ * `<header><div class="app-name"><h2>…</h2></div></header>` inside its OWN
+ * shadow root, so a style injected into the mock navigator shadow can't reach
+ * it. We only ever show one app here, so hide that header unconditionally by
+ * adopting a constructable stylesheet onto the side-nav's own shadow root —
+ * it survives the component's Lit re-renders. Matches the supervisor surface,
+ * which hides its side-nav title the same way.
+ */
+let sideNavHeaderHideSheet: CSSStyleSheet | null = null;
+
+function getSideNavHeaderHideSheet(): CSSStyleSheet {
+  if (!sideNavHeaderHideSheet) {
+    sideNavHeaderHideSheet = new CSSStyleSheet();
+    sideNavHeaderHideSheet.replaceSync("header { display: none !important; }");
+  }
+  return sideNavHeaderHideSheet;
+}
+
+function hideSideNavHeader(): void {
+  const shadow = findSideNavElement()?.shadowRoot ?? null;
+  if (!shadow) return;
+  const sheet = getSideNavHeaderHideSheet();
+  if (!shadow.adoptedStyleSheets.includes(sheet)) {
+    shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
+  }
+}
+
+/**
  * Expands the global nav side panel when it is collapsed by clicking the
  * header menu toggle (`header button.menu-button`) inside the `atlas-global-nav`
  * shadow root. No-op when the panel is already expanded.
@@ -149,6 +177,7 @@ export function useSideNavAppKey(appKey: string): void {
       if (sideNav && sideNav.getAttribute("app-key") !== appKey) {
         sideNav.setAttribute("app-key", appKey);
       }
+      hideSideNavHeader();
     };
 
     const ensureInnerObserver = (): boolean => {
