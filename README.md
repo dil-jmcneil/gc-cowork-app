@@ -33,6 +33,14 @@ npm test
 npm run build
 ```
 
+## Sign-in gate
+
+The whole app sits behind a simple username/password form (`src/auth/LoginGate.tsx`), so you can deploy this prototype publicly without it showing up to random visitors or search engines. Credentials come from `VITE_AUTH_USERNAME` / `VITE_AUTH_PASSWORD` (see `.env`; defaults to `diligent` / `gcpersona`).
+
+**This is not real security.** Vite inlines these env vars into the client bundle at build time, so the password is visible to anyone who inspects the deployed JavaScript. It only keeps the demo from being casually stumbled on. For a real deployment, set different values via your hosting provider's environment settings rather than committing production credentials, and don't use this as the only thing standing between the app and sensitive data.
+
+Once signed in, the browser remembers it (`localStorage`) until you clear site data — the same lightweight pattern used for the theme toggle below.
+
 ## Theme toggle
 
 The lightbulb button in the bottom-right corner opens demo settings, where you can switch between the **Default** and **Refreshed** looks. The choice is saved in localStorage under `gc-cowork-theme-variant`.

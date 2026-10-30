@@ -1,4 +1,5 @@
 import { AppLayout } from "@diligentcorp/atlas-react-bundle";
+import { LoginGate } from "./auth/LoginGate.js";
 import { useEffect, useLayoutEffect } from "react";
 import { Outlet, Route, Routes } from "react-router";
 import "./styles.css";
@@ -35,13 +36,15 @@ export default function App() {
   useThemeVariantBodyClass();
 
   return (
-    <Routes>
+    <LoginGate>
+      <Routes>
       <Route path="/" element={<Shell />}>
         <Route index element={<IndexPage />} />
         <Route path="chats/new" element={<NewChatPage />} />
         <Route path="chats/:chatId" element={<ChatPage />} />
       </Route>
-    </Routes>
+      </Routes>
+    </LoginGate>
   );
 }
 
