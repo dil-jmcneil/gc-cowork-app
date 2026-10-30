@@ -12,8 +12,10 @@ import {
 import { DemoSettingsFab } from "./components/demo/DemoSettingsFab.js";
 import { useThemeVariantStore } from "./demo/themeVariantStore.js";
 import ChatPage from "./pages/ChatPage.js";
+import CreateProjectPage from "./pages/CreateProjectPage.js";
 import IndexPage from "./pages/IndexPage.js";
 import NewChatPage from "./pages/NewChatPage.js";
+import ProjectPage from "./pages/ProjectPage.js";
 import { LOGGED_IN_USER } from "./user.js";
 
 /** Body class the "Refreshed" CSS token overrides in styles.css key off. */
@@ -40,6 +42,8 @@ export default function App() {
         <Route index element={<IndexPage />} />
         <Route path="chats/new" element={<NewChatPage />} />
         <Route path="chats/:chatId" element={<ChatPage />} />
+        <Route path="projects/new" element={<CreateProjectPage />} />
+        <Route path="projects/:projectId" element={<ProjectPage />} />
       </Route>
     </Routes>
   );

@@ -8,10 +8,12 @@ import { AINavLink, AINavSection } from "@diligentcorp/atlas-react-bundle/global
 
 import AddCircleIcon from "@diligentcorp/atlas-react-bundle/icons/AddCircle";
 import HomeIcon from "@diligentcorp/atlas-react-bundle/icons/Home";
+import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
 import SearchIcon from "@diligentcorp/atlas-react-bundle/icons/Search";
 
 import { expandPrototypeSideNav } from "./configureAtlasPrototypeNav.js";
 import { DEFAULT_CHAT_PREVIEW, useChatStore, type ChatRecord } from "./chat/chatStore.js";
+import { useProjectStore } from "./projects/projectStore.js";
 import {
   commandCenterNavRowInnerSx,
   commandCenterNavSearchAlignedRowSx,
@@ -102,6 +104,7 @@ export default function CommandCenterNavigation() {
         }}
       >
         <RoutedAINavLink to="/" label="Home" end icon={<HomeIcon slot="icon" />} />
+        <ProjectsNavSection />
         <RoutedAINavLink
           to="/chats/new"
           label="New chat"
@@ -134,6 +137,11 @@ export default function CommandCenterNavigation() {
           onClick={() => navigate("/")}
         />
         <CommandCenterCompactNavButton
+          label="Projects"
+          icon={<ProjectsIcon aria-hidden fontSize="small" />}
+          onClick={() => expandPrototypeSideNav()}
+        />
+        <CommandCenterCompactNavButton
           label="New chat"
           icon={<AddCircleIcon aria-hidden fontSize="small" />}
           onClick={() => navigate("/chats/new")}
@@ -145,6 +153,34 @@ export default function CommandCenterNavigation() {
         />
       </Box>
     </Box>
+  );
+}
+
+/** Collapsible list of projects, one sub-item per project. */
+function ProjectsNavSection() {
+  const projects = useProjectStore((s) => s.projects);
+  const [open, setOpen] = useState(true);
+  return (
+    <AINavSection
+      label="Projects"
+      isOpen={open}
+      childCount={projects.length}
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
+    >
+      <ProjectsIcon slot="icon" />
+      {projects.length === 0 ? (
+        <CommandCenterEmptyHint message="No projects yet" />
+      ) : (
+        projects.map((project) => (
+          <RoutedAINavLink
+            key={project.id}
+            to={`/projects/${project.id}`}
+            label={truncateLabel(project.name)}
+          />
+        ))
+      )}
+    </AINavSection>
   );
 }
 
