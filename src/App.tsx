@@ -1,4 +1,5 @@
 import { AppLayout } from "@diligentcorp/atlas-react-bundle";
+import { Box } from "@mui/material";
 import { LoginGate } from "./auth/LoginGate.js";
 import { useEffect, useLayoutEffect } from "react";
 import { Outlet, Route, Routes, useLocation } from "react-router";
@@ -68,7 +69,10 @@ function Shell() {
       userFullName={LOGGED_IN_USER.fullName}
       navigation={<CommandCenterNavigation />}
     >
-      <Outlet />
+      {/* Own stacking context, so content with a z-index (like the home hero) scrolls under the header. */}
+      <Box sx={{ isolation: "isolate" }}>
+        <Outlet />
+      </Box>
       <DemoSettingsFab offsetBottom={hasSideChat ? 120 : 24} />
     </AppLayout>
   );

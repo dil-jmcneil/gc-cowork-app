@@ -189,8 +189,8 @@ function TaskDetail({ projectId, projectName, task }: { projectId: string; proje
                     }}
                   />
                 ) : (
-                  <Stack gap={1} alignItems="flex-start">
-                    <PersonLine name={task.delegate.label} detail={task.delegate.detail} />
+                  <Stack gap={1} alignItems="flex-start" sx={{ minWidth: 0, width: "100%" }}>
+                    <PersonLine name={task.delegate.label} detail={task.delegate.detail} wrap />
                     <Button variant="outlined" size="small" onClick={() => setAssigning(true)}>
                       Assign
                     </Button>

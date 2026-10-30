@@ -6,7 +6,18 @@ function initials(name: string): string {
 }
 
 /** Avatar with a name and a secondary line (role, email, or channel). */
-export function PersonLine({ name, detail, size = 32 }: { name: string; detail?: string; size?: number }) {
+export function PersonLine({
+  name,
+  detail,
+  size = 32,
+  wrap = false,
+}: {
+  name: string;
+  detail?: string;
+  size?: number;
+  /** Let the detail wrap instead of truncating, for narrow columns. */
+  wrap?: boolean;
+}) {
   const { tokens } = useTheme();
   return (
     <Stack direction="row" alignItems="center" gap={1.25} sx={{ minWidth: 0 }}>
@@ -18,7 +29,11 @@ export function PersonLine({ name, detail, size = 32 }: { name: string; detail?:
           {name}
         </Typography>
         {detail ? (
-          <Typography variant="textSm" sx={{ color: tokens.semantic.color.type.muted.value }} noWrap>
+          <Typography
+            variant="textSm"
+            sx={{ color: tokens.semantic.color.type.muted.value, overflowWrap: "anywhere" }}
+            noWrap={!wrap}
+          >
             {detail}
           </Typography>
         ) : null}
