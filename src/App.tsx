@@ -1,10 +1,19 @@
 import { AppLayout } from "@diligentcorp/atlas-react-bundle";
-import { Typography } from "@mui/material";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
+import { Outlet, Route, Routes } from "react-router";
 import "./styles.css";
 
+import CommandCenterNavigation from "./CommandCenterNavigation.js";
+import {
+  observeAiNavSectionLayout,
+  observeAtlasPrototypeNavTweaks,
+  useSideNavAppKey,
+} from "./configureAtlasPrototypeNav.js";
 import { DemoSettingsFab } from "./components/demo/DemoSettingsFab.js";
 import { useThemeVariantStore } from "./demo/themeVariantStore.js";
+import ChatPage from "./pages/ChatPage.js";
+import IndexPage from "./pages/IndexPage.js";
+import NewChatPage from "./pages/NewChatPage.js";
 import { LOGGED_IN_USER } from "./user.js";
 
 /** Body class the "Refreshed" CSS token overrides in styles.css key off. */
@@ -21,16 +30,32 @@ function useThemeVariantBodyClass(): void {
 }
 
 export default function App() {
+  useLayoutEffect(() => observeAtlasPrototypeNavTweaks(), []);
+  useLayoutEffect(() => observeAiNavSectionLayout(), []);
   useThemeVariantBodyClass();
+
+  return (
+    <Routes>
+      <Route path="/" element={<Shell />}>
+        <Route index element={<IndexPage />} />
+        <Route path="chats/new" element={<NewChatPage />} />
+        <Route path="chats/:chatId" element={<ChatPage />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function Shell() {
+  useSideNavAppKey("launchpad");
 
   return (
     <AppLayout
       orgName="Acme Co, Inc."
       logo="/acme-logo.png"
       userFullName={LOGGED_IN_USER.fullName}
-      navigation={null}
+      navigation={<CommandCenterNavigation />}
     >
-      <Typography variant="h3">GC Cowork</Typography>
+      <Outlet />
       <DemoSettingsFab />
     </AppLayout>
   );

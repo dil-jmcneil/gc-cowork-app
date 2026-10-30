@@ -57,3 +57,15 @@
 .refreshed-tokens .AtlasPrototypeAppLayout { background: var(--refresh-nav) !important; }
 .refreshed-tokens main { background: var(--refresh-canvas); }
 
+
+/*
+ * Side nav collapsed rail: the expanded list hides via the side nav's
+ * `--label-display` var; the compact icon rail only shows when collapsed.
+ */
+.cc-q2-nav-compact {
+  display: none;
+}
+
+body.atlas-gn-panel--collapsed .cc-q2-nav-compact {
+  display: flex;
+}
