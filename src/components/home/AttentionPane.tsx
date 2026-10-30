@@ -1,7 +1,10 @@
 import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
 import { Box, Divider, Stack, Typography, useTheme } from "@mui/material";
+import { useState } from "react";
 
+import { RegulatoryChangeDialog } from "@/components/home/RegulatoryChangeDialog";
 import { ATTENTION_ITEMS, type AttentionItem } from "@/home/attentionItems";
+import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
 
 /**
  * Soft card elevation from the Figma Attention design (Elevation/New) — a
@@ -12,6 +15,8 @@ const CARD_SHADOW =
 
 export function AttentionPane({ heading = "Your Diligent daily brief" }: { heading?: string }) {
   const { tokens } = useTheme();
+  const [openChangeId, setOpenChangeId] = useState<string | null>(null);
+  const openChange = REGULATORY_CHANGES.find((c) => c.id === openChangeId) ?? null;
 
   return (
     <Stack gap={1.5}>
@@ -30,28 +35,43 @@ export function AttentionPane({ heading = "Your Diligent daily brief" }: { headi
       <Stack component="ul" gap={1.5} aria-label="Items that need your attention" sx={{ listStyle: "none", m: 0, p: 0 }}>
         {ATTENTION_ITEMS.map((item) => (
           <Box component="li" key={item.id}>
-            <AttentionCard item={item} />
+            <AttentionCard item={item} onOpen={() => setOpenChangeId(item.id)} />
           </Box>
         ))}
       </Stack>
+      <RegulatoryChangeDialog change={openChange} onClose={() => setOpenChangeId(null)} />
     </Stack>
   );
 }
 
-function AttentionCard({ item }: { item: AttentionItem }) {
+function AttentionCard({ item, onOpen }: { item: AttentionItem; onOpen: () => void }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const muted = tokens.semantic.color.type.muted.value;
 
   return (
     <Box
+      component="button"
+      type="button"
+      onClick={onOpen}
       sx={{
+        display: "block",
+        width: "100%",
+        textAlign: "left",
+        font: "inherit",
+        cursor: "pointer",
         border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
         borderRadius: tokens.semantic.radius.lg.value,
         boxShadow: CARD_SHADOW,
         backgroundColor: tokens.semantic.color.surface.default.value,
         px: 3,
         py: 2.5,
+        transition: "border-color 150ms ease, background-color 150ms ease",
+        "&:hover": { backgroundColor: tokens.semantic.color.surface.variant.value },
+        "&:focus-visible": {
+          outline: `${tokens.semantic.borderWidth.focusWidth.value} solid ${tokens.semantic.color.ui.focusRing.value}`,
+          outlineOffset: 2,
+        },
       }}
     >
       <Stack gap={1}>
