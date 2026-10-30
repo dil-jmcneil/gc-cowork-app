@@ -91,3 +91,42 @@ test("events are sorted by date, earliest first", () => {
   const dates = events.map((e) => e.date);
   expect(dates).toEqual([...dates].sort());
 });
+
+test("an overdue, unfinished task asks for a nudge and says who hasn't responded", () => {
+  const event = deriveCalendarEvents([PROJECT], NOW).find((e) => e.id === "t2")!;
+  expect(event.attention).toBe("nudge");
+  expect(event.owner).toBe("Jordan Lee");
+  expect(event.description).toContain("Jordan Lee");
+  expect(event.description).toContain("past due");
+});
+
+test("an in-progress task that isn't overdue shows a new status", () => {
+  const inProgress = {
+    ...PROJECT,
+    plan: {
+      ...PROJECT.plan,
+      tasks: [{ ...PROJECT.plan.tasks[1], id: "t4", deadline: "2026-12-01" }],
+    },
+  };
+  const event = deriveCalendarEvents([inProgress], NOW).find((e) => e.id === "t4")!;
+  expect(event.attention).toBe("new-status");
+  expect(event.status).toBe("Assigned");
+});
+
+test("a regulatory deadline with no project is awaiting your response", () => {
+  const event = deriveCalendarEvents([], NOW).find((e) => e.title === "File Form 8-K, Item 1.05")!;
+  expect(event.attention).toBe("awaiting-response");
+  expect(event.source).toBe("New cyber-attack reporting rule");
+});
+
+test("a completed task needs no attention", () => {
+  const event = deriveCalendarEvents([PROJECT], NOW).find((e) => e.id === "t1")!;
+  expect(event.attention).toBeUndefined();
+});
+
+test("every event says what it links to and suggests a next step", () => {
+  for (const event of deriveCalendarEvents([PROJECT], NOW)) {
+    expect(event.linkLabel.length).toBeGreaterThan(0);
+    expect(event.nextStep.length).toBeGreaterThan(0);
+  }
+});
