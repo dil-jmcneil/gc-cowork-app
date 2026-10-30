@@ -15,7 +15,7 @@ export async function streamAssistantMessage(
   chatId: string,
   assistantId: string,
   stream: AsyncGenerator<ChatStreamChunk>,
-  _signal: AbortSignal,
+  signal: AbortSignal,
 ): Promise<void> {
   const store = useChatMessagesStore.getState();
 
@@ -59,6 +59,7 @@ export async function streamAssistantMessage(
 
   try {
     for await (const chunk of stream) {
+      if (signal.aborted) break;
       switch (chunk.type) {
         case "reasoning-summary": {
           const last = parts[parts.length - 1];
@@ -109,6 +110,12 @@ export async function streamAssistantMessage(
       }
     }
   } finally {
+    // A stopped reply never finished its in-flight tools.
+    if (signal.aborted) {
+      for (const part of parts) {
+        if (part.type === "tool" && part.status === "running") part.status = "failed";
+      }
+    }
     store.updateMessage(chatId, assistantId, (message) => ({
       ...message,
       parts: parts.map((part) => ({ ...part })),

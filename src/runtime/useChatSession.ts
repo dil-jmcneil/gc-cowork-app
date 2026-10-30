@@ -1,14 +1,8 @@
 import { useEffect } from "react";
 
-import { makeMessageId } from "@/chat/chatMessageUtils";
-import {
-  appendAssistantMessage,
-  appendUserMessage,
-  useChatMessagesStore,
-} from "@/chat/chatMessagesStore";
+import { appendAssistantMessage } from "@/chat/chatMessagesStore";
 import { useChatStore } from "@/chat/chatStore";
-import { streamMockReply } from "@/chat/mockChatAdapter";
-import { streamAssistantMessage } from "@/runtime/streamAssistantMessage";
+import { sendUserMessage } from "@/runtime/assistantReply";
 
 const WELCOME_MESSAGE =
   "Hi, I'm Cowork. I can track regulatory changes, research rules, and keep an eye on what's due. What would you like to work on?";
@@ -31,24 +25,7 @@ export function initializeChatSession(chatId: string): void {
     return;
   }
 
-  appendUserMessage(chatId, chat.initialUserText);
-  const assistantId = makeMessageId();
-  useChatMessagesStore.getState().appendMessage(chatId, {
-    id: assistantId,
-    conversationId: chatId,
-    role: "assistant",
-    parts: [],
-    status: "streaming",
-    createdAt: new Date().toISOString(),
-  });
-
-  const controller = new AbortController();
-  void streamAssistantMessage(
-    chatId,
-    assistantId,
-    streamMockReply(chat.initialUserText, controller.signal),
-    controller.signal,
-  );
+  sendUserMessage(chatId, chat.initialUserText);
 }
 
 /** Initializes a chat session when opening `/chats/:chatId`. */

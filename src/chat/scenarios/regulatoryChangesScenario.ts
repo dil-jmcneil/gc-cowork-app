@@ -51,6 +51,7 @@ export async function* streamRegulatoryChanges(
     if (signal.aborted) return;
     yield { type: "tool-start", id: tool.id, toolName: tool.toolName, toolKind: tool.toolKind };
     await sleep(toolDelayMs, signal);
+    if (signal.aborted) return;
     yield { type: "tool-update", id: tool.id, status: "success", detail: tool.detail };
   }
 

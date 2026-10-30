@@ -5,6 +5,9 @@ import type { ChatMessage } from "./chatTypes";
 
 type ChatMessagesState = {
   messagesByChatId: Record<string, ChatMessage[]>;
+  /** Chats with an assistant reply currently streaming. */
+  streamingChatIds: Record<string, true>;
+  setStreaming: (chatId: string, streaming: boolean) => void;
   setMessages: (chatId: string, messages: ChatMessage[]) => void;
   appendMessage: (chatId: string, message: ChatMessage) => void;
   appendUserText: (chatId: string, text: string) => void;
@@ -18,6 +21,14 @@ type ChatMessagesState = {
 
 export const useChatMessagesStore = create<ChatMessagesState>((set, get) => ({
   messagesByChatId: {},
+  streamingChatIds: {},
+  setStreaming: (chatId, streaming) =>
+    set((state) => {
+      const next = { ...state.streamingChatIds };
+      if (streaming) next[chatId] = true;
+      else delete next[chatId];
+      return { streamingChatIds: next };
+    }),
   setMessages: (chatId, messages) =>
     set((state) => ({
       messagesByChatId: { ...state.messagesByChatId, [chatId]: messages },

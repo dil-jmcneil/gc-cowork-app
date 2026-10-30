@@ -124,7 +124,7 @@ export function PrototypeChatThread({
                 onSubmit={(prompt) => {
                   const text = prompt.trim();
                   if (!text) return false;
-                  void sendMessage(text);
+                  sendMessage(text);
                 }}
                 onStop={() => stop()}
               />
