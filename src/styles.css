@@ -1,5 +1,6 @@
 @import "@diligentcorp/atlas-react-bundle/styles";
 @import "@diligentcorp/atlas-react-bundle/global-nav.css";
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap");
 
 /* Flat surface.subtle canvas behind page content instead of AppLayout's gradient. */
 .AtlasPrototypeAppLayout {

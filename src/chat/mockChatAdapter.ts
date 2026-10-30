@@ -10,7 +10,7 @@ function buildGenericReply(prompt: string): string {
   if (!trimmed) {
     return "I didn't catch that — try sending a question to the assistant.";
   }
-  return `I looked into "${trimmed}". This is a mocked reply for now. Try "Show recent regulatory changes" to see what Cowork can do.`;
+  return 'I can\'t answer that one yet — this reply is a placeholder. Try "Show recent regulatory changes" to see what Cowork can do.';
 }
 
 /**
