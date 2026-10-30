@@ -1,18 +1,20 @@
 import {
-  MenuItem,
-  Select,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Typography,
   useTheme,
 } from "@mui/material";
 
 import { formatDate } from "@/lib/dates";
 import type { ProjectTask, TaskStatus } from "@/projects/project";
-import { TASK_OWNERS } from "@/projects/projectDraft";
+import type { TaskOwner } from "@/projects/people";
+
+import { OwnerTypeahead } from "./OwnerTypeahead";
 
 const STATUS_COLOR: Record<TaskStatus, "subtle" | "information" | "success"> = {
   "Not started": "subtle",
@@ -26,7 +28,7 @@ export function TaskTable({
   onOwnerChange,
 }: {
   tasks: ProjectTask[];
-  onOwnerChange?: (taskId: string, owner: string) => void;
+  onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
 }) {
   const { presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
@@ -47,26 +49,18 @@ export function TaskTable({
           {tasks.map((task) => (
             <TableRow key={task.id}>
               <TableCell>{task.description}</TableCell>
-              <TableCell sx={{ minWidth: 200 }}>
+              <TableCell sx={{ minWidth: 260 }}>
                 {onOwnerChange ? (
-                  <Select
-                    size="small"
-                    fullWidth
+                  <OwnerTypeahead
                     value={task.delegate}
-                    onChange={(event) => onOwnerChange(task.id, event.target.value)}
-                    inputProps={{ "aria-label": `Owner of ${task.description}` }}
-                  >
-                    {TASK_OWNERS.map((owner) => (
-                      <MenuItem key={owner} value={owner}>
-                        {owner}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                    onChange={(owner) => onOwnerChange(task.id, owner)}
+                    ariaLabel={`Owner of ${task.description}`}
+                  />
                 ) : (
-                  task.delegate
+                  <OwnerCell owner={task.delegate} />
                 )}
               </TableCell>
-              <TableCell>{task.ccs.join(", ")}</TableCell>
+              <TableCell>{task.ccs.map((cc) => cc.label).join(", ")}</TableCell>
               <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDate(task.deadline)}</TableCell>
               <TableCell>
                 <StatusIndicator color={STATUS_COLOR[task.status]} label={task.status} />
@@ -76,5 +70,17 @@ export function TaskTable({
         </TableBody>
       </Table>
     </TableContainer>
+  );
+}
+
+function OwnerCell({ owner }: { owner: TaskOwner }) {
+  const { tokens } = useTheme();
+  return (
+    <Stack>
+      <Typography variant="textMd">{owner.label}</Typography>
+      <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+        {owner.kind === "directory" ? owner.detail.split(" · ")[0] : owner.detail}
+      </Typography>
+    </Stack>
   );
 }

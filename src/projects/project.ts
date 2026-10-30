@@ -1,3 +1,5 @@
+import type { TaskOwner } from "./people";
+
 /** Project, Plan and Task follow the GC Cowork OOUX object model. */
 export type TaskStatus = "Not started" | "In progress" | "Done";
 
@@ -6,9 +8,9 @@ export type ProjectTask = {
   description: string;
   delegator: string;
   /** Owner of the task. */
-  delegate: string;
+  delegate: TaskOwner;
   /** People kept informed or accountable. */
-  ccs: string[];
+  ccs: TaskOwner[];
   /** ISO date, yyyy-mm-dd. */
   deadline: string;
   status: TaskStatus;

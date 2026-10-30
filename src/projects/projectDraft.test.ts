@@ -16,7 +16,8 @@ test("draft plan starts as a draft with tasks that have an owner and a deadline"
   expect(plan.tasks.length).toBeGreaterThanOrEqual(CYBER_RULE_CHANGE.deadlines.length);
   for (const task of plan.tasks) {
     expect(task.delegator).toBe("Peter");
-    expect(task.delegate.length).toBeGreaterThan(0);
+    expect(task.delegate.kind).toBe("directory");
+    expect(task.delegate.label.length).toBeGreaterThan(0);
     expect(task.deadline).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(task.status).toBe("Not started");
   }

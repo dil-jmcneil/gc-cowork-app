@@ -1,9 +1,10 @@
 import type { RegulatoryChange } from "@/regulatory/regulatoryChange";
 import { LOGGED_IN_USER } from "@/user";
 
+import { DIRECTORY, ownerShortName } from "./people";
 import type { Project, ProjectDraft, ProjectTask } from "./project";
 
-export const TASK_OWNERS = ["Maya Chen, CISO", "Jordan Lee, privacy counsel", "Sam Ortiz, compliance lead"];
+const SUGGESTED_OWNERS = DIRECTORY.slice(0, 3);
 
 const dateFormat = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -25,7 +26,7 @@ function daysBefore(iso: string, days: number): string {
 /** Mocked "AI" draft: name, description, and a plan with tasks from the rule's deadlines. */
 export function draftProjectFromChange(change: RegulatoryChange): ProjectDraft {
   const firstDeadline = [...change.deadlines].sort((a, b) => a.date.localeCompare(b.date))[0];
-  const owner = (i: number) => TASK_OWNERS[i % TASK_OWNERS.length];
+  const owner = (i: number) => SUGGESTED_OWNERS[i % SUGGESTED_OWNERS.length];
 
   const tasks: ProjectTask[] = [
     {
@@ -71,5 +72,5 @@ export function summarizeProject(project: Pick<Project, "plan">): string {
   const progress = `${done} of ${tasks.length} tasks done`;
   if (!next) return `${progress}. Everything on the plan is complete.`;
   const planNote = status === "draft" ? " The plan is still a draft." : "";
-  return `${progress}. Next up: ${next.description.charAt(0).toLowerCase()}${next.description.slice(1)} (${next.delegate.split(",")[0]}, due ${formatShortDate(next.deadline)}).${planNote}`;
+  return `${progress}. Next up: ${next.description.charAt(0).toLowerCase()}${next.description.slice(1)} (${ownerShortName(next.delegate)}, due ${formatShortDate(next.deadline)}).${planNote}`;
 }
