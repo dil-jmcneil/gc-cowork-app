@@ -36,9 +36,9 @@ export default function WorkstreamPage() {
   const signal = SIGNALS.find((c) => c.id === workstream.sourceSignalId);
   const muted = tokens.semantic.color.type.muted.value;
   const planAccepted = workstream.plan.status === "accepted";
-  const history = workstream.plan.tasks
-    .flatMap((task) => task.history.map((entry) => ({ entry, context: task.description })))
-    .sort((a, b) => b.entry.sentAt.localeCompare(a.entry.sentAt));
+  const history = workstream.plan.tasks.flatMap((task) =>
+    task.history.map((entry) => ({ entry, context: task.description })),
+  );
 
   return (
     <Container maxWidth="xl" sx={{ py: SPACE.section }}>

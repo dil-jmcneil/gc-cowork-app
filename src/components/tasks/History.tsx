@@ -1,10 +1,16 @@
 import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
 import { Button, Chip, Stack, Typography, useTheme } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { SPACE } from "@/lib/layout";
-import type { HistoryAction, HistoryEntry, HistoryFile, HistoryKind } from "@/workstreams/thread";
+import {
+  newestFirst,
+  type HistoryAction,
+  type HistoryEntry,
+  type HistoryFile,
+  type HistoryKind,
+} from "@/workstreams/thread";
 
 import { PersonLine } from "./PersonLine";
 import { HistoryCard, ThreadMessage } from "./ThreadMessages";
@@ -19,12 +25,13 @@ const FILTERS: { kind: HistoryKind | "all"; label: string }[] = [
   { kind: "file", label: "Files" },
 ];
 
-/** Messages, actions and files in one list, filterable by kind. `limit` shows the first few until expanded. */
+/** Messages, actions and files in one list, newest first, filterable by kind. `limit` shows the first few until expanded. */
 export function HistoryList({ items, ariaLabel, limit }: { items: HistoryItem[]; ariaLabel: string; limit?: number }) {
   const { presets } = useTheme();
   const [filter, setFilter] = useState<HistoryKind | "all">("all");
   const [expanded, setExpanded] = useState(false);
-  const matching = filter === "all" ? items : items.filter((i) => i.entry.kind === filter);
+  const newest = useMemo(() => newestFirst(items, (i) => i.entry.sentAt), [items]);
+  const matching = filter === "all" ? newest : newest.filter((i) => i.entry.kind === filter);
   const shown = limit && !expanded ? matching.slice(0, limit) : matching;
 
   return (

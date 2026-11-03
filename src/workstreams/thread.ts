@@ -64,3 +64,14 @@ export function makeMessageId(): string {
   counter += 1;
   return `msg-${Date.now().toString(36)}-${counter}`;
 }
+
+/**
+ * History entries, most recent first. Entries with the same time keep their
+ * recorded order, with the later-recorded one first.
+ */
+export function newestFirst<T>(items: T[], timeOf: (item: T) => string): T[] {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => timeOf(b.item).localeCompare(timeOf(a.item)) || b.index - a.index)
+    .map(({ item }) => item);
+}
