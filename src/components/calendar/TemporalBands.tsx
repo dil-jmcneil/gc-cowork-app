@@ -11,24 +11,26 @@ import { SPACE } from "@/lib/layout";
 export function useBandLook(band: TemporalBand) {
   const { tokens } = useTheme();
   const { color } = tokens.semantic;
+  // This week: blue header and accent. Next week: gray header, mid-gray accent.
+  // Further out: the lightest header, a faint accent, and shaded, faded rows.
   const near = {
     accent: color.accent.blue.content.value,
-    headerBg: color.status.notification.background.value,
+    headerBg: color.accent.blue.background.value,
     label: color.accent.blue.content.value,
     rowBg: color.surface.default.value,
-    rowHoverBg: color.status.notification.background.value,
+    rowHoverBg: color.accent.blue.background.value,
     faded: false,
   };
   const next = {
-    accent: color.type.muted.value,
-    headerBg: color.surface.subtle.value,
+    accent: color.ui.divider.secondary.value,
+    headerBg: color.status.neutral.backgroundVariant.value,
     label: color.type.default.value,
     rowBg: color.surface.default.value,
     rowHoverBg: color.surface.subtle.value,
     faded: false,
   };
   const far = {
-    accent: color.ui.divider.secondary.value,
+    accent: color.status.neutral.background.value,
     headerBg: color.surface.subtle.value,
     label: color.type.muted.value,
     rowBg: color.surface.subtle.value,

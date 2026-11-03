@@ -1,5 +1,6 @@
 import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
 import { Box, Button, Link, Stack, Tooltip, Typography, useTheme } from "@mui/material";
+import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
 import type { CalendarEvent } from "@/calendar/complianceEvents";
@@ -7,6 +8,7 @@ import { dateTense, temporalBand } from "@/calendar/weeks";
 import { SPACE } from "@/lib/layout";
 
 import { DateChip } from "./DateChip";
+import { StatusDot } from "./StatusDot";
 import { useBandLook } from "./TemporalBands";
 
 /** Tooltip body: what the event opens and Cowork's suggested next step. */
@@ -23,10 +25,11 @@ export function EventHoverDetails({ event }: { event: CalendarEvent }) {
 }
 
 /**
- * One timeline row inside a temporal band: a compact date badge, then the
- * status label and title, the workstream, and who owns it with Cowork's line
- * on the latest activity (the same order as the signal cards in chat).
- * Nothing is bold. Rows further out are shaded and faded.
+ * One timeline row inside a temporal band, after the Temporal Bands iteration:
+ * a compact date badge and status dot, then a 16px title, the workstream, and
+ * who owns it with Cowork's line on the latest activity (the same order as the
+ * signal cards in chat). Nudge sits at the end of that line when it's due.
+ * Everything is centered vertically; rows further out are shaded and faded.
  */
 export function TimelineItem({
   event,
@@ -46,7 +49,7 @@ export function TimelineItem({
     <Stack
       component="li"
       direction="row"
-      alignItems="flex-start"
+      alignItems="center"
       gap={SPACE.group}
       sx={(theme) => ({
         listStyle: "none",
@@ -59,12 +62,17 @@ export function TimelineItem({
       })}
     >
       <DateChip date={event.date} tense={dateTense(event.date, todayIso)} />
+      <StatusDot status={event.status} />
       <Stack gap={SPACE.pair} sx={{ flex: 1, minWidth: 0 }}>
-        <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} />
+        <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} showStatus={false} prominent />
         {event.workstream ? <WorkstreamLine workstream={event.workstream} /> : null}
-        <OwnerActivity event={event} />
+        <OwnerActivity
+          event={event}
+          action={
+            event.attention === "nudge" ? <NudgeAction event={event} nudged={nudged} onNudge={onNudge} /> : undefined
+          }
+        />
       </Stack>
-      <NudgeAction event={event} nudged={nudged} onNudge={onNudge} />
     </Stack>
   );
 }
@@ -75,12 +83,15 @@ export function EventTitle({
   todayIso,
   onOpen,
   showStatus = true,
+  prominent = false,
 }: {
   event: CalendarEvent;
   todayIso: string;
   onOpen: (event: CalendarEvent) => void;
   /** Swimlane cards show the status in their footer instead. */
   showStatus?: boolean;
+  /** 16px emphasized, for timeline rows. */
+  prominent?: boolean;
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
@@ -93,6 +104,8 @@ export function EventTitle({
       : tokens.semantic.color.type.default.value;
   /** A past workstream's task has no dialog to open. */
   const openable = event.kind !== "reference";
+  const titleVariant = prominent ? "h5" : "body1";
+  const titleWeight = prominent ? tokens.semantic.fontWeight.emphasis.value : undefined;
 
   return (
     <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap" sx={{ minWidth: 0 }}>
@@ -106,12 +119,12 @@ export function EventTitle({
             onClick={() => onOpen(event)}
             sx={{ textAlign: "left", color, minWidth: 0 }}
           >
-            <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
+            <Typography variant={titleVariant} component="span" sx={{ color: "inherit", fontWeight: titleWeight }}>
               {event.title}
             </Typography>
           </Link>
         ) : (
-          <Typography variant="body1" tabIndex={0} sx={{ color, minWidth: 0 }}>
+          <Typography variant={titleVariant} tabIndex={0} sx={{ color, minWidth: 0, fontWeight: titleWeight }}>
             {event.title}
           </Typography>
         )}
@@ -142,7 +155,16 @@ export function WorkstreamLine({ workstream }: { workstream: { name: string; hre
 }
 
 /** The owner, in the default color, then Cowork's line on the latest activity, as one sentence. */
-export function OwnerActivity({ event, clamp }: { event: CalendarEvent; clamp?: number }) {
+export function OwnerActivity({
+  event,
+  clamp,
+  action,
+}: {
+  event: CalendarEvent;
+  clamp?: number;
+  /** Shown right after the summary, e.g. Nudge when it says one is recommended. */
+  action?: ReactNode;
+}) {
   const { tokens } = useTheme();
   return (
     <Typography
@@ -161,6 +183,11 @@ export function OwnerActivity({ event, clamp }: { event: CalendarEvent; clamp?: 
       ) : null}
       {event.owner ? " · " : ""}
       {event.summary}
+      {action ? (
+        <Box component="span" sx={{ display: "inline-flex", verticalAlign: "middle", ml: SPACE.item }}>
+          {action}
+        </Box>
+      ) : null}
     </Typography>
   );
 }

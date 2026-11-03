@@ -155,8 +155,8 @@ export function ComplianceCalendar({
             previousLabel={`Previous ${unit}`}
             nextLabel={`Next ${unit}`}
           />
-          {/* The month grid uses dots; the timeline spells statuses out, so it needs no legend. */}
-          {view === "calendar" ? <CalendarLegend /> : null}
+          {/* Timeline and the month grid use dots; the swimlane spells statuses out, so it needs no legend. */}
+          {view === "swimlane" ? null : <CalendarLegend />}
         </Stack>
 
         <Box sx={{ pt: SPACE.group }}>
