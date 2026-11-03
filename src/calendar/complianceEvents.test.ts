@@ -163,3 +163,31 @@ test("events are sorted by date, earliest first", () => {
   const dates = events().map((e) => e.date);
   expect(dates).toEqual([...dates].sort());
 });
+
+describe("priority labels", () => {
+  const AFTER_NOV_2 = new Date("2026-11-04T00:00:00Z");
+  const label = (id: string, now = AFTER_NOV_2) => deriveCalendarEvents([], now).find((e) => e.id === id)!.priority.label;
+
+  test("an open task past its date is Overdue, a done one is Done", () => {
+    expect(label("climate-assurance")).toBe("Overdue");
+    expect(label("climate-data")).toBe("Done");
+  });
+
+  test("an open task due within a week is Due soon; later ones show their own status", () => {
+    // The pre-read is due Nov 12: eight days out on Nov 4, six days out on Nov 6.
+    expect(label("cyber-preread")).toBe("Not started");
+    expect(label("cyber-preread", new Date("2026-11-06T00:00:00Z"))).toBe("Due soon");
+  });
+
+  test("a handled signal's deadline reads Deadline; an unhandled one needs a workstream", () => {
+    expect(label("california-climate-disclosure-deadline-0")).toBe("Deadline");
+    expect(label("atg-v-lane-deadline-0")).toBe("Needs a workstream");
+  });
+
+  test("every task event carries a one-line summary and its workstream", () => {
+    for (const event of deriveCalendarEvents([], AFTER_NOV_2).filter((e) => e.kind !== "external")) {
+      expect(event.summary.length, event.id).toBeGreaterThan(0);
+      expect(event.workstream?.name, event.id).toBeTruthy();
+    }
+  });
+});

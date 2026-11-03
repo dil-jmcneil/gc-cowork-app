@@ -326,6 +326,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Sam Ortiz",
           due: "2026-10-23",
           status: "Done",
+          statusSummary: "Sam confirmed Acme is in scope: revenue is over $1 billion and it sells in California.",
         },
         {
           id: "climate-data",
@@ -333,6 +334,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Raj Patel",
           due: "2026-11-03",
           status: "Done",
+          statusSummary: "Raj sent the fiscal 2026 Scope 1 and 2 numbers from all six facilities on Nov 3.",
         },
         {
           id: "climate-assurance",
@@ -340,6 +342,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Maya Chen",
           due: "2026-11-02",
           status: "In progress",
+          statusSummary: "Maya has two vendor quotes but hasn't picked one. Cowork followed up on Oct 30 and Nov 2.",
         },
         {
           id: "climate-briefing",
@@ -347,6 +350,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Alex Kim",
           due: "2026-12-04",
           status: "Not started",
+          statusSummary: "Alex is waiting on the assurance vendor before drafting the briefing.",
         },
       ],
     },
@@ -399,6 +403,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Pete Lin",
           due: "2026-10-16",
           status: "Done",
+          statusSummary: "Pete's redline is signed. Incident Response Plan §4.2 now says four business days.",
         },
         {
           id: "cyber-signoff",
@@ -406,6 +411,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Raj Patel",
           due: "2026-10-23",
           status: "Done",
+          statusSummary: "Raj confirmed he signs 8-K cyber filings, with the CFO as backup.",
         },
         {
           id: "cyber-tabletop",
@@ -413,6 +419,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Maya Chen",
           due: "2026-11-02",
           status: "Done",
+          statusSummary: "Maya ran the tabletop on Nov 2. The team made the materiality call in under a day.",
         },
         {
           id: "cyber-preread",
@@ -420,6 +427,7 @@ export const PAST_SIGNALS: Signal[] = [
           owner: "Alex Kim",
           due: "2026-11-12",
           status: "Not started",
+          statusSummary: "Alex is holding a slot in the Nov 12 Audit Committee pre-read for the updated plan.",
         },
       ],
     },

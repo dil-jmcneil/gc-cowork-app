@@ -49,7 +49,7 @@ export function DateChip({ date, tense }: { date: string; tense: DateTense }) {
     >
       <Typography
         variant="body1"
-        sx={{ color: look.day, fontWeight: tokens.semantic.fontWeight.emphasis.value, lineHeight: "20px" }}
+        sx={{ color: look.day, lineHeight: "20px" }}
       >
         {DAY.format(parsed)}
       </Typography>
