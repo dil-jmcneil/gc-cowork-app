@@ -22,6 +22,7 @@ import { RuleTable } from "@/components/projects/RuleTable";
 import { draftChatId, seedDraftChat } from "@/projects/draftChat";
 import type { ProjectDraft } from "@/projects/project";
 import { draftProjectFromInsight } from "@/projects/projectDraft";
+import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useProjectStore } from "@/projects/projectStore";
 import { INSIGHTS } from "@/insights/insights";
 
@@ -57,6 +58,7 @@ export default function CreateProjectPage() {
 
 function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
   const { tokens, presets } = useTheme();
+  const showRules = usePlanRulesStore((s) => s.showRules);
   const navigate = useNavigate();
   const createProject = useProjectStore((s) => s.createProject);
   const [draft, setDraft] = useState(initialDraft);
@@ -158,13 +160,15 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
             </Stack>
           </SectionCard>
 
-          <SectionCard title="Rules for Every Milestone">
-            <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-              Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits,
-              it stops and asks you.
-            </Typography>
-            <RuleTable rules={draft.plan.rules} ariaLabel="Rules for every milestone" />
-          </SectionCard>
+          {showRules ? (
+            <SectionCard title="Rules for Every Milestone">
+              <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+                Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits,
+                it stops and asks you.
+              </Typography>
+              <RuleTable rules={draft.plan.rules} ariaLabel="Rules for every milestone" />
+            </SectionCard>
+          ) : null}
 
           <Stack direction="row" justifyContent="flex-end" gap={1.5}>
             <Button variant="outlined" onClick={() => navigate(-1)}>

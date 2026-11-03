@@ -1,7 +1,9 @@
 import {
   Dialog,
   DialogContent,
+  FormControlLabel,
   IconButton,
+  Switch,
   Stack,
   Typography,
   useTheme,
@@ -9,10 +11,8 @@ import {
 import CloseIcon from "@diligentcorp/atlas-react-bundle/icons/Close";
 import type { ReactNode } from "react";
 
-import {
-  useThemeVariantStore,
-  type ThemeVariant,
-} from "@/demo/themeVariantStore";
+import { usePlanRulesStore } from "@/demo/planRulesStore";
+import { useThemeVariantStore, type ThemeVariant } from "@/demo/themeVariantStore";
 
 import { DemoSettingsCardOption } from "./DemoSettingsCardOption";
 
@@ -21,11 +21,13 @@ type DemoSettingsDialogProps = {
   onClose: () => void;
 };
 
-/** Demo settings panel: switches between the Default and Refreshed themes. */
+/** Demo settings panel: switches between the Default and Refreshed themes, and shows or hides plan rules. */
 export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
   const { tokens } = useTheme();
   const themeVariant = useThemeVariantStore((s) => s.variant);
   const setThemeVariant = useThemeVariantStore((s) => s.setVariant);
+  const showRules = usePlanRulesStore((s) => s.showRules);
+  const setShowRules = usePlanRulesStore((s) => s.setShowRules);
 
   const selectThemeVariant = (next: ThemeVariant) => {
     setThemeVariant(next);
@@ -66,11 +68,7 @@ export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
         >
           Demo Settings
         </Typography>
-        <IconButton
-          size="small"
-          aria-label="Close demo settings"
-          onClick={onClose}
-        >
+        <IconButton size="small" aria-label="Close demo settings" onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Stack>
@@ -91,19 +89,25 @@ export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
               onSelect={() => selectThemeVariant("refreshed")}
             />
           </DemoSettingsSection>
+          <DemoSettingsSection label="Plans">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showRules}
+                  onChange={(e) => setShowRules(e.target.checked)}
+                  slotProps={{ input: { "aria-label": "Show Cowork's rules on plans" } }}
+                />
+              }
+              label="Show Cowork's rules on plans"
+            />
+          </DemoSettingsSection>
         </Stack>
       </DialogContent>
     </Dialog>
   );
 }
 
-function DemoSettingsSection({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function DemoSettingsSection({ label, children }: { label: string; children: ReactNode }) {
   const { tokens } = useTheme();
   return (
     <Stack gap={1.25}>

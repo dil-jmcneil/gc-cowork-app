@@ -1,11 +1,12 @@
-// Accordion, AccordionDetails and AccordionSummary are for the hidden "How Cowork Handles This" section below.
-import { Box, Stack, Typography, useTheme } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Stack, Typography, useTheme } from "@mui/material";
+
+import { usePlanRulesStore } from "@/demo/planRulesStore";
 
 import { milestoneStatuses, type MilestoneStatus } from "@/projects/milestones";
 import type { TaskOwner } from "@/projects/people";
 import type { Milestone, ProjectPlan } from "@/projects/project";
 
-// import { RuleTable } from "./RuleTable";
+import { RuleTable } from "./RuleTable";
 import { FieldLabel } from "./SectionCard";
 import { TaskTable } from "./TaskTable";
 
@@ -65,7 +66,8 @@ function MilestoneCard({
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  // const AccordionHeader = presets.AccordionPresets.components.Header;
+  const AccordionHeader = presets.AccordionPresets.components.Header;
+  const showRules = usePlanRulesStore((s) => s.showRules);
   const muted = tokens.semantic.color.type.muted.value;
   const tasks = plan.tasks.filter((t) => t.milestoneId === milestone.id);
   const headingId = `milestone-${milestone.id}`;
@@ -117,23 +119,24 @@ function MilestoneCard({
           ariaLabel={`Tasks in ${milestone.title}`}
         />
 
-        {/* Hidden for now; we may bring it back. The milestone's rules still drive the story.
-        <Accordion disableGutters data-atlas-alignment="start">
-          <AccordionSummary aria-controls={`${headingId}-rules`} id={`${headingId}-rules-header`}>
-            <AccordionHeader
-              titleTextProps={{
-                text: "How Cowork Handles This",
-                variant: "body1",
-                component: "h4",
-              }}
-              subtitleText={`${milestone.rules.length} rules, plus the rules for every milestone`}
-            />
-          </AccordionSummary>
-          <AccordionDetails id={`${headingId}-rules`}>
-            <RuleTable rules={milestone.rules} ariaLabel={`Rules in ${milestone.title}`} />
-          </AccordionDetails>
-        </Accordion>
-        */}
+        {/* Hidden unless the Demo settings toggle is on. */}
+        {showRules ? (
+          <Accordion disableGutters data-atlas-alignment="start">
+            <AccordionSummary aria-controls={`${headingId}-rules`} id={`${headingId}-rules-header`}>
+              <AccordionHeader
+                titleTextProps={{
+                  text: "How Cowork Handles This",
+                  variant: "body1",
+                  component: "h4",
+                }}
+                subtitleText={`${milestone.rules.length} rules, plus the rules for every milestone`}
+              />
+            </AccordionSummary>
+            <AccordionDetails id={`${headingId}-rules`}>
+              <RuleTable rules={milestone.rules} ariaLabel={`Rules in ${milestone.title}`} />
+            </AccordionDetails>
+          </Accordion>
+        ) : null}
       </Stack>
     </Box>
   );

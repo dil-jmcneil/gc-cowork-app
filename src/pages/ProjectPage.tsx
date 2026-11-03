@@ -8,12 +8,14 @@ import { SourceInsightCard } from "@/components/projects/SourceInsightCard";
 import { PlanMilestones } from "@/components/projects/PlanMilestones";
 import { RuleTable } from "@/components/projects/RuleTable";
 import { TaskQuickView } from "@/components/tasks/TaskQuickView";
+import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useProjectStore } from "@/projects/projectStore";
 import { INSIGHTS } from "@/insights/insights";
 
 export default function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { tokens, presets } = useTheme();
+  const showRules = usePlanRulesStore((s) => s.showRules);
   const navigate = useNavigate();
   const project = useProjectStore((s) => s.projects.find((p) => p.id === projectId));
   const acceptPlan = useProjectStore((s) => s.acceptPlan);
@@ -106,13 +108,15 @@ export default function ProjectPage() {
           </Stack>
         </SectionCard>
 
-        <SectionCard title="Rules for Every Milestone">
-          <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-            Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits, it
-            stops and asks you.
-          </Typography>
-          <RuleTable rules={project.plan.rules} ariaLabel="Rules for every milestone" />
-        </SectionCard>
+        {showRules ? (
+          <SectionCard title="Rules for Every Milestone">
+            <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+              Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits,
+              it stops and asks you.
+            </Typography>
+            <RuleTable rules={project.plan.rules} ariaLabel="Rules for every milestone" />
+          </SectionCard>
+        ) : null}
       </Stack>
       <TaskQuickView
         taskRef={openTaskId ? { projectId: project.id, taskId: openTaskId } : null}
