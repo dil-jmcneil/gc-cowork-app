@@ -93,3 +93,15 @@ test("the chat list carries every signal", async () => {
   const list = chunks.find((c) => c.type === "signal-list");
   expect(list?.type === "signal-list" && list.items.map((i) => i.id)).toEqual(SIGNALS.map((i) => i.id));
 });
+
+test("a past signal either has a workstream or is closed with an outcome, never both or neither", () => {
+  for (const signal of PAST_SIGNALS) {
+    if (signal.pastWorkstream) {
+      expect(signal.status, signal.id).toBe("In progress");
+      expect(signal.outcome, signal.id).toBeUndefined();
+    } else {
+      expect(signal.status, signal.id).toBe("Closed");
+      expect(signal.outcome, signal.id).toBeTruthy();
+    }
+  }
+});

@@ -110,8 +110,8 @@ test("past workstreams' tasks are on the calendar as display-only events, mostly
 });
 
 test("an open past task that slipped its date asks for a nudge", () => {
-  const terms = deriveCalendarEvents([], new Date("2026-11-04T00:00:00Z")).find((e) => e.id === "ftc-terms")!;
-  expect(terms).toMatchObject({ kind: "reference", status: "Blocked", attention: "nudge", owner: "Jordan Lee" });
+  const vendor = deriveCalendarEvents([], new Date("2026-11-04T00:00:00Z")).find((e) => e.id === "climate-assurance")!;
+  expect(vendor).toMatchObject({ kind: "reference", status: "Blocked", attention: "nudge", owner: "Maya Chen" });
 });
 
 test("an external deadline whose change has a workstream needs no attention", () => {

@@ -300,7 +300,7 @@ export const PAST_SIGNALS: Signal[] = [
       { kind: "topic", label: "Climate disclosure" },
     ],
     issuedDate: "2026-10-14",
-    status: "In review",
+    status: "In progress",
     deadlines: [
       {
         label: "First Scope 1 and 2 report due",
@@ -312,7 +312,43 @@ export const PAST_SIGNALS: Signal[] = [
       "Acme's revenue is over the $1 billion threshold, and it sells in California",
       "The 2026 sustainability report has Scope 1 and 2 numbers, but no third-party assurance yet",
     ],
-    outcome: "In review with Maya Chen. Cowork will suggest a plan once the assurance vendor is chosen.",
+    pastWorkstream: {
+      name: "Climate disclosure readiness",
+      status: "Active",
+      startedOn: "2026-10-16",
+      statusSummary:
+        "2 of 4 tasks done. Acme is confirmed in scope and the facilities data is in; Maya's pick of an assurance vendor slipped past Nov 2, which holds up the Dec 4 Audit Committee briefing.",
+      tasks: [
+        {
+          id: "climate-scope",
+          description: "Confirm Acme is in scope for SB 253",
+          owner: "Sam Ortiz",
+          due: "2026-10-23",
+          status: "Done",
+        },
+        {
+          id: "climate-data",
+          description: "Collect fiscal 2026 Scope 1 and 2 data from facilities",
+          owner: "Raj Patel",
+          due: "2026-11-03",
+          status: "Done",
+        },
+        {
+          id: "climate-assurance",
+          description: "Choose a third-party assurance vendor",
+          owner: "Maya Chen",
+          due: "2026-11-02",
+          status: "In progress",
+        },
+        {
+          id: "climate-briefing",
+          description: "Brief the Audit Committee on the reporting timeline",
+          owner: "Alex Kim",
+          due: "2026-12-04",
+          status: "Not started",
+        },
+      ],
+    },
   },
   {
     id: "ftc-subscription-enforcement",
@@ -326,55 +362,10 @@ export const PAST_SIGNALS: Signal[] = [
       { kind: "topic", label: "Subscription cancellation" },
     ],
     issuedDate: "2026-10-06",
-    status: "In progress",
-    deadlines: [
-      {
-        label: "Online cancellation in place",
-        date: "2026-11-30",
-        description: "Acme's own target, set from the order's terms.",
-      },
-    ],
-    reasonsRelevant: [
-      "Acme sells software on auto-renewing plans",
-      "Customer terms §7 still describes a phone-only cancellation path",
-    ],
-    pastWorkstream: {
-      name: "Online cancellation update",
-      status: "Active",
-      startedOn: "2026-10-08",
-      statusSummary:
-        "2 of 4 tasks done. Jordan's update to customer terms §7 slipped past Nov 2 and needs a nudge; Chris ships the online flow Nov 19, ahead of the Nov 30 target.",
-      tasks: [
-        {
-          id: "ftc-gap",
-          description: "Compare our cancellation terms with the FTC order",
-          owner: "Sam Ortiz",
-          due: "2026-10-20",
-          status: "Done",
-        },
-        {
-          id: "ftc-brief",
-          description: "Brief Customer Success on the new cancellation flow",
-          owner: "Priya Natarajan",
-          due: "2026-11-03",
-          status: "Done",
-        },
-        {
-          id: "ftc-terms",
-          description: "Update customer terms §7 for online cancellation",
-          owner: "Jordan Lee",
-          due: "2026-11-02",
-          status: "In progress",
-        },
-        {
-          id: "ftc-flow",
-          description: "Ship the online cancellation flow",
-          owner: "Chris Okafor",
-          due: "2026-11-19",
-          status: "In progress",
-        },
-      ],
-    },
+    status: "Closed",
+    deadlines: [],
+    reasonsRelevant: ["Acme sells some software on auto-renewing plans, but customers can already cancel online"],
+    outcome: "No action taken. Acme's customers already cancel online, so this one was lower priority.",
   },
   {
     id: "sec-cyber-guidance",
