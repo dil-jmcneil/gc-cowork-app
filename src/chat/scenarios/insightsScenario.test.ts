@@ -2,7 +2,8 @@ import type { ChatStreamChunk } from "@/chat/chatTypes";
 import { isInsightsPrompt, streamInsights } from "@/chat/scenarios/insightsScenario";
 import { DUE_SOON_PROMPT, RESEARCH_REGULATION_PROMPT, SHOW_INSIGHTS_PROMPT } from "@/home/quickActionPrompts";
 import { insightType } from "@/insights/insight";
-import { ATG_RULING, INSIGHTS } from "@/insights/insights";
+import { ATTENTION_ITEMS } from "@/home/attentionItems";
+import { ATG_RULING, INSIGHTS, PAST_INSIGHTS } from "@/insights/insights";
 
 test("matches quick action and free-text asks", () => {
   for (const text of [
@@ -28,8 +29,8 @@ test("does not match other quick actions", () => {
   }
 });
 
-test("the court ruling is the one insight, tagged as a Delaware court ruling", () => {
-  expect(INSIGHTS).toEqual([ATG_RULING]);
+test("the court ruling leads the insights, tagged as a Delaware court ruling", () => {
+  expect(INSIGHTS[0]).toBe(ATG_RULING);
   expect(insightType(ATG_RULING)).toBe("Court ruling");
   expect(ATG_RULING.tags).toContainEqual({ kind: "jurisdiction", label: "Delaware" });
   expect(ATG_RULING.tags.filter((t) => t.kind === "type")).toHaveLength(1);
@@ -69,4 +70,26 @@ test("streams reasoning, then resolving tools, then intro, then the list", async
   const last = collected[collected.length - 1];
   expect(last.type).toBe("insight-list");
   expect(last.type === "insight-list" && last.items).toBe(INSIGHTS);
+});
+
+test("there are five past insights of mixed types, two with past workstreams, all older than the ruling", () => {
+  expect(PAST_INSIGHTS).toHaveLength(5);
+  expect(new Set(PAST_INSIGHTS.map(insightType)).size).toBeGreaterThanOrEqual(3);
+  expect(PAST_INSIGHTS.filter((i) => i.pastWorkstream)).toHaveLength(2);
+  for (const insight of PAST_INSIGHTS) {
+    expect(insight.issuedDate < "2026-11-03", insight.id).toBe(true);
+    expect(insight.status, insight.id).not.toBe("New");
+  }
+});
+
+test("past insights stay out of the attention pane, which is for new items", () => {
+  const ids = new Set(ATTENTION_ITEMS.map((i) => i.id));
+  for (const insight of PAST_INSIGHTS) expect(ids.has(insight.id), insight.id).toBe(false);
+});
+
+test("the chat list carries every insight", async () => {
+  const chunks: ChatStreamChunk[] = [];
+  for await (const chunk of streamInsights(new AbortController().signal, 0)) chunks.push(chunk);
+  const list = chunks.find((c) => c.type === "insight-list");
+  expect(list?.type === "insight-list" && list.items.map((i) => i.id)).toEqual(INSIGHTS.map((i) => i.id));
 });

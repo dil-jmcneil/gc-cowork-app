@@ -1,3 +1,4 @@
+import { hasPlan } from "@/insights/insight";
 import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
 import { ATG_RULING, INSIGHTS } from "@/insights/insights";
 
@@ -53,7 +54,7 @@ test("every task is due before the nomination window opens", () => {
 });
 
 test("draft tasks aren't copies of the change's external deadlines", () => {
-  for (const change of INSIGHTS) {
+  for (const change of INSIGHTS.filter(hasPlan)) {
     const labels = new Set(change.deadlines.map((d) => d.label));
     for (const task of draftWorkstreamFromInsight(change).plan.tasks) {
       expect(labels.has(task.description), task.description).toBe(false);

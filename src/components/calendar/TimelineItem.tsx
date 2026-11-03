@@ -36,6 +36,8 @@ export function TimelineItem({
 }) {
   const { tokens } = useTheme();
   const tense = dateTense(event.date, todayIso);
+  /** A past workstream's task has no dialog to open. */
+  const openable = event.kind !== "reference";
   const settled = tense === "past" && event.status === "Complete";
   const titleColor = settled ? tokens.semantic.color.type.disabled.value : tokens.semantic.color.type.default.value;
   const bodyColor = settled ? tokens.semantic.color.type.disabled.value : tokens.semantic.color.type.muted.value;
@@ -54,9 +56,9 @@ export function TimelineItem({
     >
       <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
         <Stack
-          component="button"
-          type="button"
-          onClick={() => onOpen(event)}
+          {...(openable
+            ? { component: "button" as const, type: "button" as const, onClick: () => onOpen(event) }
+            : { tabIndex: 0 })}
           direction="row"
           alignItems="center"
           gap={SPACE.block}
@@ -68,7 +70,7 @@ export function TimelineItem({
             bgcolor: "transparent",
             font: "inherit",
             textAlign: "left",
-            cursor: "pointer",
+            cursor: openable ? "pointer" : "default",
             color: "inherit",
             outlineOffset: 2,
           }}

@@ -1,4 +1,4 @@
-import type { Insight } from "@/insights/insight";
+import type { PlannedInsight } from "@/insights/insight";
 import { LOGGED_IN_USER } from "@/user";
 
 import { findPerson, ownerShortName } from "./people";
@@ -14,7 +14,7 @@ function defaultCcs(ownerEmail: string) {
 }
 
 /** Mocked "AI" draft: name, description, and the insight's plan, with one task per template. */
-export function draftWorkstreamFromInsight(insight: Insight): WorkstreamDraft {
+export function draftWorkstreamFromInsight(insight: PlannedInsight): WorkstreamDraft {
   const { approach, milestones, rules } = insight.plan;
 
   const tasks: WorkstreamTask[] = milestones.flatMap((milestone) =>

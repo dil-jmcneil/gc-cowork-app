@@ -24,6 +24,7 @@ import type { WorkstreamDraft } from "@/workstreams/workstream";
 import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
+import { hasPlan } from "@/insights/insight";
 import { INSIGHTS } from "@/insights/insights";
 import { SPACE } from "@/lib/layout";
 
@@ -34,10 +35,10 @@ export default function CreateWorkstreamPage() {
     insight ? s.workstreams.find((p) => p.sourceInsightId === insight.id) : undefined,
   );
 
-  if (!insight) {
+  if (!insight || !hasPlan(insight)) {
     return (
       <Stack gap={SPACE.item} sx={{ p: SPACE.section }} alignItems="flex-start">
-        <Typography variant="body1">We couldn't find that insight.</Typography>
+        <Typography variant="body1">We couldn't find a plan for that insight.</Typography>
         <Link component={RouterLink} to="/">
           Go to home
         </Link>

@@ -22,7 +22,14 @@ import { startChatFromPrompt } from "@/chat/startChat";
 import { formatDate } from "@/lib/dates";
 import { InsightTags } from "@/components/insights/InsightTags";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
+import {
+  ISSUED_LABEL,
+  RELEVANCE_LABEL,
+  SOURCE_LINK_LABEL,
+  insightType,
+  pastWorkstreamProgress,
+  type Insight,
+} from "@/insights/insight";
 import { workstreamActionForInsight } from "@/insights/insightActions";
 import { STATUS_COLOR } from "@/insights/insightStatus";
 import { DETAIL_DIALOG_PAPER, SPACE } from "@/lib/layout";
@@ -40,7 +47,7 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
   if (!insight) return null;
-  const action = workstreamActionForInsight(insight.id, workstream);
+  const action = workstreamActionForInsight(insight, workstream);
   const type = insightType(insight);
 
   return (
@@ -149,26 +156,28 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
             </Stack>
 
             <Stack gap={SPACE.block}>
-              <Stack gap={SPACE.item}>
-                <SectionLabel>Key Deadlines</SectionLabel>
+              {insight.deadlines.length ? (
                 <Stack gap={SPACE.item}>
-                  {insight.deadlines.map((deadline) => (
-                    <Stack key={deadline.label} gap={SPACE.pair}>
-                      <Typography variant="body1" sx={{ fontWeight: emphasis }}>
-                        {deadline.label}
-                      </Typography>
-                      {deadline.description ? (
-                        <Typography variant="textMd" sx={{ color: muted }}>
-                          {deadline.description}
+                  <SectionLabel>Key Deadlines</SectionLabel>
+                  <Stack gap={SPACE.item}>
+                    {insight.deadlines.map((deadline) => (
+                      <Stack key={deadline.label} gap={SPACE.pair}>
+                        <Typography variant="body1" sx={{ fontWeight: emphasis }}>
+                          {deadline.label}
                         </Typography>
-                      ) : null}
-                      <Typography variant="textMd" sx={{ color: muted }}>
-                        {formatDate(deadline.date)}
-                      </Typography>
-                    </Stack>
-                  ))}
+                        {deadline.description ? (
+                          <Typography variant="textMd" sx={{ color: muted }}>
+                            {deadline.description}
+                          </Typography>
+                        ) : null}
+                        <Typography variant="textMd" sx={{ color: muted }}>
+                          {formatDate(deadline.date)}
+                        </Typography>
+                      </Stack>
+                    ))}
+                  </Stack>
                 </Stack>
-              </Stack>
+              ) : null}
 
               <Stack gap={SPACE.item}>
                 <Stack direction="row" alignItems="center" gap={SPACE.item}>
@@ -181,11 +190,21 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
                       {workstream.name}
                     </Typography>
                   </Link>
+                ) : insight.pastWorkstream ? (
+                  <Stack gap={SPACE.pair}>
+                    <Typography variant="body1" sx={{ fontWeight: emphasis }}>
+                      {insight.pastWorkstream.name}
+                    </Typography>
+                    <Typography variant="textMd" sx={{ color: muted }}>
+                      {insight.pastWorkstream.status} · {pastWorkstreamProgress(insight.pastWorkstream)}
+                    </Typography>
+                  </Stack>
                 ) : (
                   <Typography variant="body1" sx={{ color: muted }}>
-                    No workstream yet.
+                    {insight.outcome ? "None." : "No workstream yet."}
                   </Typography>
                 )}
+                {insight.outcome ? <Typography variant="body1">{insight.outcome}</Typography> : null}
               </Stack>
             </Stack>
           </Box>
@@ -202,15 +221,17 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
         >
           See in chat
         </Button>
-        <Button
-          variant="contained"
-          onClick={() => {
-            onClose();
-            navigate(action.href);
-          }}
-        >
-          {action.kind === "create" ? "Create workstream" : "View workstream"}
-        </Button>
+        {action.kind === "none" ? null : (
+          <Button
+            variant="contained"
+            onClick={() => {
+              onClose();
+              navigate(action.href);
+            }}
+          >
+            {action.kind === "create" ? "Create workstream" : "View workstream"}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

@@ -97,10 +97,10 @@ export function ComplianceCalendar({
     setToast(event.owner ? `Nudge sent to ${event.owner}.` : "Nudge sent.");
   };
 
-  /** Tasks open the task quick view; external deadlines open their insight. */
+  /** Tasks open the task quick view; external deadlines open their insight; past workstreams' tasks open nothing. */
   const handleOpen = (event: CalendarEvent) => {
     if (event.kind === "task") setOpenTask({ workstreamId: event.workstreamId, taskId: event.taskId });
-    else setOpenInsightId(event.insightId);
+    else if (event.kind === "external") setOpenInsightId(event.insightId);
   };
 
   return (

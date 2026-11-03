@@ -1,7 +1,7 @@
 import { deriveCalendarEvents } from "@/calendar/complianceEvents";
 import type { Workstream } from "@/workstreams/workstream";
 import { DIRECTORY } from "@/workstreams/people";
-import { ATG_RULING, INSIGHTS } from "@/insights/insights";
+import { ATG_RULING, INSIGHTS, PAST_INSIGHTS } from "@/insights/insights";
 
 const NOW = new Date("2026-11-01T00:00:00Z");
 const owner = (name: string) => DIRECTORY.find((p) => p.label === name)!;
@@ -87,9 +87,31 @@ test("a change with no workstream yet has no tasks on the calendar, only its ext
   expect(ruling.every((e) => e.kind === "external")).toBe(true);
 });
 
-test("an external deadline whose change has no workstream is awaiting your response", () => {
-  const event = deriveCalendarEvents([], NOW).find((e) => e.kind === "external")!;
+test("an external deadline whose insight has no workstream is awaiting your response", () => {
+  const event = deriveCalendarEvents([], NOW).find((e) => e.kind === "external" && e.insightId === ATG_RULING.id)!;
   expect(event.attention).toBe("awaiting-response");
+});
+
+test("a past insight's deadline needs no response, because it was already handled", () => {
+  for (const insight of PAST_INSIGHTS) {
+    for (const event of deriveCalendarEvents([], NOW).filter((e) => e.kind === "external" && e.insightId === insight.id)) {
+      expect(event.attention, insight.id).toBeUndefined();
+    }
+  }
+});
+
+test("past workstreams' tasks are on the calendar as display-only events, mostly done", () => {
+  const reference = deriveCalendarEvents([], NOW).filter((e) => e.kind === "reference");
+  const pastTasks = PAST_INSIGHTS.flatMap((i) => i.pastWorkstream?.tasks ?? []);
+  expect(reference).toHaveLength(pastTasks.length);
+  expect(reference.every((e) => !("href" in e) || e.href === undefined)).toBe(true);
+  const done = reference.filter((e) => e.status === "Complete").length;
+  expect(done * 2).toBeGreaterThan(reference.length);
+});
+
+test("an open past task that slipped its date asks for a nudge", () => {
+  const terms = deriveCalendarEvents([], new Date("2026-11-04T00:00:00Z")).find((e) => e.id === "ftc-terms")!;
+  expect(terms).toMatchObject({ kind: "reference", status: "Blocked", attention: "nudge", owner: "Jordan Lee" });
 });
 
 test("an external deadline whose change has a workstream needs no attention", () => {

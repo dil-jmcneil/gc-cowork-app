@@ -1,6 +1,6 @@
-import type { Milestone, PlanRule } from "@/workstreams/workstream";
+import type { Milestone, PlanRule, TaskStatus } from "@/workstreams/workstream";
 
-export type InsightStatus = "New" | "In review" | "Closed";
+export type InsightStatus = "New" | "In review" | "In progress" | "Closed";
 
 /** The kinds of insight Cowork can surface. Each insight carries exactly one as its "type" tag. */
 export type InsightType = "Court ruling" | "Regulatory change" | "Enforcement action" | "Peer filing";
@@ -35,6 +35,28 @@ export type PlanTemplate = {
   rules: PlanRule[];
 };
 
+/**
+ * A workstream from before this prototype's story begins. The prototype only
+ * shows its name, progress and tasks (on the calendar); it has no pages.
+ */
+export type PastWorkstream = {
+  name: string;
+  status: "Active" | "Closed";
+  /** ISO date, yyyy-mm-dd. */
+  startedOn: string;
+  tasks: PastWorkstreamTask[];
+};
+
+export type PastWorkstreamTask = {
+  id: string;
+  description: string;
+  /** Owner's display name. */
+  owner: string;
+  /** ISO date, yyyy-mm-dd. */
+  due: string;
+  status: TaskStatus;
+};
+
 /** Something Cowork noticed that the GC may need to act on. Extends the OOUX regulatory change object. */
 export type Insight = {
   id: string;
@@ -56,8 +78,25 @@ export type Insight = {
   deadlines: InsightDeadline[];
   /** What it means for the company. */
   reasonsRelevant: string[];
-  plan: PlanTemplate;
+  /** The plan Cowork proposes. Past insights that were handled another way have none. */
+  plan?: PlanTemplate;
+  /** A workstream started before the prototype's story, shown read-only. */
+  pastWorkstream?: PastWorkstream;
+  /** How an insight was handled without a workstream, e.g. "Reviewed Aug 20. No change needed." */
+  outcome?: string;
 };
+
+export type PlannedInsight = Insight & { plan: PlanTemplate };
+
+export function hasPlan(insight: Insight): insight is PlannedInsight {
+  return insight.plan !== undefined;
+}
+
+/** Done tasks over all tasks, e.g. "3 of 4 tasks done". */
+export function pastWorkstreamProgress(workstream: PastWorkstream): string {
+  const done = workstream.tasks.filter((t) => t.status === "Done").length;
+  return `${done} of ${workstream.tasks.length} tasks done`;
+}
 
 export function insightType(insight: Pick<Insight, "tags">): InsightType {
   const tag = insight.tags.find((t) => t.kind === "type");

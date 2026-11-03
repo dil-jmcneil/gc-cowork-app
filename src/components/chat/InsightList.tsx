@@ -8,7 +8,16 @@ import { formatDate } from "@/lib/dates";
 import type { Workstream } from "@/workstreams/workstream";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { InsightTags } from "@/components/insights/InsightTags";
-import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
+import {
+  ISSUED_LABEL,
+  RELEVANCE_LABEL,
+  SOURCE_LINK_LABEL,
+  insightType,
+  type Insight,
+  hasPlan,
+  pastWorkstreamProgress,
+  type PastWorkstream,
+} from "@/insights/insight";
 import { STATUS_COLOR } from "@/insights/insightStatus";
 import { SPACE } from "@/lib/layout";
 
@@ -71,13 +80,15 @@ function InsightCard({ insight }: { insight: Insight }) {
             rowGap: SPACE.item,
           }}
         >
-          <Detail label={insight.deadlines.length === 1 ? "Deadline" : "Deadlines"}>
-            {insight.deadlines.map((deadline) => (
-              <Typography key={deadline.label} variant="body1">
-                {deadline.label} · {formatDate(deadline.date)}
-              </Typography>
-            ))}
-          </Detail>
+          {insight.deadlines.length ? (
+            <Detail label={insight.deadlines.length === 1 ? "Deadline" : "Deadlines"}>
+              {insight.deadlines.map((deadline) => (
+                <Typography key={deadline.label} variant="body1">
+                  {deadline.label} · {formatDate(deadline.date)}
+                </Typography>
+              ))}
+            </Detail>
+          ) : null}
           <Detail label={RELEVANCE_LABEL[insightType(insight)]}>
             {insight.reasonsRelevant.map((reason) => (
               <Typography key={reason} variant="body1">
@@ -88,7 +99,17 @@ function InsightCard({ insight }: { insight: Insight }) {
         </Box>
 
         <Divider />
-        {workstream ? <WorkstreamSummary workstream={workstream} /> : <NoWorkstream insightId={insight.id} />}
+        {workstream ? (
+          <WorkstreamSummary workstream={workstream} />
+        ) : insight.pastWorkstream ? (
+          <PastWorkstreamSummary workstream={insight.pastWorkstream} />
+        ) : insight.outcome ? (
+          <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value }}>
+            {insight.outcome}
+          </Typography>
+        ) : hasPlan(insight) ? (
+          <NoWorkstream insightId={insight.id} />
+        ) : null}
       </Stack>
     </Card>
   );
@@ -120,6 +141,24 @@ function WorkstreamSummary({ workstream }: { workstream: Workstream }) {
       >
         Open workstream
       </Button>
+    </Stack>
+  );
+}
+
+/** A workstream from before the prototype's story: its name and progress, with no page to open. */
+function PastWorkstreamSummary({ workstream }: { workstream: PastWorkstream }) {
+  const { tokens } = useTheme();
+  return (
+    <Stack gap={SPACE.pair}>
+      <Stack direction="row" alignItems="center" gap={SPACE.item}>
+        <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
+        <Typography variant="body1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          {workstream.name}
+        </Typography>
+      </Stack>
+      <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+        {workstream.status} · {pastWorkstreamProgress(workstream)}
+      </Typography>
     </Stack>
   );
 }

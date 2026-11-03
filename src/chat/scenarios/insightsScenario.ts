@@ -70,7 +70,7 @@ export async function* streamInsights(signal: AbortSignal, charDelayMs = 6): Asy
   }
 
   yield* streamText(
-    "Here's what's new for you. One insight needs action before your nomination window opens.",
+    "Here are your recent insights, newest first. The Delaware ruling needs action before your nomination window opens.",
     signal,
     charDelayMs,
   );

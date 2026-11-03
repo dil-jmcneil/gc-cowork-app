@@ -281,4 +281,189 @@ export const ATG_RULING: Insight = {
   },
 };
 
-export const INSIGHTS: Insight[] = [ATG_RULING];
+/**
+ * Insights from before the ATG ruling. They don't appear in the attention
+ * pane, which is for new items, but chat lists them under recent insights.
+ * Two led to workstreams that predate the prototype's story: their tasks show
+ * on the calendar, but the workstreams have no pages. Illustrative mock data.
+ */
+export const PAST_INSIGHTS: Insight[] = [
+  {
+    id: "california-climate-disclosure",
+    title: "California sets dates for climate disclosure reports",
+    summary:
+      "The California Air Resources Board set the first reporting dates under SB 253. Companies with more than $1 billion in revenue doing business in California report Scope 1 and 2 emissions first.",
+    source: "California Air Resources Board",
+    tags: [
+      { kind: "type", label: "Regulatory change" },
+      { kind: "jurisdiction", label: "California" },
+      { kind: "topic", label: "Climate disclosure" },
+    ],
+    issuedDate: "2026-10-14",
+    status: "In review",
+    deadlines: [
+      {
+        label: "First Scope 1 and 2 report due",
+        date: "2027-06-30",
+        description: "Covers fiscal 2026 emissions.",
+      },
+    ],
+    reasonsRelevant: [
+      "Acme's revenue is over the $1 billion threshold, and it sells in California",
+      "The 2026 sustainability report has Scope 1 and 2 numbers, but no third-party assurance yet",
+    ],
+    outcome: "In review with Maya Chen. Cowork will suggest a plan once the assurance vendor is chosen.",
+  },
+  {
+    id: "ftc-subscription-enforcement",
+    title: "FTC settles with a subscription seller over hard-to-cancel plans",
+    summary:
+      "The FTC settled with a software company whose customers could only cancel by phone. The order requires online cancellation as easy as sign-up, and consent before each renewal charge.",
+    source: "Federal Trade Commission",
+    tags: [
+      { kind: "type", label: "Enforcement action" },
+      { kind: "jurisdiction", label: "United States" },
+      { kind: "topic", label: "Subscription cancellation" },
+    ],
+    issuedDate: "2026-10-06",
+    status: "In progress",
+    deadlines: [
+      {
+        label: "Online cancellation in place",
+        date: "2026-11-30",
+        description: "Acme's own target, set from the order's terms.",
+      },
+    ],
+    reasonsRelevant: [
+      "Acme sells software on auto-renewing plans",
+      "Customer terms §7 still describes a phone-only cancellation path",
+    ],
+    pastWorkstream: {
+      name: "Online cancellation update",
+      status: "Active",
+      startedOn: "2026-10-08",
+      tasks: [
+        {
+          id: "ftc-gap",
+          description: "Compare our cancellation terms with the FTC order",
+          owner: "Sam Ortiz",
+          due: "2026-10-20",
+          status: "Done",
+        },
+        {
+          id: "ftc-brief",
+          description: "Brief Customer Success on the new cancellation flow",
+          owner: "Priya Natarajan",
+          due: "2026-11-03",
+          status: "Done",
+        },
+        {
+          id: "ftc-terms",
+          description: "Update customer terms §7 for online cancellation",
+          owner: "Jordan Lee",
+          due: "2026-11-02",
+          status: "In progress",
+        },
+        {
+          id: "ftc-flow",
+          description: "Ship the online cancellation flow",
+          owner: "Chris Okafor",
+          due: "2026-11-19",
+          status: "In progress",
+        },
+      ],
+    },
+  },
+  {
+    id: "sec-cyber-guidance",
+    title: "SEC staff guidance on reporting a material cyber-attack",
+    summary:
+      "SEC staff clarified when a cyber-attack must be reported on Form 8-K under Item 1.05: within four business days after the company decides it's material, not after the investigation ends.",
+    source: "Securities and Exchange Commission",
+    tags: [
+      { kind: "type", label: "Regulatory change" },
+      { kind: "jurisdiction", label: "United States" },
+      { kind: "topic", label: "Cyber incident disclosure" },
+    ],
+    issuedDate: "2026-09-21",
+    status: "In progress",
+    deadlines: [],
+    reasonsRelevant: [
+      "Incident Response Plan §4.2 said five business days, not four",
+      "Nobody was named to sign an 8-K cyber filing",
+    ],
+    pastWorkstream: {
+      name: "Cyber 8-K readiness",
+      status: "Active",
+      startedOn: "2026-09-24",
+      tasks: [
+        {
+          id: "cyber-irp",
+          description: "Update Incident Response Plan §4.2 to four business days",
+          owner: "Pete Lin",
+          due: "2026-10-16",
+          status: "Done",
+        },
+        {
+          id: "cyber-signoff",
+          description: "Confirm who signs an 8-K cyber filing",
+          owner: "Raj Patel",
+          due: "2026-10-23",
+          status: "Done",
+        },
+        {
+          id: "cyber-tabletop",
+          description: "Run a tabletop exercise on the materiality decision",
+          owner: "Maya Chen",
+          due: "2026-11-02",
+          status: "Done",
+        },
+        {
+          id: "cyber-preread",
+          description: "Add the updated plan to the Audit Committee pre-read",
+          owner: "Alex Kim",
+          due: "2026-11-12",
+          status: "Not started",
+        },
+      ],
+    },
+  },
+  {
+    id: "delaware-officer-exculpation",
+    title: "Delaware ruling on exculpating officers",
+    summary:
+      "The Court of Chancery held that a charter amendment exculpating officers covers only claims for breach of the duty of care, not loyalty claims or claims brought by the company itself.",
+    source: "Delaware Court of Chancery",
+    tags: [
+      { kind: "type", label: "Court ruling" },
+      { kind: "jurisdiction", label: "Delaware" },
+      { kind: "topic", label: "Officer exculpation" },
+    ],
+    issuedDate: "2026-08-12",
+    status: "Closed",
+    deadlines: [],
+    reasonsRelevant: ["Acme amended its charter in 2024 to exculpate officers"],
+    outcome:
+      "Reviewed with outside counsel on Aug 20. Acme's charter already matches the ruling, so no change is needed.",
+  },
+  {
+    id: "peer-clawback-policies",
+    title: "Three peers expand their clawback policies",
+    summary:
+      "Three companies in Acme's proxy peer group expanded their clawback policies beyond the SEC's Rule 10D-1 minimum, to cover misconduct as well as restatements.",
+    source: "Peer proxy filings",
+    tags: [
+      { kind: "type", label: "Peer filing" },
+      { kind: "topic", label: "Executive compensation" },
+    ],
+    issuedDate: "2026-07-28",
+    status: "Closed",
+    deadlines: [],
+    reasonsRelevant: ["Acme's clawback policy covers restatements only, the Rule 10D-1 minimum"],
+    outcome:
+      "Shared with the Compensation Committee on Aug 5. The committee will revisit it in its 2027 policy review.",
+  },
+];
+
+/** Every insight, in the order Cowork surfaced them, newest first. */
+export const INSIGHTS: Insight[] = [ATG_RULING, ...PAST_INSIGHTS];

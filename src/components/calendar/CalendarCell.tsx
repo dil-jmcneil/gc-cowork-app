@@ -119,12 +119,14 @@ function CalendarEventChip({
 }) {
   const { tokens } = useTheme();
   const { color } = tokens.semantic;
+  /** A past workstream's task has no dialog to open. */
+  const openable = event.kind !== "reference";
   return (
     <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
       <Stack
-        component="button"
-        type="button"
-        onClick={() => onOpen(event)}
+        {...(openable
+          ? { component: "button" as const, type: "button" as const, onClick: () => onOpen(event) }
+          : { tabIndex: 0 })}
         direction="row"
         alignItems="flex-start"
         gap={SPACE.item}
@@ -133,7 +135,7 @@ function CalendarEventChip({
           border: "none",
           font: "inherit",
           textAlign: "left",
-          cursor: "pointer",
+          cursor: openable ? "pointer" : "default",
           px: SPACE.item,
           py: SPACE.item,
           borderRadius: tokens.semantic.radius.md.value,

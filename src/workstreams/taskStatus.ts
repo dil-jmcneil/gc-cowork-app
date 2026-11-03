@@ -13,12 +13,12 @@ export function formatShortDate(iso: string): string {
   return SHORT_DATE.format(new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso));
 }
 
-export function isTaskOverdue(task: WorkstreamTask, now: Date): boolean {
+export function isTaskOverdue(task: Pick<WorkstreamTask, "status" | "deadline">, now: Date): boolean {
   return task.status !== "Done" && new Date(`${task.deadline}T00:00:00Z`) < now;
 }
 
 /** What a task needs from the GC right now, if anything. */
-export function taskAttention(task: WorkstreamTask, now: Date): TaskAttention | undefined {
+export function taskAttention(task: Pick<WorkstreamTask, "status" | "deadline">, now: Date): TaskAttention | undefined {
   if (task.status === "Done") return undefined;
   if (isTaskOverdue(task, now)) return "overdue";
   if (task.status === "In progress") return "new-status";
