@@ -1,4 +1,4 @@
-import type { PlannedInsight } from "@/insights/insight";
+import type { PlannedSignal } from "@/signals/signal";
 import { LOGGED_IN_USER } from "@/user";
 
 import { findPerson, ownerShortName } from "./people";
@@ -13,13 +13,13 @@ function defaultCcs(ownerEmail: string) {
   return [findPerson(ownerEmail === ASSOCIATE_GC ? CORPORATE_SECRETARY : ASSOCIATE_GC)];
 }
 
-/** Mocked "AI" draft: name, description, and the insight's plan, with one task per template. */
-export function draftWorkstreamFromInsight(insight: PlannedInsight): WorkstreamDraft {
-  const { approach, milestones, rules } = insight.plan;
+/** Mocked "AI" draft: name, description, and the signal's plan, with one task per template. */
+export function draftWorkstreamFromSignal(signal: PlannedSignal): WorkstreamDraft {
+  const { approach, milestones, rules } = signal.plan;
 
   const tasks: WorkstreamTask[] = milestones.flatMap((milestone) =>
     milestone.tasks.map((template) => ({
-      id: `${insight.id}-${template.id}`,
+      id: `${signal.id}-${template.id}`,
       milestoneId: milestone.id,
       description: template.description,
       delegator: LOGGED_IN_USER.firstName,
@@ -32,10 +32,10 @@ export function draftWorkstreamFromInsight(insight: PlannedInsight): WorkstreamD
   );
 
   return {
-    name: insight.title,
-    sourceInsightId: insight.id,
-    description: insight.summary,
-    reasonsRelevant: [...insight.reasonsRelevant],
+    name: signal.title,
+    sourceSignalId: signal.id,
+    description: signal.summary,
+    reasonsRelevant: [...signal.reasonsRelevant],
     plan: {
       proposedApproach: approach,
       status: "draft",

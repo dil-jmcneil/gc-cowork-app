@@ -17,7 +17,7 @@ export const SPACE = {
 } as const;
 
 /**
- * Atlas pins dialog paper to 440px. Detail dialogs (an insight, a task) hold
+ * Atlas pins dialog paper to 440px. Detail dialogs (a signal, a task) hold
  * a lot of 14px text, so they open wider to avoid long scrolls.
  */
 export const DETAIL_DIALOG_PAPER = { sx: { width: "100%", maxWidth: 880 } } as const;

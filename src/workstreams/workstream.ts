@@ -73,7 +73,7 @@ export type WorkstreamPlan = {
 
 export type WorkstreamDraft = {
   name: string;
-  sourceInsightId: string;
+  sourceSignalId: string;
   description: string;
   reasonsRelevant: string[];
   plan: WorkstreamPlan;

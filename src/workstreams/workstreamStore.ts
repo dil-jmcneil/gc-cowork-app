@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { INSIGHTS } from "@/insights/insights";
+import { SIGNALS } from "@/signals/signals";
 
 import { isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
 import type { TaskOwner } from "./people";
@@ -28,7 +28,7 @@ type WorkstreamStoreState = {
   workstreams: Workstream[];
   createWorkstream: (draft: WorkstreamDraft) => Workstream;
   getWorkstream: (id: string) => Workstream | undefined;
-  getWorkstreamForInsight: (insightId: string) => Workstream | undefined;
+  getWorkstreamForSignal: (signalId: string) => Workstream | undefined;
   getTask: (workstreamId: string, taskId: string) => WorkstreamTask | undefined;
   acceptPlan: (id: string) => void;
   assignTask: (workstreamId: string, taskId: string, owner: TaskOwner) => void;
@@ -63,7 +63,7 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
     workstreams: [...SEED_WORKSTREAMS],
 
     createWorkstream: (draft) => {
-      const fallbackName = INSIGHTS.find((c) => c.id === draft.sourceInsightId)?.title ?? "Untitled workstream";
+      const fallbackName = SIGNALS.find((c) => c.id === draft.sourceSignalId)?.title ?? "Untitled workstream";
       const createdAt = nowIso();
       const base: Workstream = {
         ...draft,
@@ -86,7 +86,7 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
 
     getWorkstream: (id) => get().workstreams.find((p) => p.id === id),
 
-    getWorkstreamForInsight: (insightId) => get().workstreams.find((p) => p.sourceInsightId === insightId),
+    getWorkstreamForSignal: (signalId) => get().workstreams.find((p) => p.sourceSignalId === signalId),
 
     getTask: (workstreamId, taskId) =>
       get()

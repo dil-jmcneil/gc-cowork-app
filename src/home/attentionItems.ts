@@ -1,5 +1,5 @@
-import { insightType } from "@/insights/insight";
-import { ATG_RULING } from "@/insights/insights";
+import { signalType } from "@/signals/signal";
+import { ATG_RULING } from "@/signals/signals";
 
 export type AttentionItem = {
   id: string;
@@ -18,7 +18,7 @@ export type AttentionItem = {
 export const ATTENTION_ITEMS: AttentionItem[] = [
   {
     id: ATG_RULING.id,
-    source: insightType(ATG_RULING),
+    source: signalType(ATG_RULING),
     receivedAt: "Today 6:40 am",
     badge: "New",
     title: ATG_RULING.title,

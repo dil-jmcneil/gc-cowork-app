@@ -113,9 +113,13 @@ Assume that you're working on an enterprise B2B app unless otherwise specified.
 
 The org name and logo you can set on the `AppLayout` component in `App.tsx` should represent the customer.
 
-### Insights, not regulatory changes
+### Signals, not insights or regulatory changes
 
-Anything Cowork surfaces for the GC is an **insight** (`src/insights`). Its kind is a metadata tag, not a separate object: each insight has exactly one `type` tag ("Court ruling", "Regulatory change", "Enforcement action", "Peer filing") plus optional `jurisdiction` and `topic` tags. Don't call an insight a "regulatory change" in code or copy unless its type tag says so. The primary demo insight is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`).
+Anything Cowork surfaces for the GC is a **signal** (`src/signals`). Its kind is a metadata tag, not a separate object: each signal has exactly one `type` tag ("Court ruling", "Regulatory change", "Enforcement action", "Peer filing") plus optional `jurisdiction` and `topic` tags. Don't call a signal an "insight", or a "regulatory change" unless its type tag says so. Chat still understands "insights" when the user types it.
+
+Every signal lists why it matters to Acme under one label, **Relevance** (`RELEVANCE_LABEL`), whatever its type. Don't add per-type names like "Points for Counsel" or "Reasons Relevant".
+
+The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`). Past signals (`PAST_SIGNALS`) stay out of the attention pane; two have past workstreams that exist only as data, with tasks on the calendar and no pages.
 
 ### Workstreams and history
 

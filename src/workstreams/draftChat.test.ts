@@ -1,7 +1,7 @@
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import { useChatStore } from "@/chat/chatStore";
 import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
-import { ATG_RULING } from "@/insights/insights";
+import { ATG_RULING } from "@/signals/signals";
 
 beforeEach(() => {
   useChatStore.setState({ chats: [], activeChatId: null });

@@ -20,35 +20,36 @@ import { Link as RouterLink, useNavigate } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { formatDate } from "@/lib/dates";
-import { InsightTags } from "@/components/insights/InsightTags";
+import { SignalTags } from "@/components/signals/SignalTags";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import {
   ISSUED_LABEL,
   RELEVANCE_LABEL,
   SOURCE_LINK_LABEL,
-  insightType,
+  signalType,
   pastWorkstreamProgress,
-  type Insight,
-} from "@/insights/insight";
-import { workstreamActionForInsight } from "@/insights/insightActions";
-import { STATUS_COLOR } from "@/insights/insightStatus";
+  type Signal,
+} from "@/signals/signal";
+import { workstreamActionForSignal } from "@/signals/signalActions";
+import { STATUS_COLOR, currentStatus } from "@/signals/signalStatus";
 import { DETAIL_DIALOG_PAPER, SPACE } from "@/lib/layout";
 
 const SEE_IN_CHAT_PROMPT_PREFIX = "Tell me about";
 
-export function InsightDialog({ insight, onClose }: { insight: Insight | null; onClose: () => void }) {
+export function SignalDialog({ signal, onClose }: { signal: Signal | null; onClose: () => void }) {
   const { tokens, presets } = useTheme();
   const navigate = useNavigate();
   const workstream = useWorkstreamStore((s) =>
-    insight ? s.workstreams.find((p) => p.sourceInsightId === insight.id) : undefined,
+    signal ? s.workstreams.find((p) => p.sourceSignalId === signal.id) : undefined,
   );
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const muted = tokens.semantic.color.type.muted.value;
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
-  if (!insight) return null;
-  const action = workstreamActionForInsight(insight, workstream);
-  const type = insightType(insight);
+  if (!signal) return null;
+  const status = currentStatus(signal, Boolean(workstream));
+  const action = workstreamActionForSignal(signal, workstream);
+  const type = signalType(signal);
 
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth slotProps={{ paper: DETAIL_DIALOG_PAPER }}>
@@ -63,22 +64,22 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
               "&.MuiTypography-root": { ...theme.typography.h4, fontWeight: tokens.semantic.fontWeight.emphasis.value },
             })}
           >
-            {insight.title}
+            {signal.title}
           </Typography>
           <Typography variant="textMd" sx={{ color: muted }}>
-            {insight.source}
-            {insight.citation ? ` · ${insight.citation}` : ""}
+            {signal.source}
+            {signal.citation ? ` · ${signal.citation}` : ""}
           </Typography>
-          {insight.sourceUrl ? (
+          {signal.sourceUrl ? (
             <Link
-              href={insight.sourceUrl}
+              href={signal.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               underline="hover"
               sx={{ alignSelf: "flex-start" }}
             >
               <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
-                {SOURCE_LINK_LABEL[insightType(insight)]}
+                {SOURCE_LINK_LABEL[signalType(signal)]}
               </Typography>
             </Link>
           ) : null}
@@ -103,16 +104,16 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
             <Stack direction="row" alignItems="flex-start" gap={SPACE.item} sx={{ color: muted, minWidth: 0 }}>
               <CalendarIcon aria-hidden style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
               <Typography variant="body1" sx={{ color: "inherit" }}>
-                {ISSUED_LABEL[type]} {formatDate(insight.issuedDate)}
-                {insight.history ? `. ${insight.history}.` : ""}
+                {ISSUED_LABEL[type]} {formatDate(signal.issuedDate)}
+                {signal.history ? `. ${signal.history}.` : ""}
               </Typography>
             </Stack>
             <Box sx={{ flexShrink: 0 }}>
-              <StatusIndicator color={STATUS_COLOR[insight.status]} label={insight.status} />
+              <StatusIndicator color={STATUS_COLOR[status]} label={status} />
             </Box>
           </Stack>
 
-          <InsightTags tags={insight.tags} />
+          <SignalTags tags={signal.tags} />
 
           <Box
             sx={{
@@ -123,7 +124,7 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
           >
             <Stack gap={SPACE.pair}>
               <SectionLabel>Summary</SectionLabel>
-              <Typography variant="body1">{insight.summary}</Typography>
+              <Typography variant="body1">{signal.summary}</Typography>
             </Stack>
           </Box>
 
@@ -135,9 +136,9 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
             }}
           >
             <Stack gap={SPACE.item}>
-              <SectionLabel>{RELEVANCE_LABEL[type]}</SectionLabel>
+              <SectionLabel>{RELEVANCE_LABEL}</SectionLabel>
               <Stack gap={SPACE.item}>
-                {insight.reasonsRelevant.map((reason) => (
+                {signal.reasonsRelevant.map((reason) => (
                   <Stack key={reason} direction="row" gap={SPACE.item} alignItems="flex-start">
                     <InfoIcon
                       aria-hidden
@@ -156,11 +157,11 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
             </Stack>
 
             <Stack gap={SPACE.block}>
-              {insight.deadlines.length ? (
+              {signal.deadlines.length ? (
                 <Stack gap={SPACE.item}>
                   <SectionLabel>Key Deadlines</SectionLabel>
                   <Stack gap={SPACE.item}>
-                    {insight.deadlines.map((deadline) => (
+                    {signal.deadlines.map((deadline) => (
                       <Stack key={deadline.label} gap={SPACE.pair}>
                         <Typography variant="body1" sx={{ fontWeight: emphasis }}>
                           {deadline.label}
@@ -190,21 +191,21 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
                       {workstream.name}
                     </Typography>
                   </Link>
-                ) : insight.pastWorkstream ? (
+                ) : signal.pastWorkstream ? (
                   <Stack gap={SPACE.pair}>
                     <Typography variant="body1" sx={{ fontWeight: emphasis }}>
-                      {insight.pastWorkstream.name}
+                      {signal.pastWorkstream.name}
                     </Typography>
                     <Typography variant="textMd" sx={{ color: muted }}>
-                      {insight.pastWorkstream.status} · {pastWorkstreamProgress(insight.pastWorkstream)}
+                      {signal.pastWorkstream.status} · {pastWorkstreamProgress(signal.pastWorkstream)}
                     </Typography>
                   </Stack>
                 ) : (
                   <Typography variant="body1" sx={{ color: muted }}>
-                    {insight.outcome ? "None." : "No workstream yet."}
+                    {signal.outcome ? "None." : "No workstream yet."}
                   </Typography>
                 )}
-                {insight.outcome ? <Typography variant="body1">{insight.outcome}</Typography> : null}
+                {signal.outcome ? <Typography variant="body1">{signal.outcome}</Typography> : null}
               </Stack>
             </Stack>
           </Box>
@@ -216,7 +217,7 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
           variant="outlined"
           onClick={() => {
             onClose();
-            startChatFromPrompt(`${SEE_IN_CHAT_PROMPT_PREFIX} ${insight.title.toLowerCase()}.`, navigate);
+            startChatFromPrompt(`${SEE_IN_CHAT_PROMPT_PREFIX} ${signal.title.toLowerCase()}.`, navigate);
           }}
         >
           See in chat

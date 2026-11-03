@@ -14,10 +14,10 @@ import {
   startOfWeek,
   workWeekDates,
 } from "@/calendar/weeks";
-import { InsightDialog } from "@/components/home/InsightDialog";
+import { SignalDialog } from "@/components/home/SignalDialog";
 import { TaskQuickView, type TaskRef } from "@/components/tasks/TaskQuickView";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { INSIGHTS } from "@/insights/insights";
+import { SIGNALS } from "@/signals/signals";
 
 import { CalendarCell } from "./CalendarCell";
 import { CalendarViewToggle, type CalendarView } from "./CalendarViewToggle";
@@ -84,7 +84,7 @@ export function ComplianceCalendar({
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<TaskRef | null>(null);
-  const [openInsightId, setOpenInsightId] = useState<string | null>(null);
+  const [openSignalId, setOpenSignalId] = useState<string | null>(null);
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
 
   const range = rangeFor(variant, view, anchor);
@@ -97,10 +97,10 @@ export function ComplianceCalendar({
     setToast(event.owner ? `Nudge sent to ${event.owner}.` : "Nudge sent.");
   };
 
-  /** Tasks open the task quick view; external deadlines open their insight; past workstreams' tasks open nothing. */
+  /** Tasks open the task quick view; external deadlines open their signal; past workstreams' tasks open nothing. */
   const handleOpen = (event: CalendarEvent) => {
     if (event.kind === "task") setOpenTask({ workstreamId: event.workstreamId, taskId: event.taskId });
-    else if (event.kind === "external") setOpenInsightId(event.insightId);
+    else if (event.kind === "external") setOpenSignalId(event.signalId);
   };
 
   return (
@@ -177,9 +177,9 @@ export function ComplianceCalendar({
         onClose={() => setOpenTask(null)}
         onNudge={(owner) => setToast(`Nudge sent to ${owner}.`)}
       />
-      <InsightDialog
-        insight={INSIGHTS.find((c) => c.id === openInsightId) ?? null}
-        onClose={() => setOpenInsightId(null)}
+      <SignalDialog
+        signal={SIGNALS.find((c) => c.id === openSignalId) ?? null}
+        onClose={() => setOpenSignalId(null)}
       />
 
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>

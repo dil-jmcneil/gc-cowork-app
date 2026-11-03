@@ -1,7 +1,7 @@
 import { deriveCalendarEvents } from "@/calendar/complianceEvents";
 import type { Workstream } from "@/workstreams/workstream";
 import { DIRECTORY } from "@/workstreams/people";
-import { ATG_RULING, INSIGHTS, PAST_INSIGHTS } from "@/insights/insights";
+import { ATG_RULING, SIGNALS, PAST_SIGNALS } from "@/signals/signals";
 
 const NOW = new Date("2026-11-01T00:00:00Z");
 const owner = (name: string) => DIRECTORY.find((p) => p.label === name)!;
@@ -9,7 +9,7 @@ const owner = (name: string) => DIRECTORY.find((p) => p.label === name)!;
 const WORKSTREAM: Workstream = {
   id: "workstream-1",
   name: "Online cancellation update",
-  sourceInsightId: "atg-v-lane",
+  sourceSignalId: "atg-v-lane",
   description: "d",
   reasonsRelevant: [],
   statusSummary: "s",
@@ -73,11 +73,11 @@ const byId = (id: string) => events().find((e) => e.id === id)!;
 
 test("every regulatory deadline shows as an external deadline, with or without a workstream", () => {
   const externals = events().filter((e) => e.kind === "external");
-  const expected = INSIGHTS.reduce((n, c) => n + c.deadlines.length, 0);
+  const expected = SIGNALS.reduce((n, c) => n + c.deadlines.length, 0);
   expect(externals).toHaveLength(expected);
   for (const event of externals) {
     expect(event.status).toBe("External");
-    expect(event.insightId).toBeDefined();
+    expect(event.signalId).toBeDefined();
   }
 });
 
@@ -87,22 +87,22 @@ test("a change with no workstream yet has no tasks on the calendar, only its ext
   expect(ruling.every((e) => e.kind === "external")).toBe(true);
 });
 
-test("an external deadline whose insight has no workstream is awaiting your response", () => {
-  const event = deriveCalendarEvents([], NOW).find((e) => e.kind === "external" && e.insightId === ATG_RULING.id)!;
+test("an external deadline whose signal has no workstream is awaiting your response", () => {
+  const event = deriveCalendarEvents([], NOW).find((e) => e.kind === "external" && e.signalId === ATG_RULING.id)!;
   expect(event.attention).toBe("awaiting-response");
 });
 
-test("a past insight's deadline needs no response, because it was already handled", () => {
-  for (const insight of PAST_INSIGHTS) {
-    for (const event of deriveCalendarEvents([], NOW).filter((e) => e.kind === "external" && e.insightId === insight.id)) {
-      expect(event.attention, insight.id).toBeUndefined();
+test("a past signal's deadline needs no response, because it was already handled", () => {
+  for (const signal of PAST_SIGNALS) {
+    for (const event of deriveCalendarEvents([], NOW).filter((e) => e.kind === "external" && e.signalId === signal.id)) {
+      expect(event.attention, signal.id).toBeUndefined();
     }
   }
 });
 
 test("past workstreams' tasks are on the calendar as display-only events, mostly done", () => {
   const reference = deriveCalendarEvents([], NOW).filter((e) => e.kind === "reference");
-  const pastTasks = PAST_INSIGHTS.flatMap((i) => i.pastWorkstream?.tasks ?? []);
+  const pastTasks = PAST_SIGNALS.flatMap((i) => i.pastWorkstream?.tasks ?? []);
   expect(reference).toHaveLength(pastTasks.length);
   expect(reference.every((e) => !("href" in e) || e.href === undefined)).toBe(true);
   const done = reference.filter((e) => e.status === "Complete").length;
@@ -115,7 +115,7 @@ test("an open past task that slipped its date asks for a nudge", () => {
 });
 
 test("an external deadline whose change has a workstream needs no attention", () => {
-  const atg = events().filter((e) => e.kind === "external" && e.insightId === ATG_RULING.id);
+  const atg = events().filter((e) => e.kind === "external" && e.signalId === ATG_RULING.id);
   expect(atg.length).toBeGreaterThan(0);
   for (const event of atg) expect(event.attention).toBeUndefined();
 });

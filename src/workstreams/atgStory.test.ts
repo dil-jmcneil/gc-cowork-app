@@ -1,13 +1,13 @@
-import { ATG_RULING } from "@/insights/insights";
+import { ATG_RULING } from "@/signals/signals";
 import { currentMilestone } from "@/workstreams/milestones";
 import { isMessage } from "@/workstreams/thread";
-import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
+import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
 
 beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
 function startAtgWorkstream() {
-  const draft = draftWorkstreamFromInsight(ATG_RULING);
+  const draft = draftWorkstreamFromSignal(ATG_RULING);
   return useWorkstreamStore.getState().createWorkstream({ ...draft, plan: { ...draft.plan, status: "accepted" } });
 }
 

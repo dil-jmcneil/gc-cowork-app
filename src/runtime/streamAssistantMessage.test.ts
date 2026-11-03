@@ -1,9 +1,9 @@
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import type { ChatStreamChunk } from "@/chat/chatTypes";
-import type { Insight } from "@/insights/insight";
+import type { Signal } from "@/signals/signal";
 import { streamAssistantMessage } from "@/runtime/streamAssistantMessage";
 
-const item: Insight = {
+const item: Signal = {
   id: "x",
   title: "T",
   summary: "S",
@@ -22,7 +22,7 @@ async function* chunks(): AsyncGenerator<ChatStreamChunk> {
   yield { type: "tool-update", id: "t1", status: "success" };
   yield { type: "text-delta", delta: "H" };
   yield { type: "text-delta", delta: "i" };
-  yield { type: "insight-list", items: [item] };
+  yield { type: "signal-list", items: [item] };
   yield { type: "finish" };
 }
 
@@ -42,11 +42,11 @@ test("folds reasoning, tool lifecycle, text, and regulatory list into parts", as
     "reasoning",
     "tool",
     "text",
-    "insight-list",
+    "signal-list",
   ]);
   const tool = message.parts[1];
   expect(tool.type === "tool" && tool.status).toBe("success");
   const list = message.parts[3];
-  expect(list.type === "insight-list" && list.items).toEqual([item]);
+  expect(list.type === "signal-list" && list.items).toEqual([item]);
   expect(message.status).toBe("done");
 });

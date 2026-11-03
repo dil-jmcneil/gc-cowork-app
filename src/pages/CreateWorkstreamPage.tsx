@@ -16,29 +16,30 @@ import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 
 import { SideChatLayout } from "@/components/chat/SideChatLayout";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
-import { SourceInsightCard } from "@/components/workstreams/SourceInsightCard";
+import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { PlanMilestones } from "@/components/workstreams/PlanMilestones";
 import { RuleTable } from "@/components/workstreams/RuleTable";
 import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
 import type { WorkstreamDraft } from "@/workstreams/workstream";
-import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
+import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { hasPlan } from "@/insights/insight";
-import { INSIGHTS } from "@/insights/insights";
+import { hasPlan } from "@/signals/signal";
+import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
+import { RELEVANCE_LABEL } from "@/signals/signal";
 
 export default function CreateWorkstreamPage() {
   const [params] = useSearchParams();
-  const insight = INSIGHTS.find((c) => c.id === params.get("insight"));
+  const signal = SIGNALS.find((c) => c.id === params.get("signal"));
   const existing = useWorkstreamStore((s) =>
-    insight ? s.workstreams.find((p) => p.sourceInsightId === insight.id) : undefined,
+    signal ? s.workstreams.find((p) => p.sourceSignalId === signal.id) : undefined,
   );
 
-  if (!insight || !hasPlan(insight)) {
+  if (!signal || !hasPlan(signal)) {
     return (
       <Stack gap={SPACE.item} sx={{ p: SPACE.section }} alignItems="flex-start">
-        <Typography variant="body1">We couldn't find a plan for that insight.</Typography>
+        <Typography variant="body1">We couldn't find a plan for that signal.</Typography>
         <Link component={RouterLink} to="/">
           Go to home
         </Link>
@@ -48,14 +49,14 @@ export default function CreateWorkstreamPage() {
   if (existing) {
     return (
       <Stack gap={SPACE.item} sx={{ p: SPACE.section }} alignItems="flex-start">
-        <Typography variant="body1">There's already a workstream for this insight.</Typography>
+        <Typography variant="body1">There's already a workstream for this signal.</Typography>
         <Link component={RouterLink} to={`/workstreams/${existing.id}`}>
           Open {existing.name}
         </Link>
       </Stack>
     );
   }
-  return <CreateWorkstreamForm key={insight.id} initialDraft={draftWorkstreamFromInsight(insight)} />;
+  return <CreateWorkstreamForm key={signal.id} initialDraft={draftWorkstreamFromSignal(signal)} />;
 }
 
 function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft }) {
@@ -64,10 +65,10 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
   const navigate = useNavigate();
   const createWorkstream = useWorkstreamStore((s) => s.createWorkstream);
   const [draft, setDraft] = useState(initialDraft);
-  const insight = INSIGHTS.find((c) => c.id === draft.sourceInsightId)!;
+  const signal = SIGNALS.find((c) => c.id === draft.sourceSignalId)!;
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
 
-  useEffect(() => seedDraftChat(insight), [insight]);
+  useEffect(() => seedDraftChat(signal), [signal]);
 
   const setPlan = (patch: Partial<WorkstreamDraft["plan"]>) =>
     setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
@@ -81,7 +82,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
   };
 
   return (
-    <SideChatLayout chatId={draftChatId(insight.id)}>
+    <SideChatLayout chatId={draftChatId(signal.id)}>
       <Container maxWidth="xl" sx={{ py: SPACE.section }}>
         <Stack gap={SPACE.section}>
           <Stack gap={SPACE.pair}>
@@ -89,7 +90,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
               Create workstream
             </Typography>
             <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-              Cowork drafted this from the insight. Review the plan, then start the workstream.
+              Cowork drafted this from the signal. Review the plan, then start the workstream.
             </Typography>
           </Stack>
 
@@ -122,7 +123,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
                       />
                     </FormControl>
                     <Stack gap={SPACE.pair}>
-                      <FieldLabel>Why it's relevant</FieldLabel>
+                      <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
                       <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
                         {draft.reasonsRelevant.map((reason) => (
                           <Typography component="li" variant="body1" key={reason}>
@@ -136,7 +137,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
               </Stack>
             </Grid>
             <Grid item sm={4} md={8} lg={3} xl={4}>
-              <SourceInsightCard insight={insight} />
+              <SourceSignalCard signal={signal} />
             </Grid>
           </Grid>
 

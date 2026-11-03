@@ -1,20 +1,20 @@
 import type { ChatStreamChunk } from "@/chat/chatTypes";
-import { isInsightsPrompt, streamInsights } from "@/chat/scenarios/insightsScenario";
-import { DUE_SOON_PROMPT, RESEARCH_REGULATION_PROMPT, SHOW_INSIGHTS_PROMPT } from "@/home/quickActionPrompts";
-import { insightType } from "@/insights/insight";
+import { isSignalsPrompt, streamSignals } from "@/chat/scenarios/signalsScenario";
+import { DUE_SOON_PROMPT, RESEARCH_REGULATION_PROMPT, SHOW_SIGNALS_PROMPT } from "@/home/quickActionPrompts";
+import { signalType } from "@/signals/signal";
 import { ATTENTION_ITEMS } from "@/home/attentionItems";
-import { ATG_RULING, INSIGHTS, PAST_INSIGHTS } from "@/insights/insights";
+import { ATG_RULING, SIGNALS, PAST_SIGNALS } from "@/signals/signals";
 
 test("matches quick action and free-text asks", () => {
   for (const text of [
-    SHOW_INSIGHTS_PROMPT,
-    "show recent insights",
+    SHOW_SIGNALS_PROMPT,
+    "show recent signals",
     "any new court rulings?",
     "what are the latest regulatory changes?",
     "any new rule changes this month",
     "recent regulatory updates",
   ]) {
-    expect(isInsightsPrompt(text), text).toBe(true);
+    expect(isSignalsPrompt(text), text).toBe(true);
   }
 });
 
@@ -25,13 +25,13 @@ test("does not match other quick actions", () => {
     "help me research a regulation",
     "review a contract",
   ]) {
-    expect(isInsightsPrompt(text), text).toBe(false);
+    expect(isSignalsPrompt(text), text).toBe(false);
   }
 });
 
-test("the court ruling leads the insights, tagged as a Delaware court ruling", () => {
-  expect(INSIGHTS[0]).toBe(ATG_RULING);
-  expect(insightType(ATG_RULING)).toBe("Court ruling");
+test("the court ruling leads the signals, tagged as a Delaware court ruling", () => {
+  expect(SIGNALS[0]).toBe(ATG_RULING);
+  expect(signalType(ATG_RULING)).toBe("Court ruling");
   expect(ATG_RULING.tags).toContainEqual({ kind: "jurisdiction", label: "Delaware" });
   expect(ATG_RULING.tags.filter((t) => t.kind === "type")).toHaveLength(1);
 });
@@ -44,7 +44,7 @@ test("the ruling's deadlines are the nomination window, in date order", () => {
 
 test("streams reasoning, then resolving tools, then intro, then the list", async () => {
   const collected: ChatStreamChunk[] = [];
-  for await (const chunk of streamInsights(new AbortController().signal, 0)) {
+  for await (const chunk of streamSignals(new AbortController().signal, 0)) {
     collected.push(chunk);
   }
   const firstSeen = [...new Set(collected.map((c) => c.type))];
@@ -54,7 +54,7 @@ test("streams reasoning, then resolving tools, then intro, then the list", async
     "tool-start",
     "tool-update",
     "text-delta",
-    "insight-list",
+    "signal-list",
   ]);
   const starts = collected.filter((c) => c.type === "tool-start");
   expect(starts).toHaveLength(3);
@@ -68,28 +68,28 @@ test("streams reasoning, then resolving tools, then intro, then the list", async
     expect(chunk.type === "tool-update" && chunk.status).toBe("success");
   }
   const last = collected[collected.length - 1];
-  expect(last.type).toBe("insight-list");
-  expect(last.type === "insight-list" && last.items).toBe(INSIGHTS);
+  expect(last.type).toBe("signal-list");
+  expect(last.type === "signal-list" && last.items).toBe(SIGNALS);
 });
 
-test("there are five past insights of mixed types, two with past workstreams, all older than the ruling", () => {
-  expect(PAST_INSIGHTS).toHaveLength(5);
-  expect(new Set(PAST_INSIGHTS.map(insightType)).size).toBeGreaterThanOrEqual(3);
-  expect(PAST_INSIGHTS.filter((i) => i.pastWorkstream)).toHaveLength(2);
-  for (const insight of PAST_INSIGHTS) {
-    expect(insight.issuedDate < "2026-11-03", insight.id).toBe(true);
-    expect(insight.status, insight.id).not.toBe("New");
+test("there are five past signals of mixed types, two with past workstreams, all older than the ruling", () => {
+  expect(PAST_SIGNALS).toHaveLength(5);
+  expect(new Set(PAST_SIGNALS.map(signalType)).size).toBeGreaterThanOrEqual(3);
+  expect(PAST_SIGNALS.filter((i) => i.pastWorkstream)).toHaveLength(2);
+  for (const signal of PAST_SIGNALS) {
+    expect(signal.issuedDate < "2026-11-03", signal.id).toBe(true);
+    expect(signal.status, signal.id).not.toBe("New");
   }
 });
 
-test("past insights stay out of the attention pane, which is for new items", () => {
+test("past signals stay out of the attention pane, which is for new items", () => {
   const ids = new Set(ATTENTION_ITEMS.map((i) => i.id));
-  for (const insight of PAST_INSIGHTS) expect(ids.has(insight.id), insight.id).toBe(false);
+  for (const signal of PAST_SIGNALS) expect(ids.has(signal.id), signal.id).toBe(false);
 });
 
-test("the chat list carries every insight", async () => {
+test("the chat list carries every signal", async () => {
   const chunks: ChatStreamChunk[] = [];
-  for await (const chunk of streamInsights(new AbortController().signal, 0)) chunks.push(chunk);
-  const list = chunks.find((c) => c.type === "insight-list");
-  expect(list?.type === "insight-list" && list.items.map((i) => i.id)).toEqual(INSIGHTS.map((i) => i.id));
+  for await (const chunk of streamSignals(new AbortController().signal, 0)) chunks.push(chunk);
+  const list = chunks.find((c) => c.type === "signal-list");
+  expect(list?.type === "signal-list" && list.items.map((i) => i.id)).toEqual(SIGNALS.map((i) => i.id));
 });

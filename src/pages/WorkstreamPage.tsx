@@ -4,15 +4,16 @@ import { Link as RouterLink, useNavigate, useParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
-import { SourceInsightCard } from "@/components/workstreams/SourceInsightCard";
+import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { PlanMilestones } from "@/components/workstreams/PlanMilestones";
 import { RuleTable } from "@/components/workstreams/RuleTable";
 import { HistoryList } from "@/components/tasks/History";
 import { TaskQuickView } from "@/components/tasks/TaskQuickView";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { INSIGHTS } from "@/insights/insights";
+import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
+import { RELEVANCE_LABEL } from "@/signals/signal";
 
 export default function WorkstreamPage() {
   const { workstreamId } = useParams<{ workstreamId: string }>();
@@ -35,7 +36,7 @@ export default function WorkstreamPage() {
     );
   }
 
-  const insight = INSIGHTS.find((c) => c.id === workstream.sourceInsightId);
+  const signal = SIGNALS.find((c) => c.id === workstream.sourceSignalId);
   const muted = tokens.semantic.color.type.muted.value;
   const planAccepted = workstream.plan.status === "accepted";
   const history = workstream.plan.tasks
@@ -66,10 +67,10 @@ export default function WorkstreamPage() {
               <SectionCard title="Status Summary">
                 <Typography variant="body1">{workstream.statusSummary}</Typography>
               </SectionCard>
-              <SectionCard title="About This Insight">
+              <SectionCard title="About This Signal">
                 <Typography variant="body1">{workstream.description}</Typography>
                 <Stack gap={SPACE.pair}>
-                  <FieldLabel>Why it's relevant</FieldLabel>
+                  <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
                   <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
                     {workstream.reasonsRelevant.map((reason) => (
                       <Typography component="li" variant="body1" key={reason}>
@@ -83,7 +84,7 @@ export default function WorkstreamPage() {
           </Grid>
 
           <Grid item sm={4} md={8} lg={3} xl={4}>
-            <Stack gap={SPACE.block}>{insight ? <SourceInsightCard insight={insight} /> : null}</Stack>
+            <Stack gap={SPACE.block}>{signal ? <SourceSignalCard signal={signal} /> : null}</Stack>
           </Grid>
         </Grid>
 

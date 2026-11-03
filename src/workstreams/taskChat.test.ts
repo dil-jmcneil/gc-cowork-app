@@ -1,6 +1,6 @@
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
-import { ATG_RULING } from "@/insights/insights";
-import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
+import { ATG_RULING } from "@/signals/signals";
+import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/workstreams/taskChat";
 
@@ -12,7 +12,7 @@ const task = () =>
 beforeEach(() => {
   useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] });
   useChatMessagesStore.setState({ messagesByChatId: {} });
-  WORKSTREAM_ID = useWorkstreamStore.getState().createWorkstream(draftWorkstreamFromInsight(ATG_RULING)).id;
+  WORKSTREAM_ID = useWorkstreamStore.getState().createWorkstream(draftWorkstreamFromSignal(ATG_RULING)).id;
 });
 
 test("a status question gets the status summary and leaves the thread alone", () => {

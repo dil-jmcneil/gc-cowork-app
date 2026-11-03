@@ -1,7 +1,7 @@
 import type { Workstream, WorkstreamTask } from "@/workstreams/workstream";
 import { taskAttention } from "@/workstreams/taskStatus";
-import { insightType, type PastWorkstream, type PastWorkstreamTask } from "@/insights/insight";
-import { INSIGHTS } from "@/insights/insights";
+import { signalType, type PastWorkstream, type PastWorkstreamTask } from "@/signals/signal";
+import { SIGNALS } from "@/signals/signals";
 
 /** Task statuses, plus "External" for deadlines set outside the company. */
 export type CalendarEventStatus = "Assigned" | "Complete" | "Blocked" | "External";
@@ -18,7 +18,7 @@ type EventBase = {
   description: string;
   status: CalendarEventStatus;
   attention?: CalendarEventAttention;
-  /** The insight or workstream this event belongs to. */
+  /** The signal or workstream this event belongs to. */
   source: string;
   /** Who owns it, when someone does. */
   owner?: string;
@@ -32,7 +32,7 @@ type EventBase = {
 
 export type CalendarEvent =
   | (EventBase & { kind: "task"; workstreamId: string; taskId: string })
-  | (EventBase & { kind: "external"; insightId: string })
+  | (EventBase & { kind: "external"; signalId: string })
   /** A past workstream's task. Display only: no dialog or page. */
   | (EventBase & { kind: "reference" });
 
@@ -103,30 +103,30 @@ function referenceTaskEvent(workstream: PastWorkstream, task: PastWorkstreamTask
 }
 
 /**
- * Compliance calendar events: every insight deadline as an external
+ * Compliance calendar events: every signal deadline as an external
  * deadline, the tasks of past workstreams (display only), plus the tasks of
- * every workstream. An insight has no tasks until
+ * every workstream. A signal has no tasks until
  * its workstream exists.
  */
 export function deriveCalendarEvents(workstreams: Workstream[], now: Date): CalendarEvent[] {
-  const workstreamChangeIds = new Set(workstreams.map((p) => p.sourceInsightId));
+  const workstreamChangeIds = new Set(workstreams.map((p) => p.sourceSignalId));
 
-  const externalEvents: CalendarEvent[] = INSIGHTS.flatMap((insight) =>
-    insight.deadlines.map((deadline, index) => {
-      const hasWorkstream = workstreamChangeIds.has(insight.id) || Boolean(insight.pastWorkstream);
-      const handled = hasWorkstream || Boolean(insight.outcome);
+  const externalEvents: CalendarEvent[] = SIGNALS.flatMap((signal) =>
+    signal.deadlines.map((deadline, index) => {
+      const hasWorkstream = workstreamChangeIds.has(signal.id) || Boolean(signal.pastWorkstream);
+      const handled = hasWorkstream || Boolean(signal.outcome);
       return {
         kind: "external" as const,
-        id: `${insight.id}-deadline-${index}`,
-        insightId: insight.id,
+        id: `${signal.id}-deadline-${index}`,
+        signalId: signal.id,
         date: deadline.date,
         title: deadline.label,
-        description: `${insight.title} · ${insight.source}`,
+        description: `${signal.title} · ${signal.source}`,
         status: "External" as const,
         ...(handled ? {} : { attention: "awaiting-response" as const }),
-        source: insight.title,
-        href: hasWorkstream ? "/" : `/workstreams/new?insight=${encodeURIComponent(insight.id)}`,
-        linkLabel: `${insightType(insight)}: ${insight.title}`,
+        source: signal.title,
+        href: hasWorkstream ? "/" : `/workstreams/new?signal=${encodeURIComponent(signal.id)}`,
+        linkLabel: `${signalType(signal)}: ${signal.title}`,
         nextStep: hasWorkstream
           ? "Track it through the workstream's tasks"
           : handled
@@ -136,9 +136,9 @@ export function deriveCalendarEvents(workstreams: Workstream[], now: Date): Cale
     }),
   );
 
-  const referenceEvents = INSIGHTS.flatMap((insight) =>
-    insight.pastWorkstream
-      ? insight.pastWorkstream.tasks.map((task) => referenceTaskEvent(insight.pastWorkstream!, task, now))
+  const referenceEvents = SIGNALS.flatMap((signal) =>
+    signal.pastWorkstream
+      ? signal.pastWorkstream.tasks.map((task) => referenceTaskEvent(signal.pastWorkstream!, task, now))
       : [],
   );
 

@@ -1,15 +1,15 @@
 import type { Milestone, PlanRule, TaskStatus } from "@/workstreams/workstream";
 
-export type InsightStatus = "New" | "In review" | "In progress" | "Closed";
+export type SignalStatus = "New" | "In review" | "In progress" | "Closed";
 
-/** The kinds of insight Cowork can surface. Each insight carries exactly one as its "type" tag. */
-export type InsightType = "Court ruling" | "Regulatory change" | "Enforcement action" | "Peer filing";
+/** The kinds of signal Cowork can surface. Each signal carries exactly one as its "type" tag. */
+export type SignalType = "Court ruling" | "Regulatory change" | "Enforcement action" | "Peer filing";
 
-/** Metadata that says what an insight is and what it's about. */
-export type InsightTag =
-  { kind: "type"; label: InsightType } | { kind: "jurisdiction"; label: string } | { kind: "topic"; label: string };
+/** Metadata that says what a signal is and what it's about. */
+export type SignalTag =
+  { kind: "type"; label: SignalType } | { kind: "jurisdiction"; label: string } | { kind: "topic"; label: string };
 
-export type InsightDeadline = {
+export type SignalDeadline = {
   label: string;
   /** ISO date, yyyy-mm-dd. */
   date: string;
@@ -17,9 +17,9 @@ export type InsightDeadline = {
   description?: string;
 };
 
-/** A task Cowork proposes when a workstream is drafted from the insight. */
+/** A task Cowork proposes when a workstream is drafted from the signal. */
 export type TaskTemplate = {
-  /** Stable within the insight, so stories can find the task again. */
+  /** Stable within the signal, so stories can find the task again. */
   id: string;
   description: string;
   /** Email of the suggested owner, in the directory or a known outside contact. */
@@ -28,7 +28,7 @@ export type TaskTemplate = {
   due: string;
 };
 
-/** The plan Cowork proposes for an insight: milestones with their tasks, plus rules for every milestone. */
+/** The plan Cowork proposes for a signal: milestones with their tasks, plus rules for every milestone. */
 export type PlanTemplate = {
   approach: string;
   milestones: (Milestone & { tasks: TaskTemplate[] })[];
@@ -58,7 +58,7 @@ export type PastWorkstreamTask = {
 };
 
 /** Something Cowork noticed that the GC may need to act on. Extends the OOUX regulatory change object. */
-export type Insight = {
+export type Signal = {
   id: string;
   title: string;
   summary: string;
@@ -70,26 +70,26 @@ export type Insight = {
   citation?: string;
   /** Later events, e.g. an appeal. */
   history?: string;
-  tags: InsightTag[];
+  tags: SignalTag[];
   /** When the source issued it, ISO yyyy-mm-dd. */
   issuedDate: string;
-  status: InsightStatus;
+  status: SignalStatus;
   /** External dates. Shown on the calendar as external deadlines. */
-  deadlines: InsightDeadline[];
+  deadlines: SignalDeadline[];
   /** What it means for the company. */
   reasonsRelevant: string[];
-  /** The plan Cowork proposes. Past insights that were handled another way have none. */
+  /** The plan Cowork proposes. Past signals that were handled another way have none. */
   plan?: PlanTemplate;
   /** A workstream started before the prototype's story, shown read-only. */
   pastWorkstream?: PastWorkstream;
-  /** How an insight was handled without a workstream, e.g. "Reviewed Aug 20. No change needed." */
+  /** How a signal was handled without a workstream, e.g. "Reviewed Aug 20. No change needed." */
   outcome?: string;
 };
 
-export type PlannedInsight = Insight & { plan: PlanTemplate };
+export type PlannedSignal = Signal & { plan: PlanTemplate };
 
-export function hasPlan(insight: Insight): insight is PlannedInsight {
-  return insight.plan !== undefined;
+export function hasPlan(signal: Signal): signal is PlannedSignal {
+  return signal.plan !== undefined;
 }
 
 /** Done tasks over all tasks, e.g. "3 of 4 tasks done". */
@@ -98,14 +98,14 @@ export function pastWorkstreamProgress(workstream: PastWorkstream): string {
   return `${done} of ${workstream.tasks.length} tasks done`;
 }
 
-export function insightType(insight: Pick<Insight, "tags">): InsightType {
-  const tag = insight.tags.find((t) => t.kind === "type");
-  if (!tag) throw new Error("An insight needs a type tag");
-  return tag.label as InsightType;
+export function signalType(signal: Pick<Signal, "tags">): SignalType {
+  const tag = signal.tags.find((t) => t.kind === "type");
+  if (!tag) throw new Error("A signal needs a type tag");
+  return tag.label as SignalType;
 }
 
 /** How each type names its issued date, e.g. a ruling is "Decided". */
-export const ISSUED_LABEL: Record<InsightType, string> = {
+export const ISSUED_LABEL: Record<SignalType, string> = {
   "Court ruling": "Decided",
   "Regulatory change": "Effective",
   "Enforcement action": "Announced",
@@ -113,17 +113,16 @@ export const ISSUED_LABEL: Record<InsightType, string> = {
 };
 
 /** Link text for each type's source document. */
-export const SOURCE_LINK_LABEL: Record<InsightType, string> = {
+export const SOURCE_LINK_LABEL: Record<SignalType, string> = {
   "Court ruling": "Read the opinion (PDF)",
   "Regulatory change": "Read the rule",
   "Enforcement action": "Read the announcement",
   "Peer filing": "Read the filing",
 };
 
-/** What each type calls its "why it's relevant" list. */
-export const RELEVANCE_LABEL: Record<InsightType, string> = {
-  "Court ruling": "Points for Counsel",
-  "Regulatory change": "Reasons Relevant",
-  "Enforcement action": "Reasons Relevant",
-  "Peer filing": "Reasons Relevant",
-};
+/**
+ * One label for a signal's "why it matters to Acme" list, whatever its type.
+ * Court rulings used to say "Points for Counsel" and others "Reasons Relevant";
+ * both described the same thing.
+ */
+export const RELEVANCE_LABEL = "Relevance";

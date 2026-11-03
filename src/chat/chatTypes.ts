@@ -1,4 +1,4 @@
-import type { Insight } from "@/insights/insight";
+import type { Signal } from "@/signals/signal";
 
 /**
  * Our own chat model + streaming chunk types. These replace the
@@ -70,9 +70,9 @@ export type ChatSourcePart = {
   title: string;
 };
 
-export type ChatInsightListPart = {
-  type: "insight-list";
-  items: Insight[];
+export type ChatSignalListPart = {
+  type: "signal-list";
+  items: Signal[];
 };
 
 export type ChatPart =
@@ -80,7 +80,7 @@ export type ChatPart =
   | ChatReasoningPart
   | ChatToolPart
   | ChatSourcePart
-  | ChatInsightListPart;
+  | ChatSignalListPart;
 
 export type ChatMessageStatus = "streaming" | "done";
 
@@ -118,6 +118,6 @@ export type ChatStreamChunk =
     }
   | { type: "source"; sourceId: string; url: string; title: string }
   | { type: "text-delta"; delta: string }
-  | { type: "insight-list"; items: Insight[] }
+  | { type: "signal-list"; items: Signal[] }
   | { type: "finish" }
   | { type: "abort" };

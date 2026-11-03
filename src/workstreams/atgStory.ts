@@ -1,4 +1,4 @@
-import { ATG_RULING } from "@/insights/insights";
+import { ATG_RULING } from "@/signals/signals";
 import { LOGGED_IN_USER } from "@/user";
 
 import { findPerson } from "./people";
@@ -186,8 +186,8 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
   });
 }
 
-export function isAtgWorkstream(workstream: Pick<Workstream, "sourceInsightId">): boolean {
-  return workstream.sourceInsightId === ATG_RULING.id;
+export function isAtgWorkstream(workstream: Pick<Workstream, "sourceSignalId">): boolean {
+  return workstream.sourceSignalId === ATG_RULING.id;
 }
 
 /** The ATG v. Lane workstream as it stands a few days after it started. */

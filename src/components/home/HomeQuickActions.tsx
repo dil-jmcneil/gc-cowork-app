@@ -3,7 +3,7 @@ import { Box, Stack, Typography, useTheme } from "@mui/material";
 import { useNavigate } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
-import { DUE_SOON_PROMPT, RESEARCH_REGULATION_PROMPT, SHOW_INSIGHTS_PROMPT } from "@/home/quickActionPrompts";
+import { DUE_SOON_PROMPT, RESEARCH_REGULATION_PROMPT, SHOW_SIGNALS_PROMPT } from "@/home/quickActionPrompts";
 import { SPACE } from "@/lib/layout";
 
 /** Three quick action cards under the home composer; each starts a prompted chat. */
@@ -17,10 +17,10 @@ type QuickAction = {
 
 const ACTIONS: QuickAction[] = [
   {
-    id: "insights",
-    title: "Show recent insights",
+    id: "signals",
+    title: "Show recent signals",
     description: "See new rulings and rule changes that affect us, and why each one matters.",
-    prompt: SHOW_INSIGHTS_PROMPT,
+    prompt: SHOW_SIGNALS_PROMPT,
   },
   {
     id: "due-soon",

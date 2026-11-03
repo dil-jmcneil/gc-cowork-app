@@ -1,11 +1,11 @@
-import type { Insight } from "./insight";
+import type { Signal } from "./signal";
 
 /**
  * The prototype's primary use case, from the ATG v. Lane discovery brief.
  * The ruling is real; Acme's bylaw findings are modeled on gaps the brief
  * found in public Delaware bylaws. Points for counsel, not legal advice.
  */
-export const ATG_RULING: Insight = {
+export const ATG_RULING: Signal = {
   id: "atg-v-lane",
   title: "Delaware ruling on advance notice bylaws",
   summary:
@@ -62,15 +62,15 @@ export const ATG_RULING: Insight = {
           {
             id: "already-reviewed",
             when: "You reply that counsel already reviewed the bylaw.",
-            actions: "Close the insight. Record the date and who reviewed it.",
-            until: "The insight is closed, with the reason on record.",
+            actions: "Close the signal. Record the date and who reviewed it.",
+            until: "The signal is closed, with the reason on record.",
             kind: "exception",
           },
           {
             id: "no-gap",
             when: "Counsel finds no gap that needs a change.",
-            actions: "Quote counsel's reason to you, and close the insight when you confirm.",
-            until: "The insight is closed, with counsel's reason on record.",
+            actions: "Quote counsel's reason to you, and close the signal when you confirm.",
+            until: "The signal is closed, with counsel's reason on record.",
             kind: "exception",
           },
         ],
@@ -184,7 +184,7 @@ export const ATG_RULING: Insight = {
         title: "Watch the nomination window",
         startsWhen: "The new bylaws are in force.",
         doneWhen: "The window closed on Feb 6, and every notice that came in was reviewed under the new process.",
-        approver: "Peter closes the insight",
+        approver: "Peter closes the signal",
         rules: [
           {
             id: "edgar",
@@ -282,12 +282,12 @@ export const ATG_RULING: Insight = {
 };
 
 /**
- * Insights from before the ATG ruling. They don't appear in the attention
- * pane, which is for new items, but chat lists them under recent insights.
+ * Signals from before the ATG ruling. They don't appear in the attention
+ * pane, which is for new items, but chat lists them under recent signals.
  * Two led to workstreams that predate the prototype's story: their tasks show
  * on the calendar, but the workstreams have no pages. Illustrative mock data.
  */
-export const PAST_INSIGHTS: Insight[] = [
+export const PAST_SIGNALS: Signal[] = [
   {
     id: "california-climate-disclosure",
     title: "California sets dates for climate disclosure reports",
@@ -465,5 +465,5 @@ export const PAST_INSIGHTS: Insight[] = [
   },
 ];
 
-/** Every insight, in the order Cowork surfaced them, newest first. */
-export const INSIGHTS: Insight[] = [ATG_RULING, ...PAST_INSIGHTS];
+/** Every signal, in the order Cowork surfaced them, newest first. */
+export const SIGNALS: Signal[] = [ATG_RULING, ...PAST_SIGNALS];

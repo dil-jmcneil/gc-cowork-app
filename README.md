@@ -7,12 +7,12 @@ The first step covers:
 - the Atlas shell, with a left nav for Home, New chat, and chat history
 - a home page with the chat hero, three quick actions, and an attention pane
 - a mocked chat that streams replies with reasoning and tool calls
-- a scripted "Show recent insights" reply that renders compact insight cards, tagged by type (court ruling, regulatory change, and so on), each showing its workstream or a Create workstream button
-- Workstreams: a Create workstream screen that drafts the workstream and its plan from an insight, a workstream page, and a Workstreams section in the left nav. Plans are a short spine of milestones, each with what starts it, what finishes it, and who approves it. A Demo settings toggle shows the rules Cowork follows inside each milestone.
+- a scripted "Show recent signals" reply that renders compact signal cards, tagged by type (court ruling, regulatory change, and so on), each showing its workstream or a Create workstream button
+- Workstreams: a Create workstream screen that drafts the workstream and its plan from a signal, a workstream page, and a Workstreams section in the left nav. Plans are a short spine of milestones, each with what starts it, what finishes it, and who approves it. A Demo settings toggle shows the rules Cowork follows inside each milestone.
 - Tasks: a quick-view overlay (status summary, badges, owner, key details) and a full task view with a History of messages, Cowork's actions, and files, plus a chat panel
 - A compliance calendar on the home page and as a full page, showing workstream tasks and external deadlines
 
-The primary insight is the Delaware Court of Chancery's ATG v. Lane ruling on advance notice bylaws. Starting its workstream is a demo shortcut: its tasks jump ahead to where they'd be after a few days of work, with replies from outside counsel and Acme's owners already in their history.
+The primary signal is the Delaware Court of Chancery's ATG v. Lane ruling on advance notice bylaws. Starting its workstream is a demo shortcut: its tasks jump ahead to where they'd be after a few days of work, with replies from outside counsel and Acme's owners already in their history.
 
 All chat responses are mocked client-side. There's no backend.
 

@@ -1,10 +1,10 @@
 import { Chip, Stack } from "@mui/material";
 
-import type { InsightTag } from "@/insights/insight";
+import type { SignalTag } from "@/signals/signal";
 import { SPACE } from "@/lib/layout";
 
-/** An insight's metadata tags. The type tag is filled so it reads first. */
-export function InsightTags({ tags }: { tags: InsightTag[] }) {
+/** A signal's metadata tags. The type tag is filled so it reads first. */
+export function SignalTags({ tags }: { tags: SignalTag[] }) {
   const ordered = [...tags].sort((a, b) => Number(b.kind === "type") - Number(a.kind === "type"));
   return (
     <Stack

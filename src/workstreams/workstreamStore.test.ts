@@ -1,33 +1,33 @@
-import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
+import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { ATG_RULING, INSIGHTS } from "@/insights/insights";
+import { ATG_RULING, SIGNALS } from "@/signals/signals";
 
 beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
-test("no insight has a workstream until the GC starts one", () => {
-  const { getWorkstreamForInsight } = useWorkstreamStore.getState();
-  for (const insight of INSIGHTS) expect(getWorkstreamForInsight(insight.id)).toBeUndefined();
+test("no signal has a workstream until the GC starts one", () => {
+  const { getWorkstreamForSignal } = useWorkstreamStore.getState();
+  for (const signal of SIGNALS) expect(getWorkstreamForSignal(signal.id)).toBeUndefined();
 });
 
 test("createWorkstream stores the workstream and links it to its change", () => {
   const draft = {
-    ...draftWorkstreamFromInsight(ATG_RULING),
+    ...draftWorkstreamFromSignal(ATG_RULING),
     name: "Advance notice bylaw update",
   };
   const workstream = useWorkstreamStore.getState().createWorkstream(draft);
   expect(workstream.name).toBe("Advance notice bylaw update");
   expect(workstream.statusSummary.length).toBeGreaterThan(0);
-  expect(useWorkstreamStore.getState().getWorkstreamForInsight(ATG_RULING.id)).toBe(workstream);
+  expect(useWorkstreamStore.getState().getWorkstreamForSignal(ATG_RULING.id)).toBe(workstream);
   expect(useWorkstreamStore.getState().getWorkstream(workstream.id)).toBe(workstream);
 });
 
 test("createWorkstream falls back to the change title when the name is blank", () => {
-  const draft = { ...draftWorkstreamFromInsight(ATG_RULING), name: "   " };
+  const draft = { ...draftWorkstreamFromSignal(ATG_RULING), name: "   " };
   expect(useWorkstreamStore.getState().createWorkstream(draft).name).toBe(ATG_RULING.title);
 });
 
 test("acceptPlan marks the plan accepted", () => {
-  const workstream = useWorkstreamStore.getState().createWorkstream(draftWorkstreamFromInsight(ATG_RULING));
+  const workstream = useWorkstreamStore.getState().createWorkstream(draftWorkstreamFromSignal(ATG_RULING));
   useWorkstreamStore.getState().acceptPlan(workstream.id);
   expect(useWorkstreamStore.getState().getWorkstream(workstream.id)!.plan.status).toBe("accepted");
 });
@@ -35,7 +35,7 @@ test("acceptPlan marks the plan accepted", () => {
 describe("task actions", () => {
   let WORKSTREAM_ID = "";
   beforeEach(() => {
-    WORKSTREAM_ID = useWorkstreamStore.getState().createWorkstream(draftWorkstreamFromInsight(ATG_RULING)).id;
+    WORKSTREAM_ID = useWorkstreamStore.getState().createWorkstream(draftWorkstreamFromSignal(ATG_RULING)).id;
   });
   const firstTask = () => useWorkstreamStore.getState().getWorkstream(WORKSTREAM_ID)!.plan.tasks[0];
 

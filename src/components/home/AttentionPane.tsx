@@ -28,10 +28,10 @@ import {
 import { useState, type MouseEvent, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
-import { InsightDialog } from "@/components/home/InsightDialog";
+import { SignalDialog } from "@/components/home/SignalDialog";
 import { ATTENTION_ITEMS, type AttentionItem } from "@/home/attentionItems";
 import { attentionView, nextMonday, useAttentionStore } from "@/home/attentionStore";
-import { INSIGHTS } from "@/insights/insights";
+import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 import type { Workstream } from "@/workstreams/workstream";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
@@ -42,22 +42,22 @@ type Toast = { message: string; undo: () => void };
 
 /**
  * Figma "Attention pane" (AI agentic playground, 3274:11121): a plain title,
- * then one card per item. Each card opens its insight, and its menu snoozes
+ * then one card per item. Each card opens its signal, and its menu snoozes
  * the item until next Monday or dismisses it.
  */
 export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { heading?: string }) {
   const { tokens } = useTheme();
-  const [openInsightId, setOpenInsightId] = useState<string | null>(null);
+  const [openSignalId, setOpenSignalId] = useState<string | null>(null);
   const [showSnoozed, setShowSnoozed] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const store = useAttentionStore();
   const view = attentionView(ATTENTION_ITEMS, store, new Date());
-  const openInsight = INSIGHTS.find((c) => c.id === openInsightId) ?? null;
+  const openSignal = SIGNALS.find((c) => c.id === openSignalId) ?? null;
   const muted = tokens.semantic.color.type.muted.value;
 
   const open = (id: string) => {
     store.markSeen(id);
-    setOpenInsightId(id);
+    setOpenSignalId(id);
   };
   const snooze = (item: AttentionItem) => {
     store.snooze(item.id);
@@ -155,7 +155,7 @@ export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { headi
         </Stack>
       ) : null}
 
-      <InsightDialog insight={openInsight} onClose={() => setOpenInsightId(null)} />
+      <SignalDialog signal={openSignal} onClose={() => setOpenSignalId(null)} />
 
       <Snackbar open={toast !== null} autoHideDuration={6000} onClose={() => setToast(null)}>
         <Alert
@@ -210,7 +210,7 @@ function AttentionCard({
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  const workstream = useWorkstreamStore((s) => s.workstreams.find((w) => w.sourceInsightId === item.id));
+  const workstream = useWorkstreamStore((s) => s.workstreams.find((w) => w.sourceSignalId === item.id));
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const muted = tokens.semantic.color.type.muted.value;
   const titleId = `attention-${item.id}-title`;

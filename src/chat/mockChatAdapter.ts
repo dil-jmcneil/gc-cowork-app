@@ -1,8 +1,8 @@
 import type { ChatStreamChunk } from "@/chat/chatTypes";
 import {
-  isInsightsPrompt,
-  streamInsights,
-} from "@/chat/scenarios/insightsScenario";
+  isSignalsPrompt,
+  streamSignals,
+} from "@/chat/scenarios/signalsScenario";
 import { streamText } from "@/chat/scenarios/streamHelpers";
 
 function buildGenericReply(prompt: string): string {
@@ -10,7 +10,7 @@ function buildGenericReply(prompt: string): string {
   if (!trimmed) {
     return "I didn't catch that — try sending a question to the assistant.";
   }
-  return 'I can\'t answer that one yet — this reply is a placeholder. Try "Show recent insights" to see what Cowork can do.';
+  return 'I can\'t answer that one yet — this reply is a placeholder. Try "Show recent signals" to see what Cowork can do.';
 }
 
 /**
@@ -25,8 +25,8 @@ export async function* streamMockReply(
   try {
     if (replyText) {
       yield* streamText(replyText, signal);
-    } else if (isInsightsPrompt(promptText)) {
-      yield* streamInsights(signal);
+    } else if (isSignalsPrompt(promptText)) {
+      yield* streamSignals(signal);
     } else {
       yield* streamText(buildGenericReply(promptText), signal);
     }
