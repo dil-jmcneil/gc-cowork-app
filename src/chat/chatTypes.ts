@@ -1,4 +1,4 @@
-import type { RegulatoryChange } from "@/regulatory/regulatoryChange";
+import type { Insight } from "@/insights/insight";
 
 /**
  * Our own chat model + streaming chunk types. These replace the
@@ -70,9 +70,9 @@ export type ChatSourcePart = {
   title: string;
 };
 
-export type ChatRegulatoryChangeListPart = {
-  type: "regulatory-change-list";
-  items: RegulatoryChange[];
+export type ChatInsightListPart = {
+  type: "insight-list";
+  items: Insight[];
 };
 
 export type ChatPart =
@@ -80,7 +80,7 @@ export type ChatPart =
   | ChatReasoningPart
   | ChatToolPart
   | ChatSourcePart
-  | ChatRegulatoryChangeListPart;
+  | ChatInsightListPart;
 
 export type ChatMessageStatus = "streaming" | "done";
 
@@ -118,6 +118,6 @@ export type ChatStreamChunk =
     }
   | { type: "source"; sourceId: string; url: string; title: string }
   | { type: "text-delta"; delta: string }
-  | { type: "regulatory-change-list"; items: RegulatoryChange[] }
+  | { type: "insight-list"; items: Insight[] }
   | { type: "finish" }
   | { type: "abort" };

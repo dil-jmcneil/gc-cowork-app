@@ -1,7 +1,8 @@
-import { DIRECTORY, suggestOwners } from "@/projects/people";
+import {
+  OUTSIDE_CONTACTS, DIRECTORY, suggestOwners } from "@/projects/people";
 
 test("empty input lists the directory", () => {
-  expect(suggestOwners("")).toEqual(DIRECTORY);
+  expect(suggestOwners("")).toEqual([...DIRECTORY, ...OUTSIDE_CONTACTS]);
 });
 
 test("matches directory people by name, role, or email", () => {
@@ -13,7 +14,10 @@ test("matches directory people by name, role, or email", () => {
 test("an email address becomes an external email option", () => {
   const options = suggestOwners("jane@outsidecounsel.com");
   expect(options).toContainEqual(
-    expect.objectContaining({ kind: "email", label: "jane@outsidecounsel.com" }),
+    expect.objectContaining({
+      kind: "email",
+      label: "jane@outsidecounsel.com",
+    }),
   );
 });
 

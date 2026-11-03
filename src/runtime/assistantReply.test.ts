@@ -1,6 +1,6 @@
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import { useChatStore } from "@/chat/chatStore";
-import { SHOW_REGULATORY_CHANGES_PROMPT } from "@/home/quickActionPrompts";
+import { SHOW_INSIGHTS_PROMPT } from "@/home/quickActionPrompts";
 import {
   isChatStreaming,
   sendUserMessage,
@@ -28,7 +28,7 @@ test("opening reply counts as streaming until it finishes", async () => {
 });
 
 test("a follow-up can't start while the opening reply is streaming", async () => {
-  const chat = useChatStore.getState().createChat({ initialUserText: SHOW_REGULATORY_CHANGES_PROMPT });
+  const chat = useChatStore.getState().createChat({ initialUserText: SHOW_INSIGHTS_PROMPT });
   initializeChatSession(chat.id);
   expect(sendUserMessage(chat.id, "another question")).toBe(false);
   await vi.runAllTimersAsync();
@@ -37,7 +37,7 @@ test("a follow-up can't start while the opening reply is streaming", async () =>
 });
 
 test("stopping mid-tool does not mark the running tool as succeeded", async () => {
-  const chat = useChatStore.getState().createChat({ initialUserText: SHOW_REGULATORY_CHANGES_PROMPT });
+  const chat = useChatStore.getState().createChat({ initialUserText: SHOW_INSIGHTS_PROMPT });
   initializeChatSession(chat.id);
   const reply = () => messages(chat.id).find((m) => m.role === "assistant")!;
   while (!reply().parts.some((p) => p.type === "tool")) {
@@ -48,7 +48,7 @@ test("stopping mid-tool does not mark the running tool as succeeded", async () =
   const tools = reply().parts.filter((p) => p.type === "tool");
   expect(tools).toHaveLength(1);
   expect(tools[0].type === "tool" && tools[0].status).not.toBe("success");
-  expect(reply().parts.some((p) => p.type === "regulatory-change-list")).toBe(false);
+  expect(reply().parts.some((p) => p.type === "insight-list")).toBe(false);
   expect(reply().status).toBe("done");
   expect(isChatStreaming(chat.id)).toBe(false);
 });

@@ -25,7 +25,11 @@ export function workWeekDates(monday: string): string[] {
   return [0, 1, 2, 3, 4].map((n) => addDays(monday, n));
 }
 
-const MONTH_DAY = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const MONTH_DAY = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
 
 /** "Oct 26 to Nov 6", matching the Figma Compliance Calendar header. */
 export function formatDateRange(startIso: string, endIso: string): string {
@@ -55,7 +59,11 @@ export function monthGridDates(iso: string): string[] {
   return dates;
 }
 
-const MONTH_YEAR = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+const MONTH_YEAR = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 /** "October 2026". */
 export function formatMonthYear(iso: string): string {

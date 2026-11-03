@@ -1,39 +1,32 @@
 import ArrowRightIcon from "@diligentcorp/atlas-react-bundle/icons/ArrowRight";
 import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
-import {
-  Box,
-  Button,
-  Card,
-  Divider,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Button, Card, Divider, Stack, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
 import { formatDate } from "@/lib/dates";
 import type { Project } from "@/projects/project";
 import { useProjectStore } from "@/projects/projectStore";
-import type { RegulatoryChange } from "@/regulatory/regulatoryChange";
-import { STATUS_COLOR } from "@/regulatory/regulatoryStatus";
+import { InsightTags } from "@/components/insights/InsightTags";
+import { ISSUED_LABEL, RELEVANCE_LABEL, insightType, type Insight } from "@/insights/insight";
+import { STATUS_COLOR } from "@/insights/insightStatus";
 
-export function RegulatoryChangeList({ items }: { items: RegulatoryChange[] }) {
+export function InsightList({ items }: { items: Insight[] }) {
   return (
     <Stack component="ul" gap={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
-      {items.map((change) => (
-        <Box component="li" key={change.id}>
-          <RegulatoryChangeCard change={change} />
+      {items.map((insight) => (
+        <Box component="li" key={insight.id}>
+          <InsightCard insight={insight} />
         </Box>
       ))}
     </Stack>
   );
 }
 
-function RegulatoryChangeCard({ change }: { change: RegulatoryChange }) {
+function InsightCard({ insight }: { insight: Insight }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  const project = useProjectStore((s) => s.projects.find((p) => p.sourceChangeId === change.id));
+  const project = useProjectStore((s) => s.projects.find((p) => p.sourceInsightId === insight.id));
   const muted = tokens.semantic.color.type.muted.value;
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
@@ -41,34 +34,38 @@ function RegulatoryChangeCard({ change }: { change: RegulatoryChange }) {
     <Card sx={{ px: 2, py: 1.5 }}>
       <Stack gap={1}>
         <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
-          <StatusIndicator color={STATUS_COLOR[change.status]} label={change.status} />
+          <StatusIndicator color={STATUS_COLOR[insight.status]} label={insight.status} />
           <Typography variant="textMd" component="h3" sx={{ fontWeight: emphasis, flex: 1, minWidth: 200 }}>
-            {change.title}
+            {insight.title}
           </Typography>
           <Typography variant="textMd" sx={{ color: muted, whiteSpace: "nowrap" }}>
-            {change.regulatoryBody} · Effective {formatDate(change.effectiveDate)}
+            {insight.source} · {ISSUED_LABEL[insightType(insight)]} {formatDate(insight.issuedDate)}
           </Typography>
         </Stack>
 
-        <Typography variant="textMd">{change.summary}</Typography>
+        <InsightTags tags={insight.tags} />
+        <Typography variant="textMd">{insight.summary}</Typography>
 
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "minmax(0, 1fr) minmax(0, 1fr)" },
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "minmax(0, 1fr) minmax(0, 1fr)",
+            },
             columnGap: 2,
             rowGap: 1,
           }}
         >
-          <Detail label={change.deadlines.length === 1 ? "Deadline" : "Deadlines"}>
-            {change.deadlines.map((deadline) => (
+          <Detail label={insight.deadlines.length === 1 ? "Deadline" : "Deadlines"}>
+            {insight.deadlines.map((deadline) => (
               <Typography key={deadline.label} variant="textMd">
                 {deadline.label} · {formatDate(deadline.date)}
               </Typography>
             ))}
           </Detail>
-          <Detail label="Why It Matters">
-            {change.reasonsRelevant.map((reason) => (
+          <Detail label={RELEVANCE_LABEL[insightType(insight)]}>
+            {insight.reasonsRelevant.map((reason) => (
               <Typography key={reason} variant="textMd">
                 {reason}
               </Typography>
@@ -77,7 +74,7 @@ function RegulatoryChangeCard({ change }: { change: RegulatoryChange }) {
         </Box>
 
         <Divider />
-        {project ? <ProjectSummary project={project} /> : <NoProject changeId={change.id} />}
+        {project ? <ProjectSummary project={project} /> : <NoProject insightId={insight.id} />}
       </Stack>
     </Card>
   );
@@ -113,7 +110,7 @@ function ProjectSummary({ project }: { project: Project }) {
   );
 }
 
-function NoProject({ changeId }: { changeId: string }) {
+function NoProject({ insightId }: { insightId: string }) {
   const { tokens } = useTheme();
   return (
     <Stack direction="row" alignItems="center" gap={1.5}>
@@ -122,7 +119,7 @@ function NoProject({ changeId }: { changeId: string }) {
       </Typography>
       <Button
         component={RouterLink}
-        to={`/projects/new?change=${encodeURIComponent(changeId)}`}
+        to={`/projects/new?insight=${encodeURIComponent(insightId)}`}
         variant="contained"
         size="small"
         sx={{ flexShrink: 0 }}
@@ -139,7 +136,10 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
     <Stack gap={0.25}>
       <Typography
         variant="textSm"
-        sx={{ color: tokens.semantic.color.type.muted.value, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+        sx={{
+          color: tokens.semantic.color.type.muted.value,
+          fontWeight: tokens.semantic.fontWeight.emphasis.value,
+        }}
       >
         {label}
       </Typography>

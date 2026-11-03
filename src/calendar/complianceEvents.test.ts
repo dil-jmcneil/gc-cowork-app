@@ -1,7 +1,7 @@
 import { deriveCalendarEvents } from "@/calendar/complianceEvents";
 import type { Project } from "@/projects/project";
 import { DIRECTORY } from "@/projects/people";
-import { CYBER_RULE_CHANGE, REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import { ATG_RULING, INSIGHTS } from "@/insights/insights";
 
 const NOW = new Date("2026-11-01T00:00:00Z");
 const owner = (name: string) => DIRECTORY.find((p) => p.label === name)!;
@@ -9,7 +9,7 @@ const owner = (name: string) => DIRECTORY.find((p) => p.label === name)!;
 const PROJECT: Project = {
   id: "project-1",
   name: "Online cancellation update",
-  sourceChangeId: "ftc-click-to-cancel",
+  sourceInsightId: "atg-v-lane",
   description: "d",
   reasonsRelevant: [],
   statusSummary: "s",
@@ -17,9 +17,12 @@ const PROJECT: Project = {
   plan: {
     proposedApproach: "p",
     status: "accepted",
+    milestones: [],
+    rules: [],
     tasks: [
       {
         id: "t1",
+        milestoneId: "m1",
         description: "Compare the rule against our policies",
         delegator: "Peter",
         delegate: owner("Maya Chen"),
@@ -30,6 +33,7 @@ const PROJECT: Project = {
       },
       {
         id: "t2",
+        milestoneId: "m1",
         description: "Build the online cancellation flow",
         delegator: "Peter",
         delegate: owner("Jordan Lee"),
@@ -40,6 +44,7 @@ const PROJECT: Project = {
       },
       {
         id: "t3",
+        milestoneId: "m1",
         description: "Update customer terms §7",
         delegator: "Peter",
         delegate: owner("Sam Ortiz"),
@@ -50,6 +55,7 @@ const PROJECT: Project = {
       },
       {
         id: "t4",
+        milestoneId: "m1",
         description: "Brief the board",
         delegator: "Peter",
         delegate: owner("Alex Kim"),
@@ -67,18 +73,18 @@ const byId = (id: string) => events().find((e) => e.id === id)!;
 
 test("every regulatory deadline shows as an external deadline, with or without a project", () => {
   const externals = events().filter((e) => e.kind === "external");
-  const expected = REGULATORY_CHANGES.reduce((n, c) => n + c.deadlines.length, 0);
+  const expected = INSIGHTS.reduce((n, c) => n + c.deadlines.length, 0);
   expect(externals).toHaveLength(expected);
   for (const event of externals) {
     expect(event.status).toBe("External");
-    expect(event.changeId).toBeDefined();
+    expect(event.insightId).toBeDefined();
   }
 });
 
 test("a change with no project yet has no tasks on the calendar, only its external deadlines", () => {
-  const cyber = deriveCalendarEvents([], NOW).filter((e) => e.source === CYBER_RULE_CHANGE.title);
-  expect(cyber.length).toBe(CYBER_RULE_CHANGE.deadlines.length);
-  expect(cyber.every((e) => e.kind === "external")).toBe(true);
+  const ruling = deriveCalendarEvents([], NOW).filter((e) => e.source === ATG_RULING.title);
+  expect(ruling.length).toBe(ATG_RULING.deadlines.length);
+  expect(ruling.every((e) => e.kind === "external")).toBe(true);
 });
 
 test("an external deadline whose change has no project is awaiting your response", () => {
@@ -87,14 +93,18 @@ test("an external deadline whose change has no project is awaiting your response
 });
 
 test("an external deadline whose change has a project needs no attention", () => {
-  const ftc = events().filter((e) => e.kind === "external" && e.changeId === "ftc-click-to-cancel");
-  expect(ftc.length).toBeGreaterThan(0);
-  for (const event of ftc) expect(event.attention).toBeUndefined();
+  const atg = events().filter((e) => e.kind === "external" && e.insightId === ATG_RULING.id);
+  expect(atg.length).toBeGreaterThan(0);
+  for (const event of atg) expect(event.attention).toBeUndefined();
 });
 
 test("task events point at their project and task", () => {
   const event = byId("t3");
-  expect(event).toMatchObject({ kind: "task", projectId: "project-1", taskId: "t3" });
+  expect(event).toMatchObject({
+    kind: "task",
+    projectId: "project-1",
+    taskId: "t3",
+  });
   expect(event.owner).toBe("Sam Ortiz");
 });
 
@@ -109,7 +119,10 @@ test("an unfinished task past its deadline is Blocked and asks for a nudge", () 
 });
 
 test("an in-progress task that isn't overdue shows a new status", () => {
-  expect(byId("t3")).toMatchObject({ status: "Assigned", attention: "new-status" });
+  expect(byId("t3")).toMatchObject({
+    status: "Assigned",
+    attention: "new-status",
+  });
 });
 
 test("a not-started task that isn't due yet is Assigned with no attention", () => {

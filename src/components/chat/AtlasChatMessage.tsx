@@ -30,10 +30,10 @@ import type {
   ChatPart,
   ChatReasoningPart,
   ChatToolPart,
-  ChatRegulatoryChangeListPart,
+  ChatInsightListPart,
 } from "@/chat/chatTypes";
 import { ToolCall, ToolGroup } from "@/components/chat/ToolCall";
-import { RegulatoryChangeList } from "@/components/chat/RegulatoryChangeList";
+import { InsightList } from "@/components/chat/InsightList";
 import { chatBodyTypography } from "./chatTypography";
 import { BrandSpinner } from "@/components/chat/BrandSpinner";
 import { useThemeVariantStore } from "@/demo/themeVariantStore";
@@ -168,7 +168,7 @@ type MessageSegment =
   | { kind: "reasoning"; key: string; reasoning: ChatReasoningPart[] }
   | { kind: "tools"; key: string; tools: ChatToolPart[] }
   | { kind: "text"; key: string; text: string }
-  | { kind: "regulatory-change-list"; key: string; part: ChatRegulatoryChangeListPart };
+  | { kind: "insight-list"; key: string; part: ChatInsightListPart };
 
 /**
  * Collapses the flat parts list into ordered, render-ready segments: runs of
@@ -190,8 +190,8 @@ function buildSegments(parts: ChatPart[]): MessageSegment[] {
     } else if (part.type === "text") {
       if (last?.kind === "text") last.text += part.text;
       else segments.push({ kind: "text", key: `x-${index}`, text: part.text });
-    } else if (part.type === "regulatory-change-list") {
-      segments.push({ kind: "regulatory-change-list", key: `l-${index}`, part });
+    } else if (part.type === "insight-list") {
+      segments.push({ kind: "insight-list", key: `l-${index}`, part });
     }
   });
   return segments;
@@ -439,13 +439,13 @@ export function AtlasChatMessage({
   const isStreaming = message.status === "streaming";
 
   // The leading run of reasoning/tool segments — everything before the first
-  // text or regulatory-change-list segment — is the "work" `WorkGroup` collapses.
+  // text or insight-list segment — is the "work" `WorkGroup` collapses.
   // `workEndIndex === segments.length` means the final output hasn't started
   // yet (there's no non-work segment at all), which is also how we tell
   // "still working" from "done working, now writing the answer".
   const workEndIndex = (() => {
     const idx = segments.findIndex(
-      (segment) => segment.kind === "text" || segment.kind === "regulatory-change-list",
+      (segment) => segment.kind === "text" || segment.kind === "insight-list",
     );
     return idx === -1 ? segments.length : idx;
   })();
@@ -508,8 +508,8 @@ export function AtlasChatMessage({
               />
             ) : segment.kind === "tools" ? (
               <ToolCallList tools={segment.tools} />
-            ) : segment.kind === "regulatory-change-list" ? (
-              <RegulatoryChangeList items={segment.part.items} />
+            ) : segment.kind === "insight-list" ? (
+              <InsightList items={segment.part.items} />
             ) : (
               <MessageTextSegment text={segment.text} />
             )}

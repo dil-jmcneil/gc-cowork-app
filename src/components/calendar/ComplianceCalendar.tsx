@@ -14,10 +14,10 @@ import {
   startOfWeek,
   workWeekDates,
 } from "@/calendar/weeks";
-import { RegulatoryChangeDialog } from "@/components/home/RegulatoryChangeDialog";
+import { InsightDialog } from "@/components/home/InsightDialog";
 import { TaskQuickView, type TaskRef } from "@/components/tasks/TaskQuickView";
 import { useProjectStore } from "@/projects/projectStore";
-import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import { INSIGHTS } from "@/insights/insights";
 
 import { CalendarCell } from "./CalendarCell";
 import { CalendarViewToggle, type CalendarView } from "./CalendarViewToggle";
@@ -83,7 +83,7 @@ export function ComplianceCalendar({
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<TaskRef | null>(null);
-  const [openChangeId, setOpenChangeId] = useState<string | null>(null);
+  const [openInsightId, setOpenInsightId] = useState<string | null>(null);
   const nudgeTask = useProjectStore((s) => s.nudgeTask);
 
   const range = rangeFor(variant, view, anchor);
@@ -96,10 +96,10 @@ export function ComplianceCalendar({
     setToast(event.owner ? `Nudge sent to ${event.owner}.` : "Nudge sent.");
   };
 
-  /** Tasks open the task quick view; external deadlines open their regulatory change. */
+  /** Tasks open the task quick view; external deadlines open their insight. */
   const handleOpen = (event: CalendarEvent) => {
     if (event.kind === "task") setOpenTask({ projectId: event.projectId, taskId: event.taskId });
-    else setOpenChangeId(event.changeId);
+    else setOpenInsightId(event.insightId);
   };
 
   return (
@@ -176,9 +176,9 @@ export function ComplianceCalendar({
         onClose={() => setOpenTask(null)}
         onNudge={(owner) => setToast(`Nudge sent to ${owner}.`)}
       />
-      <RegulatoryChangeDialog
-        change={REGULATORY_CHANGES.find((c) => c.id === openChangeId) ?? null}
-        onClose={() => setOpenChangeId(null)}
+      <InsightDialog
+        insight={INSIGHTS.find((c) => c.id === openInsightId) ?? null}
+        onClose={() => setOpenInsightId(null)}
       />
 
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>

@@ -1,23 +1,15 @@
-import {
-  Box,
-  Button,
-  Container,
-  GridLegacy as Grid,
-  Link,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Button, Container, GridLegacy as Grid, Link, Stack, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { FieldLabel, SectionCard } from "@/components/projects/SectionCard";
-import { SourceChangeCard } from "@/components/projects/SourceChangeCard";
-import { TaskTable } from "@/components/projects/TaskTable";
+import { SourceInsightCard } from "@/components/projects/SourceInsightCard";
+import { PlanMilestones } from "@/components/projects/PlanMilestones";
+import { RuleTable } from "@/components/projects/RuleTable";
 import { TaskQuickView } from "@/components/tasks/TaskQuickView";
 import { useProjectStore } from "@/projects/projectStore";
-import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import { INSIGHTS } from "@/insights/insights";
 
 export default function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -39,7 +31,7 @@ export default function ProjectPage() {
     );
   }
 
-  const change = REGULATORY_CHANGES.find((c) => c.id === project.sourceChangeId);
+  const insight = INSIGHTS.find((c) => c.id === project.sourceInsightId);
   const muted = tokens.semantic.color.type.muted.value;
   const planAccepted = project.plan.status === "accepted";
 
@@ -47,7 +39,13 @@ export default function ProjectPage() {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Stack gap={3}>
         <Stack gap={0.5}>
-          <Typography variant="textSm" sx={{ color: muted, fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          <Typography
+            variant="textSm"
+            sx={{
+              color: muted,
+              fontWeight: tokens.semantic.fontWeight.emphasis.value,
+            }}
+          >
             Project
           </Typography>
           <Typography variant="h4" component="h1">
@@ -61,7 +59,7 @@ export default function ProjectPage() {
               <SectionCard title="Status Summary">
                 <Typography variant="textMd">{project.statusSummary}</Typography>
               </SectionCard>
-              <SectionCard title="About This Change">
+              <SectionCard title="About This Insight">
                 <Typography variant="textMd">{project.description}</Typography>
                 <Stack gap={0.5}>
                   <FieldLabel>Why it's relevant</FieldLabel>
@@ -74,34 +72,25 @@ export default function ProjectPage() {
                   </Box>
                 </Stack>
               </SectionCard>
-
             </Stack>
           </Grid>
 
           <Grid item sm={4} md={8} lg={3} xl={4}>
-            <Stack gap={2}>
-              {change ? <SourceChangeCard change={change} /> : null}
-            </Stack>
+            <Stack gap={2}>{insight ? <SourceInsightCard insight={insight} /> : null}</Stack>
           </Grid>
         </Grid>
 
         <SectionCard
           title="Plan"
           action={
-            <StatusIndicator
-              color={planAccepted ? "success" : "subtle"}
-              label={planAccepted ? "Accepted" : "Draft"}
-            />
+            <StatusIndicator color={planAccepted ? "success" : "subtle"} label={planAccepted ? "Accepted" : "Draft"} />
           }
         >
           <Stack gap={0.5}>
             <FieldLabel>Proposed approach</FieldLabel>
             <Typography variant="textMd">{project.plan.proposedApproach}</Typography>
           </Stack>
-          <Stack gap={0.5}>
-            <FieldLabel>Tasks</FieldLabel>
-            <TaskTable tasks={project.plan.tasks} onOpenTask={setOpenTaskId} />
-          </Stack>
+          <PlanMilestones plan={project.plan} onOpenTask={setOpenTaskId} />
           <Stack direction="row" gap={1.5} justifyContent="flex-end">
             <Button
               variant="outlined"
@@ -115,6 +104,14 @@ export default function ProjectPage() {
               </Button>
             )}
           </Stack>
+        </SectionCard>
+
+        <SectionCard title="Rules for Every Milestone">
+          <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+            Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits, it
+            stops and asks you.
+          </Typography>
+          <RuleTable rules={project.plan.rules} ariaLabel="Rules for every milestone" />
         </SectionCard>
       </Stack>
       <TaskQuickView

@@ -28,8 +28,10 @@ export function TaskTable({
   tasks,
   onOwnerChange,
   onOpenTask,
+  ariaLabel = "Tasks",
 }: {
   tasks: ProjectTask[];
+  ariaLabel?: string;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   /** Makes each task's description open it, e.g. in the quick view. */
   onOpenTask?: (taskId: string) => void;
@@ -39,10 +41,10 @@ export function TaskTable({
 
   return (
     <TableContainer>
-      <Table size="small" aria-label="Tasks">
+      <Table size="small" aria-label={ariaLabel}>
         <TableHead>
           <TableRow>
-            <TableCell>Task</TableCell>
+            <TableCell sx={{ width: "38%" }}>Task</TableCell>
             <TableCell>Owner</TableCell>
             <TableCell>CC</TableCell>
             <TableCell>Deadline</TableCell>
@@ -52,7 +54,7 @@ export function TaskTable({
         <TableBody>
           {tasks.map((task) => (
             <TableRow key={task.id}>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: "normal" }}>
                 {onOpenTask ? (
                   <Link
                     component="button"
@@ -97,7 +99,7 @@ function OwnerCell({ owner }: { owner: TaskOwner }) {
     <Stack>
       <Typography variant="textMd">{owner.label}</Typography>
       <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-        {owner.kind === "directory" ? owner.detail.split(" · ")[0] : owner.detail}
+        {owner.detail.split(" · ")[0]}
       </Typography>
     </Stack>
   );

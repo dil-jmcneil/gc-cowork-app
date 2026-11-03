@@ -46,7 +46,12 @@ export function OwnerTypeahead({
       inputValue={inputValue}
       onInputChange={(_, next) => setInputValue(next)}
       onChange={(_, next) => {
-        onChange({ id: next.id, label: next.label, detail: next.detail, kind: next.kind });
+        onChange({
+          id: next.id,
+          label: next.label,
+          detail: next.detail,
+          kind: next.kind,
+        });
         setInputValue(next.label);
       }}
       onBlur={() => setInputValue(value.label)}
@@ -54,9 +59,7 @@ export function OwnerTypeahead({
       filterOptions={(o) => o}
       getOptionLabel={(o) => o.label}
       isOptionEqualToValue={(a, b) => a.id === b.id}
-      renderOption={(props, option) =>
-        userLookup.renderOption(props as unknown as PresetItemProps, asPreset(option))
-      }
+      renderOption={(props, option) => userLookup.renderOption(props as unknown as PresetItemProps, asPreset(option))}
       noOptionsText="Type a name, email, or @handle"
       renderInput={(params) => (
         <TextField

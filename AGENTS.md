@@ -94,6 +94,18 @@ Assume that you're working on an enterprise B2B app unless otherwise specified.
 
 The org name and logo you can set on the `AppLayout` component in `App.tsx` should represent the customer.
 
+### Insights, not regulatory changes
+
+Anything Cowork surfaces for the GC is an **insight** (`src/insights`). Its kind is a metadata tag, not a separate object: each insight has exactly one `type` tag ("Court ruling", "Regulatory change", "Enforcement action", "Peer filing") plus optional `jurisdiction` and `topic` tags. Don't call an insight a "regulatory change" in code or copy unless its type tag says so. The primary demo insight is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`).
+
+### Plans are milestones plus rule rows
+
+Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into Boxes and Arrows"):
+
+- **Milestones** are a short, ordered spine. Each is a contract: what must be true to start, what must exist when it's done, and who approves the handover. Don't describe the route inside a milestone.
+- **Rules** are flat rows of *when* (precondition), *Cowork does* (bounded actions, with a circuit breaker where retries are involved) and *until* (postcondition). Rows never refer to other rows. Add failures and edge cases as new `exception` rows instead of new steps.
+- Rules that apply everywhere live on the plan; the rest live on their milestone. Always include a "no rule fits" row that stops and asks the GC.
+
 ## Writing style
 
 The Diligent writing style is following the Microsoft Writing Style Guide. Consult it for detailed information, but here are some important rules to follow:

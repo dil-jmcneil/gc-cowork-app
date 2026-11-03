@@ -1,50 +1,46 @@
-import type { RegulatoryChange } from "@/regulatory/regulatoryChange";
+import type { Insight } from "@/insights/insight";
 import { LOGGED_IN_USER } from "@/user";
 
 import { findPerson, ownerShortName } from "./people";
+import { formatShortDate } from "./taskStatus";
 import type { Project, ProjectDraft, ProjectTask } from "./project";
 
-const dateFormat = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
+const ASSOCIATE_GC = "pete.lin@acme.com";
+const CORPORATE_SECRETARY = "alex.kim@acme.com";
 
-function formatShortDate(iso: string): string {
-  return dateFormat.format(new Date(`${iso}T00:00:00Z`));
-}
-
-const COMPLIANCE_LEAD = "sam.ortiz@acme.com";
-const PRIVACY_COUNSEL = "jordan.lee@acme.com";
-
-/** The compliance lead stays informed on every task, unless they own it. */
+/** The associate GC stays informed on every task, unless they own it. */
 function defaultCcs(ownerEmail: string) {
-  return [findPerson(ownerEmail === COMPLIANCE_LEAD ? PRIVACY_COUNSEL : COMPLIANCE_LEAD)];
+  return [findPerson(ownerEmail === ASSOCIATE_GC ? CORPORATE_SECRETARY : ASSOCIATE_GC)];
 }
 
-/** Mocked "AI" draft: name, description, and a plan built from the change's task templates. */
-export function draftProjectFromChange(change: RegulatoryChange): ProjectDraft {
-  const firstDeadline = [...change.deadlines].sort((a, b) => a.date.localeCompare(b.date))[0];
+/** Mocked "AI" draft: name, description, and the insight's plan, with one task per template. */
+export function draftProjectFromInsight(insight: Insight): ProjectDraft {
+  const { approach, milestones, rules } = insight.plan;
 
-  const tasks: ProjectTask[] = change.taskTemplates.map((template) => ({
-    id: `${change.id}-${template.id}`,
-    description: template.description,
-    delegator: LOGGED_IN_USER.firstName,
-    delegate: findPerson(template.ownerEmail),
-    ccs: defaultCcs(template.ownerEmail),
-    deadline: template.due,
-    status: "Not started",
-    thread: [],
-  }));
+  const tasks: ProjectTask[] = milestones.flatMap((milestone) =>
+    milestone.tasks.map((template) => ({
+      id: `${insight.id}-${template.id}`,
+      milestoneId: milestone.id,
+      description: template.description,
+      delegator: LOGGED_IN_USER.firstName,
+      delegate: findPerson(template.ownerEmail),
+      ccs: defaultCcs(template.ownerEmail),
+      deadline: template.due,
+      status: "Not started",
+      thread: [],
+    })),
+  );
 
   return {
-    name: change.title,
-    sourceChangeId: change.id,
-    description: change.summary,
-    reasonsRelevant: [...change.reasonsRelevant],
+    name: insight.title,
+    sourceInsightId: insight.id,
+    description: insight.summary,
+    reasonsRelevant: [...insight.reasonsRelevant],
     plan: {
-      proposedApproach: `Find where our current policies fall short of the new ${change.regulatoryBody} requirements, assign an owner for each gap, and close them before ${formatShortDate(firstDeadline.date)}.`,
+      proposedApproach: approach,
       status: "draft",
+      milestones: milestones.map(({ tasks: _tasks, ...milestone }) => milestone),
+      rules,
       tasks,
     },
   };
@@ -54,9 +50,7 @@ export function draftProjectFromChange(change: RegulatoryChange): ProjectDraft {
 export function summarizeProject(project: Pick<Project, "plan">): string {
   const { tasks, status } = project.plan;
   const done = tasks.filter((t) => t.status === "Done").length;
-  const next = tasks
-    .filter((t) => t.status !== "Done")
-    .sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
+  const next = tasks.filter((t) => t.status !== "Done").sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
   const progress = `${done} of ${tasks.length} tasks done`;
   if (!next) return `${progress}. Everything on the plan is complete.`;
   const planNote = status === "draft" ? " The plan is still a draft." : "";

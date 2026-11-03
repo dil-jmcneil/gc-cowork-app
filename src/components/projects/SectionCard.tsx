@@ -18,7 +18,10 @@ export function SectionCard({
     <Card
       component="section"
       aria-label={title}
-      sx={{ bgcolor: tokens.semantic.color.surface.default.value, height: "100%" }}
+      sx={{
+        bgcolor: tokens.semantic.color.surface.default.value,
+        height: "100%",
+      }}
     >
       <CardContent sx={{ p: 0, pb: 2, "&:last-child": { pb: 2 } }}>
         <Stack gap={1.5}>
@@ -27,7 +30,10 @@ export function SectionCard({
             <Typography
               variant="textMd"
               component="h2"
-              sx={{ flex: 1, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+              sx={{
+                flex: 1,
+                fontWeight: tokens.semantic.fontWeight.emphasis.value,
+              }}
             >
               {title}
             </Typography>
@@ -46,7 +52,10 @@ export function FieldLabel({ children }: { children: ReactNode }) {
   return (
     <Typography
       variant="textSm"
-      sx={{ color: tokens.semantic.color.type.muted.value, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+      sx={{
+        color: tokens.semantic.color.type.muted.value,
+        fontWeight: tokens.semantic.fontWeight.emphasis.value,
+      }}
     >
       {children}
     </Typography>

@@ -23,13 +23,7 @@ test("addDays shifts an ISO date by n days", () => {
 });
 
 test("workWeekDates returns the five weekdays starting Monday", () => {
-  expect(workWeekDates("2026-10-26")).toEqual([
-    "2026-10-26",
-    "2026-10-27",
-    "2026-10-28",
-    "2026-10-29",
-    "2026-10-30",
-  ]);
+  expect(workWeekDates("2026-10-26")).toEqual(["2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30"]);
 });
 
 test("formatDateRange reads like the Figma header", () => {

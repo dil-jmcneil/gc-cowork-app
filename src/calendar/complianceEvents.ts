@@ -1,8 +1,9 @@
 import type { Project, ProjectTask } from "@/projects/project";
 import { taskAttention } from "@/projects/taskStatus";
-import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import { insightType } from "@/insights/insight";
+import { INSIGHTS } from "@/insights/insights";
 
-/** Task statuses, plus "External" for regulator-set deadlines. */
+/** Task statuses, plus "External" for deadlines set outside the company. */
 export type CalendarEventStatus = "Assigned" | "Complete" | "Blocked" | "External";
 
 /** What the timeline's right-hand Attention slot shows for an event. */
@@ -17,7 +18,7 @@ type EventBase = {
   description: string;
   status: CalendarEventStatus;
   attention?: CalendarEventAttention;
-  /** The regulatory change or project this event belongs to. */
+  /** The insight or project this event belongs to. */
   source: string;
   /** Who owns it, when someone does. */
   owner?: string;
@@ -31,7 +32,7 @@ type EventBase = {
 
 export type CalendarEvent =
   | (EventBase & { kind: "task"; projectId: string; taskId: string })
-  | (EventBase & { kind: "external"; changeId: string });
+  | (EventBase & { kind: "external"; insightId: string });
 
 function taskEvent(project: Project, task: ProjectTask, now: Date): CalendarEvent {
   const owner = task.delegate.label;
@@ -84,36 +85,34 @@ function taskEvent(project: Project, task: ProjectTask, now: Date): CalendarEven
 }
 
 /**
- * Compliance calendar events: every regulatory deadline as an external
- * deadline, plus the tasks of every project. A change has no tasks until
+ * Compliance calendar events: every insight deadline as an external
+ * deadline, plus the tasks of every project. A insight has no tasks until
  * its project exists.
  */
 export function deriveCalendarEvents(projects: Project[], now: Date): CalendarEvent[] {
-  const projectChangeIds = new Set(projects.map((p) => p.sourceChangeId));
+  const projectChangeIds = new Set(projects.map((p) => p.sourceInsightId));
 
-  const externalEvents: CalendarEvent[] = REGULATORY_CHANGES.flatMap((change) =>
-    change.deadlines.map((deadline, index) => {
-      const hasProject = projectChangeIds.has(change.id);
+  const externalEvents: CalendarEvent[] = INSIGHTS.flatMap((insight) =>
+    insight.deadlines.map((deadline, index) => {
+      const hasProject = projectChangeIds.has(insight.id);
       return {
         kind: "external" as const,
-        id: `${change.id}-deadline-${index}`,
-        changeId: change.id,
+        id: `${insight.id}-deadline-${index}`,
+        insightId: insight.id,
         date: deadline.date,
         title: deadline.label,
-        description: `${change.title} · ${change.regulatoryBody}`,
+        description: `${insight.title} · ${insight.source}`,
         status: "External" as const,
         ...(hasProject ? {} : { attention: "awaiting-response" as const }),
-        source: change.title,
-        href: hasProject ? "/" : `/projects/new?change=${encodeURIComponent(change.id)}`,
-        linkLabel: `Regulatory change: ${change.title}`,
+        source: insight.title,
+        href: hasProject ? "/" : `/projects/new?insight=${encodeURIComponent(insight.id)}`,
+        linkLabel: `${insightType(insight)}: ${insight.title}`,
         nextStep: hasProject ? "Track it through the project's tasks" : "Create a project to assign owners",
       };
     }),
   );
 
-  const taskEvents = projects.flatMap((project) =>
-    project.plan.tasks.map((task) => taskEvent(project, task, now)),
-  );
+  const taskEvents = projects.flatMap((project) => project.plan.tasks.map((task) => taskEvent(project, task, now)));
 
   return [...externalEvents, ...taskEvents].sort((a, b) => a.date.localeCompare(b.date));
 }

@@ -20,69 +20,61 @@ import { Link as RouterLink, useNavigate } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { formatDate } from "@/lib/dates";
+import { InsightTags } from "@/components/insights/InsightTags";
 import { useProjectStore } from "@/projects/projectStore";
-import type { RegulatoryChange } from "@/regulatory/regulatoryChange";
-import { projectActionForChange } from "@/regulatory/regulatoryChangeActions";
-import { STATUS_COLOR } from "@/regulatory/regulatoryStatus";
+import { ISSUED_LABEL, RELEVANCE_LABEL, insightType, type Insight } from "@/insights/insight";
+import { projectActionForInsight } from "@/insights/insightActions";
+import { STATUS_COLOR } from "@/insights/insightStatus";
 
 const SEE_IN_CHAT_PROMPT_PREFIX = "Tell me about";
 
-export function RegulatoryChangeDialog({
-  change,
-  onClose,
-}: {
-  change: RegulatoryChange | null;
-  onClose: () => void;
-}) {
+export function InsightDialog({ insight, onClose }: { insight: Insight | null; onClose: () => void }) {
   const { tokens, presets } = useTheme();
   const navigate = useNavigate();
   const project = useProjectStore((s) =>
-    change ? s.projects.find((p) => p.sourceChangeId === change.id) : undefined,
+    insight ? s.projects.find((p) => p.sourceInsightId === insight.id) : undefined,
   );
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const muted = tokens.semantic.color.type.muted.value;
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
-  if (!change) return null;
-  const action = projectActionForChange(change.id, project);
+  if (!insight) return null;
+  const action = projectActionForInsight(insight.id, project);
+  const type = insightType(insight);
 
   return (
-    <Dialog
-      open
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle component="div" sx={{ pr: 6 }}>
         <Stack gap={0.5} sx={{ minWidth: 0 }}>
           <Typography variant="h4" component="h2">
-            {change.title}
+            {insight.title}
           </Typography>
           <Typography variant="textMd" sx={{ color: muted }}>
-            {change.regulatoryBody}
+            {insight.source}
+            {insight.citation ? ` · ${insight.citation}` : ""}
           </Typography>
         </Stack>
-        <IconButton
-          aria-label="Close"
-          onClick={onClose}
-          size="small"
-          sx={{ position: "absolute", top: 12, right: 12 }}
-        >
+        <IconButton aria-label="Close" onClick={onClose} size="small" sx={{ position: "absolute", top: 12, right: 12 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
         <Stack gap={2.5}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-            <Stack direction="row" alignItems="center" gap={1} sx={{ color: muted }}>
-              <CalendarIcon aria-hidden style={{ width: 16, height: 16 }} />
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={2}>
+            <Stack direction="row" alignItems="flex-start" gap={1} sx={{ color: muted, minWidth: 0 }}>
+              <CalendarIcon aria-hidden style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
               <Typography variant="textMd" sx={{ color: "inherit" }}>
-                Effective: {formatDate(change.effectiveDate)}
+                {ISSUED_LABEL[type]} {formatDate(insight.issuedDate)}
+                {insight.history ? `. ${insight.history}.` : ""}
               </Typography>
             </Stack>
-            <StatusIndicator color={STATUS_COLOR[change.status]} label={change.status} />
+            <Box sx={{ flexShrink: 0 }}>
+              <StatusIndicator color={STATUS_COLOR[insight.status]} label={insight.status} />
+            </Box>
           </Stack>
+
+          <InsightTags tags={insight.tags} />
 
           <Box
             sx={{
@@ -93,18 +85,24 @@ export function RegulatoryChangeDialog({
           >
             <Stack gap={0.5}>
               <SectionLabel>Summary</SectionLabel>
-              <Typography variant="textMd">{change.summary}</Typography>
+              <Typography variant="textMd">{insight.summary}</Typography>
             </Stack>
           </Box>
 
           <Stack gap={1}>
-            <SectionLabel>Reasons Relevant</SectionLabel>
+            <SectionLabel>{RELEVANCE_LABEL[type]}</SectionLabel>
             <Stack gap={0.75}>
-              {change.reasonsRelevant.map((reason) => (
+              {insight.reasonsRelevant.map((reason) => (
                 <Stack key={reason} direction="row" gap={1} alignItems="flex-start">
                   <InfoIcon
                     aria-hidden
-                    style={{ width: 16, height: 16, marginTop: 2, color: muted, flexShrink: 0 }}
+                    style={{
+                      width: 16,
+                      height: 16,
+                      marginTop: 2,
+                      color: muted,
+                      flexShrink: 0,
+                    }}
                   />
                   <Typography variant="textMd">{reason}</Typography>
                 </Stack>
@@ -115,7 +113,7 @@ export function RegulatoryChangeDialog({
           <Stack gap={1}>
             <SectionLabel>Key Deadlines</SectionLabel>
             <Stack gap={1.25}>
-              {change.deadlines.map((deadline) => (
+              {insight.deadlines.map((deadline) => (
                 <Stack key={deadline.label} gap={0.25}>
                   <Typography variant="textMd" sx={{ fontWeight: emphasis }}>
                     {deadline.label}
@@ -158,7 +156,7 @@ export function RegulatoryChangeDialog({
           variant="outlined"
           onClick={() => {
             onClose();
-            startChatFromPrompt(`${SEE_IN_CHAT_PROMPT_PREFIX} ${change.title.toLowerCase()}.`, navigate);
+            startChatFromPrompt(`${SEE_IN_CHAT_PROMPT_PREFIX} ${insight.title.toLowerCase()}.`, navigate);
           }}
         >
           See in chat

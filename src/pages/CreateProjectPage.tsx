@@ -16,25 +16,26 @@ import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 
 import { SideChatLayout } from "@/components/chat/SideChatLayout";
 import { FieldLabel, SectionCard } from "@/components/projects/SectionCard";
-import { SourceChangeCard } from "@/components/projects/SourceChangeCard";
-import { TaskTable } from "@/components/projects/TaskTable";
+import { SourceInsightCard } from "@/components/projects/SourceInsightCard";
+import { PlanMilestones } from "@/components/projects/PlanMilestones";
+import { RuleTable } from "@/components/projects/RuleTable";
 import { draftChatId, seedDraftChat } from "@/projects/draftChat";
 import type { ProjectDraft } from "@/projects/project";
-import { draftProjectFromChange } from "@/projects/projectDraft";
+import { draftProjectFromInsight } from "@/projects/projectDraft";
 import { useProjectStore } from "@/projects/projectStore";
-import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import { INSIGHTS } from "@/insights/insights";
 
 export default function CreateProjectPage() {
   const [params] = useSearchParams();
-  const change = REGULATORY_CHANGES.find((c) => c.id === params.get("change"));
+  const insight = INSIGHTS.find((c) => c.id === params.get("insight"));
   const existing = useProjectStore((s) =>
-    change ? s.projects.find((p) => p.sourceChangeId === change.id) : undefined,
+    insight ? s.projects.find((p) => p.sourceInsightId === insight.id) : undefined,
   );
 
-  if (!change) {
+  if (!insight) {
     return (
       <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">We couldn't find that regulatory change.</Typography>
+        <Typography variant="textMd">We couldn't find that insight.</Typography>
         <Link component={RouterLink} to="/">
           Go to home
         </Link>
@@ -44,14 +45,14 @@ export default function CreateProjectPage() {
   if (existing) {
     return (
       <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">There's already a project for this change.</Typography>
+        <Typography variant="textMd">There's already a project for this insight.</Typography>
         <Link component={RouterLink} to={`/projects/${existing.id}`}>
           Open {existing.name}
         </Link>
       </Stack>
     );
   }
-  return <CreateProjectForm key={change.id} initialDraft={draftProjectFromChange(change)} />;
+  return <CreateProjectForm key={insight.id} initialDraft={draftProjectFromInsight(insight)} />;
 }
 
 function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
@@ -59,21 +60,23 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
   const navigate = useNavigate();
   const createProject = useProjectStore((s) => s.createProject);
   const [draft, setDraft] = useState(initialDraft);
-  const change = REGULATORY_CHANGES.find((c) => c.id === draft.sourceChangeId)!;
+  const insight = INSIGHTS.find((c) => c.id === draft.sourceInsightId)!;
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
 
-  useEffect(() => seedDraftChat(change), [change]);
+  useEffect(() => seedDraftChat(insight), [insight]);
 
-  const setPlan = (patch: Partial<ProjectDraft["plan"]>) =>
-    setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
+  const setPlan = (patch: Partial<ProjectDraft["plan"]>) => setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
 
   const handleCreate = () => {
-    const project = createProject({ ...draft, plan: { ...draft.plan, status: "accepted" } });
+    const project = createProject({
+      ...draft,
+      plan: { ...draft.plan, status: "accepted" },
+    });
     navigate(`/projects/${project.id}`);
   };
 
   return (
-    <SideChatLayout chatId={draftChatId(change.id)}>
+    <SideChatLayout chatId={draftChatId(insight.id)}>
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Stack gap={3}>
           <Stack gap={0.5}>
@@ -81,7 +84,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
               Create project
             </Typography>
             <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-              Cowork drafted this from the regulatory change. Review it, then create the project.
+              Cowork drafted this from the insight. Review the plan, then start the project.
             </Typography>
           </Stack>
 
@@ -99,12 +102,17 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
                       />
                     </FormControl>
                     <FormControl fullWidth>
-                      <FormLabel htmlFor="project-description">Description of change</FormLabel>
+                      <FormLabel htmlFor="project-description">Description</FormLabel>
                       <TextField
                         multiline
                         minRows={2}
                         value={draft.description}
-                        onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+                        onChange={(e) =>
+                          setDraft((d) => ({
+                            ...d,
+                            description: e.target.value,
+                          }))
+                        }
                         slotProps={{ input: { id: "project-description" } }}
                       />
                     </FormControl>
@@ -120,18 +128,14 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
                     </Stack>
                   </Stack>
                 </SectionCard>
-
               </Stack>
             </Grid>
             <Grid item sm={4} md={8} lg={3} xl={4}>
-              <SourceChangeCard change={change} />
+              <SourceInsightCard insight={insight} />
             </Grid>
           </Grid>
 
-          <SectionCard
-            title="Proposed Plan"
-            action={<StatusIndicator color="subtle" label="Draft" />}
-          >
+          <SectionCard title="Proposed Plan" action={<StatusIndicator color="subtle" label="Draft" />}>
             <Stack gap={2}>
               <FormControl fullWidth>
                 <FormLabel htmlFor="plan-approach">Proposed approach</FormLabel>
@@ -143,18 +147,23 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
                   slotProps={{ input: { id: "plan-approach" } }}
                 />
               </FormControl>
-              <Stack gap={0.5}>
-                <FieldLabel>Tasks</FieldLabel>
-                <TaskTable
-                  tasks={draft.plan.tasks}
-                  onOwnerChange={(taskId, owner) =>
-                    setPlan({
-                      tasks: draft.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
-                    })
-                  }
-                />
-              </Stack>
+              <PlanMilestones
+                plan={draft.plan}
+                onOwnerChange={(taskId, owner) =>
+                  setPlan({
+                    tasks: draft.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
+                  })
+                }
+              />
             </Stack>
+          </SectionCard>
+
+          <SectionCard title="Rules for Every Milestone">
+            <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+              Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits,
+              it stops and asks you.
+            </Typography>
+            <RuleTable rules={draft.plan.rules} ariaLabel="Rules for every milestone" />
           </SectionCard>
 
           <Stack direction="row" justifyContent="flex-end" gap={1.5}>

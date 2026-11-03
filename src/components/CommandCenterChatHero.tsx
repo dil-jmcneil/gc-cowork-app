@@ -2,7 +2,7 @@ import { Stack, Typography, useTheme } from "@mui/material";
 
 /** Capability summary shown under the Command Center / New chat hero heading. */
 export const COMMAND_CENTER_CHAT_CAPABILITY_SUMMARY =
-  "Ask about a rule, see what's changed, or check what's due. Cowork keeps track of the regulations that affect you.";
+  "Ask about a rule or ruling, see what's new, or check what's due. Cowork keeps track of the insights that affect you.";
 
 /**
  * Shared hero heading for Command Center home and New chat — non-personalized title

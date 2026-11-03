@@ -1,22 +1,20 @@
 import { LOGGED_IN_USER } from "@/user";
 
-import type { TaskOwner } from "./people";
+import { ownerShortName, type TaskOwner } from "./people";
 import type { ProjectTask, TaskStatus } from "./project";
 import { formatShortDate } from "./taskStatus";
 import { makeMessageId, type TaskMessage } from "./thread";
 
 const GC = LOGGED_IN_USER.firstName;
 
-function firstName(owner: TaskOwner): string {
-  return owner.kind === "directory" ? owner.label.split(" ")[0] : owner.label;
-}
+const firstName = ownerShortName;
 
 /** "Review tools with HR" → "review tools with HR": only the first letter drops, so acronyms survive. */
 function asPhrase(description: string): string {
   return description.charAt(0).toLowerCase() + description.slice(1);
 }
 
-function coworkEmail(to: TaskOwner, subject: string, body: string, sentAt: string): TaskMessage {
+export function coworkEmail(to: TaskOwner, subject: string, body: string, sentAt: string): TaskMessage {
   return {
     id: makeMessageId(),
     channel: "email",
@@ -39,14 +37,14 @@ export function assignmentEmail(task: ProjectTask, sentAt: string): TaskMessage 
   );
 }
 
-/** A nudge from Cowork to the owner. */
-export function reminderEmail(task: ProjectTask, sentAt: string): TaskMessage {
+/** A nudge from Cowork to the owner; `attempt` counts follow-ups against the circuit breaker. */
+export function reminderEmail(task: ProjectTask, sentAt: string, attempt?: { n: number; of: number }): TaskMessage {
   const overdue = new Date(`${task.deadline}T00:00:00Z`) < new Date(sentAt);
   const when = overdue ? `was due ${formatShortDate(task.deadline)}` : `is due ${formatShortDate(task.deadline)}`;
   return coworkEmail(
     task.delegate,
     `Reminder: ${task.description}`,
-    `Hi ${firstName(task.delegate)}, following up for ${GC}: "${task.description}" ${when}. Where does it stand?`,
+    `Hi ${firstName(task.delegate)}, following up for ${GC}: "${task.description}" ${when}. Where does it stand?${attempt ? ` (Follow-up ${attempt.n} of ${attempt.of}.)` : ""}`,
     sentAt,
   );
 }
@@ -88,18 +86,33 @@ export function statusChangeNote(status: TaskStatus, sentAt: string): TaskMessag
   };
 }
 
+/** Cowork tells the GC something in chat, such as which rule it applied. */
+export function coworkNote(body: string, sentAt: string): TaskMessage {
+  return {
+    id: makeMessageId(),
+    channel: "chat",
+    authorRole: "cowork",
+    authorName: "Cowork",
+    to: [GC],
+    body,
+    sentAt,
+  };
+}
+
 /** The GC's own message, added through the chat surface. */
 export function gcChatMessage(text: string, sentAt: string): TaskMessage {
-  return { id: makeMessageId(), channel: "chat", authorRole: "delegator", authorName: GC, body: text, sentAt };
+  return {
+    id: makeMessageId(),
+    channel: "chat",
+    authorRole: "delegator",
+    authorName: GC,
+    body: text,
+    sentAt,
+  };
 }
 
 /** An owner's reply by email. */
-export function ownerReply(
-  owner: TaskOwner,
-  body: string,
-  sentAt: string,
-  attachments?: string[],
-): TaskMessage {
+export function ownerReply(owner: TaskOwner, body: string, sentAt: string, attachments?: string[]): TaskMessage {
   return {
     id: makeMessageId(),
     channel: "email",

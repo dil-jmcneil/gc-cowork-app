@@ -2,11 +2,7 @@ import { Box, Stack, Typography, useTheme } from "@mui/material";
 import { useNavigate } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
-import {
-  DUE_SOON_PROMPT,
-  RESEARCH_REGULATION_PROMPT,
-  SHOW_REGULATORY_CHANGES_PROMPT,
-} from "@/home/quickActionPrompts";
+import { DUE_SOON_PROMPT, RESEARCH_REGULATION_PROMPT, SHOW_INSIGHTS_PROMPT } from "@/home/quickActionPrompts";
 
 /** Three quick action cards under the home composer; each starts a prompted chat. */
 
@@ -19,10 +15,10 @@ type QuickAction = {
 
 const ACTIONS: QuickAction[] = [
   {
-    id: "regulatory-changes",
-    title: "Show recent regulatory changes",
-    description: "See what's changed in the rules that affect us, and why each one matters.",
-    prompt: SHOW_REGULATORY_CHANGES_PROMPT,
+    id: "insights",
+    title: "Show recent insights",
+    description: "See new rulings and rule changes that affect us, and why each one matters.",
+    prompt: SHOW_INSIGHTS_PROMPT,
   },
   {
     id: "due-soon",
@@ -44,12 +40,7 @@ export function HomeQuickActions() {
 
   return (
     <Stack gap={1}>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        gap={1.25}
-        role="list"
-        aria-label="Quick actions"
-      >
+      <Stack direction={{ xs: "column", sm: "row" }} gap={1.25} role="list" aria-label="Quick actions">
         {ACTIONS.map((action) => (
           <Box
             key={action.id}
@@ -71,8 +62,7 @@ export function HomeQuickActions() {
               borderRadius: tokens.semantic.radius.lg.value,
               border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
               bgcolor: tokens.semantic.color.surface.default.value,
-              transition:
-                "border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease",
+              transition: "border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease",
               "&:hover": {
                 borderColor: tokens.semantic.color.outline.default.value,
                 bgcolor: tokens.semantic.color.surface.subtle.value,
@@ -93,21 +83,13 @@ export function HomeQuickActions() {
             >
               {action.title}
             </Typography>
-            <Typography
-              component="span"
-              variant="textSm"
-              sx={{ color: tokens.semantic.color.type.muted.value }}
-            >
+            <Typography component="span" variant="textSm" sx={{ color: tokens.semantic.color.type.muted.value }}>
               {action.description}
             </Typography>
           </Box>
         ))}
       </Stack>
-      <Typography
-        variant="textSm"
-        align="center"
-        sx={{ color: tokens.semantic.color.type.muted.value, pt: 0.5 }}
-      >
+      <Typography variant="textSm" align="center" sx={{ color: tokens.semantic.color.type.muted.value, pt: 0.5 }}>
         AI-generated content may have inaccuracies.
       </Typography>
     </Stack>

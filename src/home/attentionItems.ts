@@ -1,4 +1,5 @@
-import { CYBER_RULE_CHANGE } from "@/regulatory/regulatoryChanges";
+import { insightType } from "@/insights/insight";
+import { ATG_RULING } from "@/insights/insights";
 
 export type AttentionItem = {
   id: string;
@@ -14,12 +15,12 @@ export type AttentionItem = {
 
 export const ATTENTION_ITEMS: AttentionItem[] = [
   {
-    id: CYBER_RULE_CHANGE.id,
-    source: "SEC rule change",
-    receivedAt: "Today 6:35 am",
+    id: ATG_RULING.id,
+    source: insightType(ATG_RULING),
+    receivedAt: "Today 6:40 am",
     badge: "New",
-    title: CYBER_RULE_CHANGE.title,
-    summary: CYBER_RULE_CHANGE.summary,
-    relatedPolicy: "Incident Response Plan §4.2: report a cyber-attack in four business days",
+    title: ATG_RULING.title,
+    summary: ATG_RULING.summary,
+    relatedPolicy: "Bylaws Article II, Section 8: advance notice of director nominations",
   },
 ];

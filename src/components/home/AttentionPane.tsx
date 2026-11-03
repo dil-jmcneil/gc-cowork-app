@@ -3,20 +3,15 @@ import ScaleIcon from "@diligentcorp/atlas-react-bundle/icons/Scale";
 import { Box, Stack, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 
-import { RegulatoryChangeDialog } from "@/components/home/RegulatoryChangeDialog";
+import { InsightDialog } from "@/components/home/InsightDialog";
 import { ATTENTION_ITEMS, type AttentionItem } from "@/home/attentionItems";
-import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import { INSIGHTS } from "@/insights/insights";
 
 /** Figma "Attention pane": a plain title, then one card per item that needs the GC. */
-export function AttentionPane({
-  heading = "Your Diligent Daily Brief",
-}: {
-  heading?: string;
-}) {
+export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { heading?: string }) {
   const { tokens } = useTheme();
-  const [openChangeId, setOpenChangeId] = useState<string | null>(null);
-  const openChange =
-    REGULATORY_CHANGES.find((c) => c.id === openChangeId) ?? null;
+  const [openInsightId, setOpenInsightId] = useState<string | null>(null);
+  const openInsight = INSIGHTS.find((c) => c.id === openInsightId) ?? null;
 
   return (
     <Stack gap={3} component="section" aria-labelledby="attention-pane-heading">
@@ -40,31 +35,18 @@ export function AttentionPane({
       >
         {ATTENTION_ITEMS.map((item) => (
           <Box component="li" key={item.id}>
-            <AttentionCard
-              item={item}
-              onOpen={() => setOpenChangeId(item.id)}
-            />
+            <AttentionCard item={item} onOpen={() => setOpenInsightId(item.id)} />
           </Box>
         ))}
       </Stack>
-      <RegulatoryChangeDialog
-        change={openChange}
-        onClose={() => setOpenChangeId(null)}
-      />
+      <InsightDialog insight={openInsight} onClose={() => setOpenInsightId(null)} />
     </Stack>
   );
 }
 
-function AttentionCard({
-  item,
-  onOpen,
-}: {
-  item: AttentionItem;
-  onOpen: () => void;
-}) {
+function AttentionCard({ item, onOpen }: { item: AttentionItem; onOpen: () => void }) {
   const { tokens, presets } = useTheme();
-  const StatusIndicator =
-    presets.StatusIndicatorPresets.components.StatusIndicator;
+  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const muted = tokens.semantic.color.type.muted.value;
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
@@ -92,19 +74,8 @@ function AttentionCard({
       }}
     >
       <Stack gap={2}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          gap={1.5}
-          flexWrap="wrap"
-          sx={{ minHeight: 32 }}
-        >
-          <Stack
-            direction="row"
-            alignItems="center"
-            gap={1}
-            sx={{ color: muted }}
-          >
+        <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap" sx={{ minHeight: 32 }}>
+          <Stack direction="row" alignItems="center" gap={1} sx={{ color: muted }}>
             <Stack direction="row" alignItems="center" gap={0.5}>
               <ScaleIcon aria-hidden style={{ width: 20, height: 20 }} />
               <Typography
@@ -151,16 +122,8 @@ function AttentionCard({
           >
             {item.summary}
           </Typography>
-          <Stack
-            direction="row"
-            alignItems="center"
-            gap={1}
-            sx={{ color: muted, pt: 0.5 }}
-          >
-            <OpenFileIcon
-              aria-hidden
-              style={{ width: 16, height: 16, flexShrink: 0 }}
-            />
+          <Stack direction="row" alignItems="center" gap={1} sx={{ color: muted, pt: 0.5 }}>
+            <OpenFileIcon aria-hidden style={{ width: 16, height: 16, flexShrink: 0 }} />
             <Typography variant="body1" sx={{ color: "inherit" }}>
               {item.relatedPolicy}
             </Typography>

@@ -2,7 +2,11 @@ import type { ProjectTask } from "./project";
 
 export type TaskAttention = "overdue" | "new-status";
 
-const SHORT_DATE = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const SHORT_DATE = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
 
 export function formatShortDate(iso: string): string {
   return SHORT_DATE.format(new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso));
@@ -35,7 +39,9 @@ export function summarizeTask(task: ProjectTask, now: Date): string {
     return reply ? `${owner} marked this done on ${formatShortDate(reply.sentAt)}.` : `Done. ${owner} closed it out.`;
   }
   if (isTaskOverdue(task, now)) {
-    const reminders = task.thread.filter((m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body)).length;
+    const reminders = task.thread.filter(
+      (m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body),
+    ).length;
     const chased = reminders > 0 ? ` after ${reminders} reminder${reminders === 1 ? "" : "s"}` : "";
     return `Past due since ${due}. ${owner} hasn't responded${chased} — a nudge is recommended.`;
   }

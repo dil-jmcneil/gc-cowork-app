@@ -5,7 +5,7 @@ import { useChatStore } from "@/chat/chatStore";
 import { sendUserMessage } from "@/runtime/assistantReply";
 
 const WELCOME_MESSAGE =
-  "Hi, I'm Cowork. I can track regulatory changes, research rules, and keep an eye on what's due. What would you like to work on?";
+  "Hi, I'm Cowork. I can track new rulings and rule changes, research them, and keep an eye on what's due. What would you like to work on?";
 
 /**
  * Seeds a chat the first time it opens: the opening prompt plus a streamed
