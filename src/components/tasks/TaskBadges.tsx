@@ -18,6 +18,7 @@ export function TaskBadges({ task, now }: { task: WorkstreamTask; now: Date }) {
   return (
     <Stack direction="row" gap={SPACE.item} alignItems="center" flexWrap="wrap">
       <StatusIndicator color={STATUS_COLOR[task.status]} label={task.status} />
+      {attention === "review" ? <StatusIndicator color="warning" label="Needs your review" /> : null}
       {attention === "overdue" ? <StatusIndicator color="error" label="Overdue" /> : null}
       {attention === "new-status" ? <StatusIndicator color="information" label="New status" /> : null}
     </Stack>

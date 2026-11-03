@@ -68,7 +68,9 @@ export function TimelineItem({
         <OwnerActivity
           event={event}
           action={
-            event.attention === "nudge" ? <NudgeAction event={event} nudged={nudged} onNudge={onNudge} /> : undefined
+            event.attention === "nudge" || event.attention === "review" ? (
+              <NudgeAction event={event} nudged={nudged} onNudge={onNudge} onOpen={onOpen} />
+            ) : undefined
           }
         />
       </Stack>
@@ -206,16 +208,31 @@ export function OwnerActivity({
   );
 }
 
-/** Nudge, for an overdue task. The status label covers every other state. */
+/** The inline action a row calls for: Nudge when overdue, Review when the owner says it's done. */
 export function NudgeAction({
   event,
   nudged,
   onNudge,
+  onOpen,
 }: {
   event: CalendarEvent;
   nudged: boolean;
   onNudge: (event: CalendarEvent) => void;
+  onOpen?: (event: CalendarEvent) => void;
 }) {
+  if (event.attention === "review" && onOpen) {
+    return (
+      <Button
+        variant="outlined"
+        size="xsmall"
+        onClick={() => onOpen(event)}
+        aria-label={`Review ${event.title}`}
+        sx={{ flexShrink: 0 }}
+      >
+        Review
+      </Button>
+    );
+  }
   if (event.attention !== "nudge") return null;
   return (
     <Button

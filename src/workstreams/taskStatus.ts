@@ -1,7 +1,7 @@
 import type { WorkstreamTask } from "./workstream";
 import { isMessage } from "./thread";
 
-export type TaskAttention = "overdue" | "new-status";
+export type TaskAttention = "overdue" | "review" | "new-status";
 
 const SHORT_DATE = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -18,8 +18,13 @@ export function isTaskOverdue(task: Pick<WorkstreamTask, "status" | "deadline">,
 }
 
 /** What a task needs from the GC right now, if anything. */
-export function taskAttention(task: Pick<WorkstreamTask, "status" | "deadline">, now: Date): TaskAttention | undefined {
+export function taskAttention(
+  task: Pick<WorkstreamTask, "status" | "deadline" | "awaitingReview">,
+  now: Date,
+): TaskAttention | undefined {
   if (task.status === "Done") return undefined;
+  // Waiting on the GC outranks overdue: the owner has delivered.
+  if (task.awaitingReview) return "review";
   if (isTaskOverdue(task, now)) return "overdue";
   if (task.status === "In progress") return "new-status";
   return undefined;

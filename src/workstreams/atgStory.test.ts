@@ -1,3 +1,5 @@
+import { deriveCalendarEvents } from "@/calendar/complianceEvents";
+import { handleTaskChatMessage } from "@/workstreams/taskChat";
 import { temporalBand } from "@/calendar/weeks";
 import { ATG_RULING } from "@/signals/signals";
 import { currentMilestone } from "@/workstreams/milestones";
@@ -63,4 +65,40 @@ test("the early tasks land this week and next on the calendar, so the widget sho
   // The questionnaire still follows counsel's memo, and everything stays ahead of the window.
   expect(due("questionnaire") > due("memo")).toBe(true);
   expect(due("questionnaire") < ATG_RULING.deadlines[0].date).toBe(true);
+});
+
+describe("the memo is done by Dana and waiting on Peter's review", () => {
+  test("Dana's done doesn't close it; Cowork holds it open and asks Peter", () => {
+    const memo = byKey("memo");
+    expect(memo.status).toBe("In progress");
+    expect(memo.awaitingReview).toBe(true);
+    const last = memo.history.slice(-3);
+    expect(last[0]).toMatchObject({ kind: "message", authorRole: "delegate", authorName: "Dana Whitfield" });
+    expect(last[1]).toMatchObject({ kind: "action", summary: "Held the task open for your review" });
+    expect(last[2]).toMatchObject({ kind: "message", authorRole: "cowork", to: ["Peter"] });
+  });
+
+  test("confirming closes it and records who closed it", () => {
+    const workstream = startAtgWorkstream();
+    useWorkstreamStore.getState().confirmTaskDone(workstream.id, `${ATG_RULING.id}-memo`);
+    const memo = useWorkstreamStore.getState().getTask(workstream.id, `${ATG_RULING.id}-memo`)!;
+    expect(memo).toMatchObject({ status: "Done", awaitingReview: false });
+    expect(memo.history.at(-1)).toMatchObject({ kind: "action", actor: "Peter" });
+  });
+
+  test("replying \"Got it\" in the task chat closes it too", () => {
+    const workstream = startAtgWorkstream();
+    const reply = handleTaskChatMessage(workstream.id, `${ATG_RULING.id}-memo`, "Got it, looks good", new Date());
+    expect(reply).toMatch(/closed the task/);
+    expect(useWorkstreamStore.getState().getTask(workstream.id, `${ATG_RULING.id}-memo`)!.status).toBe("Done");
+  });
+
+  test("the calendar asks for a review, not a nudge", () => {
+    const workstream = startAtgWorkstream();
+    const event = deriveCalendarEvents([workstream], new Date("2026-11-03T12:00:00Z")).find(
+      (e) => e.id === `${ATG_RULING.id}-memo`,
+    )!;
+    expect(event.priority.label).toBe("Needs your review");
+    expect(event.attention).toBe("review");
+  });
 });

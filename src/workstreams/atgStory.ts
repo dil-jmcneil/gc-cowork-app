@@ -73,8 +73,22 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
           `Happy to. I'll send the memo and a draft Section 8 to ${GC} directly by Nov 6, and reply "done" here when it's sent.`,
           "2026-10-28T16:20:00Z",
         ),
+        ownerReply(
+          DANA,
+          `Done. I emailed ${GC} the memo and a draft Section 8 this afternoon, ahead of the Nov 6 date.`,
+          "2026-11-02T21:40:00Z",
+        ),
+        coworkAction("Held the task open for your review", "2026-11-02T21:41:00Z", {
+          detail: "Dana is outside Acme, so her \"done\" doesn't close the task. You confirm it once you've reviewed the memo.",
+          rule: "An owner outside Acme says a task is done.",
+        }),
+        coworkNote(
+          `Dana says she sent you the memo and draft Section 8: "Done. I emailed ${GC} the memo and a draft Section 8 this afternoon, ahead of the Nov 6 date." Review it, then reply "Got it" or confirm on the task, and I'll close it.`,
+          "2026-11-02T21:42:00Z",
+        ),
       ],
-      statusSummary: `Dana confirmed on Oct 28. The memo and draft text go to you directly by Nov 6. When she says it's done, Cowork checks with you before closing the task.`,
+      awaitingReview: true,
+      statusSummary: `Dana sent the memo and draft Section 8 to you on Nov 2. Your turn: review it, then confirm to close the task.`,
     });
   }
 
@@ -119,7 +133,7 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         }),
       ],
       statusSummary:
-        "Waiting on counsel's draft text. Cowork is holding follow-ups and sends Alex the text when you approve it.",
+        "Waiting on your approval of counsel's draft text, which arrived Nov 2. Cowork is holding follow-ups and sends Alex the text when you approve it.",
     });
   }
 
@@ -197,6 +211,6 @@ export function progressAtgWorkstream(workstream: Workstream): Workstream {
     createdAt: STARTED_AT,
     plan: { ...workstream.plan, tasks: workstream.plan.tasks.map(storyFor) },
     statusSummary:
-      "Getting counsel's view: Dana's memo is due Nov 6 and the Dec 15 committee slot is booked; Morgan hasn't replied yet (follow-up 1 of 3).",
+      "Your turn: Dana sent the memo and draft Section 8 on Nov 2 and it needs your review. The Dec 15 committee slot is booked; Morgan hasn't replied yet (follow-up 1 of 3).",
   };
 }

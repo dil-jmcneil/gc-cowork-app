@@ -12,7 +12,15 @@ export type CalendarEventStatus = "Assigned" | "Complete" | "Blocked" | "Externa
  * read Deadline, or Needs a workstream when nobody has picked them up.
  */
 export type EventPriority = {
-  label: "Overdue" | "Due soon" | "In progress" | "Not started" | "Done" | "Deadline" | "Needs a workstream";
+  label:
+    | "Needs your review"
+    | "Overdue"
+    | "Due soon"
+    | "In progress"
+    | "Not started"
+    | "Done"
+    | "Deadline"
+    | "Needs a workstream";
   color: "error" | "warning" | "information" | "subtle" | "success";
 };
 
@@ -20,7 +28,7 @@ export type EventPriority = {
 const DUE_SOON_DAYS = 7;
 
 /** What the timeline's right-hand Attention slot shows for an event. */
-export type CalendarEventAttention = "nudge" | "awaiting-response" | "new-status";
+export type CalendarEventAttention = "nudge" | "review" | "awaiting-response" | "new-status";
 
 type EventBase = {
   id: string;
@@ -54,10 +62,11 @@ export type CalendarEvent =
   /** A past workstream's task. No task dialog; its workstream link opens the signal. */
   | (EventBase & { kind: "reference"; signalId: string });
 
-type TaskFacts = Pick<WorkstreamTask, "status" | "deadline">;
+type TaskFacts = Pick<WorkstreamTask, "status" | "deadline" | "awaitingReview">;
 
 function taskPriority(task: TaskFacts, now: Date): EventPriority {
   if (task.status === "Done") return { label: "Done", color: "success" };
+  if (task.awaitingReview) return { label: "Needs your review", color: "warning" };
   if (isTaskOverdue(task, now)) return { label: "Overdue", color: "error" };
   const daysLeft = (new Date(`${task.deadline}T00:00:00Z`).getTime() - now.getTime()) / 86_400_000;
   if (daysLeft <= DUE_SOON_DAYS) return { label: "Due soon", color: "warning" };
@@ -78,6 +87,15 @@ function taskState(task: TaskFacts, owner: string, source: string, now: Date) {
     };
   }
   const attention = taskAttention(task, now);
+  if (attention === "review") {
+    return {
+      priority,
+      status: "Assigned" as const,
+      attention: "review" as const,
+      description: `${source} — ${owner} says it's done; your review closes it`,
+      nextStep: "Review what was sent, then confirm to close the task",
+    };
+  }
   if (attention === "overdue") {
     return {
       priority,

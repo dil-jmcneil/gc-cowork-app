@@ -80,6 +80,11 @@ export function statusChangeNote(status: TaskStatus, sentAt: string): HistoryAct
   return { kind: "action", id: makeMessageId(), actor: GC, summary: `Set the status to ${status}`, sentAt };
 }
 
+/** The GC confirmed an owner's "done" and closed the task. */
+export function confirmedDoneNote(sentAt: string): HistoryAction {
+  return { kind: "action", id: makeMessageId(), actor: GC, summary: "Confirmed it's done and closed the task", sentAt };
+}
+
 /** Something Cowork did, with the plan rule it applied when there is one. */
 export function coworkAction(
   summary: string,

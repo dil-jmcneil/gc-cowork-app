@@ -20,6 +20,11 @@ export type WorkstreamTask = {
   history: HistoryEntry[];
   /** Hand-written summary for a scripted story; otherwise one is generated. */
   statusSummary?: string;
+  /**
+   * The owner says it's done, but the GC confirms before it closes, e.g. when
+   * the owner is outside the company. The task stays open until then.
+   */
+  awaitingReview?: boolean;
 };
 
 /**

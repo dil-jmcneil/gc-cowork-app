@@ -74,7 +74,7 @@ function TaskDetail({
 }) {
   const { tokens } = useTheme();
   const location = useLocation();
-  const { assignTask, setTaskStatus, nudgeTask, messageDelegate } = useWorkstreamStore.getState();
+  const { assignTask, setTaskStatus, nudgeTask, messageDelegate, confirmTaskDone } = useWorkstreamStore.getState();
   const [composing, setComposing] = useState(false);
   const [draft, setDraft] = useState("");
   const [toast, setToast] = useState<string | null>(null);
@@ -114,6 +114,26 @@ function TaskDetail({
         </Stack>
 
         <Stack gap={SPACE.block}>
+          {task.awaitingReview ? (
+            <Alert
+              severity="warning"
+              action={
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => {
+                    confirmTaskDone(workstreamId, task.id);
+                    setToast("Task closed. Cowork recorded your confirmation.");
+                  }}
+                >
+                  Confirm and close
+                </Button>
+              }
+            >
+              {task.delegate.label} says this is done. Review what was sent to you, then confirm to close the task.
+            </Alert>
+          ) : null}
+
           <SectionCard title="Status Summary">
             <Typography variant="body1">{summarizeTask(task, now)}</Typography>
           </SectionCard>

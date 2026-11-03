@@ -48,6 +48,7 @@ export function TaskQuickView({
   );
   const task = workstream?.plan.tasks.find((t) => t.id === taskRef?.taskId);
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
+  const confirmTaskDone = useWorkstreamStore((s) => s.confirmTaskDone);
 
   if (!taskRef || !workstream || !task) return null;
 
@@ -163,7 +164,12 @@ export function TaskQuickView({
       </DialogContent>
 
       <DialogActions>
-        {overdue ? (
+        {task.awaitingReview ? (
+          <Button variant="outlined" onClick={() => confirmTaskDone(workstream.id, task.id)}>
+            Confirm and close
+          </Button>
+        ) : null}
+        {overdue && !task.awaitingReview ? (
           <Button
             variant="outlined"
             onClick={() => {

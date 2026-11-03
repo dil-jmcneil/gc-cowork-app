@@ -190,7 +190,7 @@ function SwimCard({
           <OwnerActivity event={event} clamp={2} />
           <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.item}>
             <StatusIndicator color={event.priority.color} label={event.priority.label} />
-            <NudgeAction event={event} nudged={nudged} onNudge={onNudge} />
+            <NudgeAction event={event} nudged={nudged} onNudge={onNudge} onOpen={onOpen} />
           </Stack>
         </Stack>
       </CardContent>
