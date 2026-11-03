@@ -6,7 +6,7 @@ import { SPACE } from "@/lib/layout";
 const DAY = new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: "UTC" });
 const MONTH = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
 
-/** 44px day-over-month box with the Figma Past / Present / Future treatments. */
+/** Compact 40px day-over-month badge with Past / Present / Future treatments. */
 export function DateChip({ date, tense }: { date: string; tense: DateTense }) {
   const { tokens } = useTheme();
   const { color } = tokens.semantic;
@@ -38,9 +38,9 @@ export function DateChip({ date, tense }: { date: string; tense: DateTense }) {
       alignItems="center"
       justifyContent="center"
       sx={{
-        width: 44,
+        width: 40,
         flexShrink: 0,
-        p: SPACE.pair,
+        py: SPACE.pair,
         borderRadius: tokens.semantic.radius.md.value,
         border: `1px solid ${look.border}`,
         bgcolor: look.bg,
@@ -49,11 +49,11 @@ export function DateChip({ date, tense }: { date: string; tense: DateTense }) {
     >
       <Typography
         variant="body1"
-        sx={{ color: look.day, fontWeight: tokens.semantic.fontWeight.emphasis.value, lineHeight: "20px" }}
+        sx={{ color: look.day, lineHeight: "18px", fontWeight: tokens.semantic.fontWeight.bold.value }}
       >
         {DAY.format(parsed)}
       </Typography>
-      <Typography variant="textMd" sx={{ color: look.month, lineHeight: "16px", textTransform: "uppercase" }}>
+      <Typography variant="textMd" sx={{ color: look.month, lineHeight: "14px", textTransform: "uppercase" }}>
         {MONTH.format(parsed)}
       </Typography>
     </Stack>

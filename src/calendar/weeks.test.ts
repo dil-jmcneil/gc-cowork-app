@@ -1,3 +1,4 @@
+import { bandDates, temporalBand } from "./weeks";
 import {
   addDays,
   addMonths,
@@ -65,4 +66,23 @@ test("relativeBucket groups dates the way the Figma timeline does", () => {
   expect(relativeBucket("2026-12-15", today)).toBe("1 month out");
   expect(relativeBucket("2027-01-15", today)).toBe("2 months out");
   expect(relativeBucket("2026-10-20", today)).toBe("Earlier");
+});
+
+describe("temporal bands", () => {
+  const TODAY = "2026-11-03"; // a Tuesday; its week runs Nov 2 – Nov 8
+
+  test("dates fall into earlier, this week, next week, or further out", () => {
+    expect(temporalBand("2026-10-30", TODAY)).toBe("earlier");
+    expect(temporalBand("2026-11-02", TODAY)).toBe("this-week");
+    expect(temporalBand("2026-11-08", TODAY)).toBe("this-week");
+    expect(temporalBand("2026-11-09", TODAY)).toBe("next-week");
+    expect(temporalBand("2026-11-16", TODAY)).toBe("further");
+  });
+
+  test("each band names its dates", () => {
+    expect(bandDates("earlier", TODAY)).toBe("Before Nov 2");
+    expect(bandDates("this-week", TODAY)).toBe("Nov 2 – Nov 8");
+    expect(bandDates("next-week", TODAY)).toBe("Nov 9 – Nov 15");
+    expect(bandDates("further", TODAY)).toBe("Nov 16 and beyond");
+  });
 });

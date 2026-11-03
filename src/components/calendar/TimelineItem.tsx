@@ -1,11 +1,13 @@
-import { Box, Button, Stack, Tooltip, Typography, useTheme } from "@mui/material";
+import { Box, Button, Link, Stack, Tooltip, Typography, useTheme, type SxProps, type Theme } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 
-import type { CalendarEvent, CalendarEventAttention } from "@/calendar/complianceEvents";
-import { dateTense } from "@/calendar/weeks";
+import type { CalendarEvent } from "@/calendar/complianceEvents";
+import { dateTense, temporalBand } from "@/calendar/weeks";
+import { SPACE } from "@/lib/layout";
 
 import { DateChip } from "./DateChip";
 import { StatusDot } from "./StatusDot";
-import { SPACE } from "@/lib/layout";
+import { useBandLook } from "./TemporalBands";
 
 /** Tooltip body: what the event opens and Cowork's suggested next step. */
 export function EventHoverDetails({ event }: { event: CalendarEvent }) {
@@ -20,7 +22,13 @@ export function EventHoverDetails({ event }: { event: CalendarEvent }) {
   );
 }
 
-/** Figma TimelineItem: date chip, status dot, title and summary, and the Attention slot. */
+/**
+ * One timeline row inside a temporal band, after the Temporal Bands iteration:
+ * a compact date badge and status dot, then a 16px title, the workstream, and
+ * who owns it with Cowork's line on the latest activity (the same order as the
+ * signal cards in chat). When the row needs the GC, its badge and Nudge or
+ * Review sit in the top-right corner. Rows further out are shaded and faded.
+ */
 export function TimelineItem({
   event,
   todayIso,
@@ -34,120 +42,237 @@ export function TimelineItem({
   onNudge: (event: CalendarEvent) => void;
   onOpen: (event: CalendarEvent) => void;
 }) {
-  const { tokens } = useTheme();
-  const tense = dateTense(event.date, todayIso);
-  /** A past workstream's task has no dialog to open. */
-  const openable = event.kind !== "reference";
-  const settled = tense === "past" && event.status === "Complete";
-  const titleColor = settled ? tokens.semantic.color.type.disabled.value : tokens.semantic.color.type.default.value;
-  const bodyColor = settled ? tokens.semantic.color.type.disabled.value : tokens.semantic.color.type.muted.value;
-
+  const look = useBandLook(temporalBand(event.date, todayIso));
   return (
     <Stack
+      component="li"
       direction="row"
       alignItems="center"
-      gap={SPACE.block}
-      sx={{
+      gap={SPACE.group}
+      sx={(theme) => ({
+        listStyle: "none",
         px: SPACE.block,
         py: SPACE.item,
+        bgcolor: look.rowBg,
+        borderTop: `1px solid ${theme.tokens.semantic.color.ui.divider.default.value}`,
         transition: "background-color 120ms ease",
-        "&:hover, &:focus-within": { bgcolor: tokens.semantic.color.status.neutral.backgroundVariant.value },
-      }}
+        "&:hover, &:focus-within": { bgcolor: look.rowHoverBg },
+      })}
     >
-      <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
-        <Stack
-          {...(openable
-            ? { component: "button" as const, type: "button" as const, onClick: () => onOpen(event) }
-            : { tabIndex: 0 })}
-          direction="row"
-          alignItems="center"
-          gap={SPACE.block}
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            p: 0,
-            border: "none",
-            bgcolor: "transparent",
-            font: "inherit",
-            textAlign: "left",
-            cursor: openable ? "pointer" : "default",
-            color: "inherit",
-            outlineOffset: 2,
-          }}
-        >
-          <DateChip date={event.date} tense={tense} />
-          <StatusDot status={event.status} />
-          <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              variant="body1"
-              sx={{ color: titleColor, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
-            >
-              {event.title}
-            </Typography>
-            <Typography variant="body1" sx={{ color: bodyColor }}>
-              {event.description}
-            </Typography>
-          </Stack>
+      <DateChip date={event.date} tense={dateTense(event.date, todayIso)} />
+      <StatusDot status={event.status} />
+      <Stack gap={SPACE.pair} sx={{ flex: 1, minWidth: 0 }}>
+        <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} showStatus={false} prominent />
+        <Stack>
+          {event.workstream ? (
+            <WorkstreamLine workstream={event.workstream} onOpenSignal={() => onOpen(event)} />
+          ) : null}
+          <OwnerActivity event={event} />
         </Stack>
-      </Tooltip>
-      <Box sx={{ width: 190, flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
-        <AttentionSlot attention={event.attention} nudged={nudged} owner={event.owner} onNudge={() => onNudge(event)} />
-      </Box>
+      </Stack>
+      {needsAttention(event) ? (
+        <AttentionActions
+          event={event}
+          nudged={nudged}
+          onNudge={onNudge}
+          onOpen={onOpen}
+          sx={{ alignSelf: "flex-start" }}
+        />
+      ) : null}
     </Stack>
   );
 }
 
-function AttentionSlot({
-  attention,
+/** The row asks something of the GC: a nudge for overdue work, or a review of finished work. */
+function needsAttention(event: CalendarEvent) {
+  return event.attention === "nudge" || event.attention === "review";
+}
+
+/**
+ * Top-right corner of a row or card: the status badge, then the action it
+ * calls for (Nudge or Review). Rows show it only when the event needs the GC;
+ * swimlane cards always show the badge.
+ */
+export function AttentionActions({
+  event,
   nudged,
-  owner,
   onNudge,
+  onOpen,
+  sx,
 }: {
-  attention?: CalendarEventAttention;
+  event: CalendarEvent;
   nudged: boolean;
-  owner?: string;
-  onNudge: () => void;
+  onNudge: (event: CalendarEvent) => void;
+  onOpen: (event: CalendarEvent) => void;
+  sx?: SxProps<Theme>;
+}) {
+  const { presets } = useTheme();
+  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      gap={SPACE.item}
+      sx={[{ flexShrink: 0 }, ...(Array.isArray(sx) ? sx : [sx])]}
+    >
+      <StatusIndicator color={event.priority.color} label={event.priority.label} />
+      <NudgeAction event={event} nudged={nudged} onNudge={onNudge} onOpen={onOpen} />
+    </Stack>
+  );
+}
+
+/** Status label, then the title. The title opens the task or signal, when there is one to open. */
+export function EventTitle({
+  event,
+  todayIso,
+  onOpen,
+  showStatus = true,
+  prominent = false,
+}: {
+  event: CalendarEvent;
+  todayIso: string;
+  onOpen: (event: CalendarEvent) => void;
+  /** Swimlane cards show the status in their footer instead. */
+  showStatus?: boolean;
+  /** 16px emphasized, for timeline rows. */
+  prominent?: boolean;
+}) {
+  const { tokens, presets } = useTheme();
+  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const look = useBandLook(temporalBand(event.date, todayIso));
+  const done = event.status === "Complete" && event.date < todayIso;
+  const color = done
+    ? tokens.semantic.color.type.disabled.value
+    : look.faded
+      ? tokens.semantic.color.type.muted.value
+      : tokens.semantic.color.type.default.value;
+  /** A past workstream's task has no dialog to open. */
+  const openable = event.kind !== "reference";
+  const titleVariant = prominent ? "h5" : "body1";
+  const titleWeight = prominent ? tokens.semantic.fontWeight.emphasis.value : undefined;
+
+  return (
+    <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap" sx={{ minWidth: 0 }}>
+      {showStatus ? <StatusIndicator color={event.priority.color} label={event.priority.label} /> : null}
+      <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
+        {openable ? (
+          <Link
+            component="button"
+            type="button"
+            underline="hover"
+            onClick={() => onOpen(event)}
+            sx={{ textAlign: "left", color, minWidth: 0 }}
+          >
+            <Typography variant={titleVariant} component="span" sx={{ color: "inherit", fontWeight: titleWeight }}>
+              {event.title}
+            </Typography>
+          </Link>
+        ) : (
+          <Typography variant={titleVariant} tabIndex={0} sx={{ color, minWidth: 0, fontWeight: titleWeight }}>
+            {event.title}
+          </Typography>
+        )}
+      </Tooltip>
+    </Stack>
+  );
+}
+
+/**
+ * "Workstream:" in muted text, then the workstream's name as a blue link, with
+ * no icon. A workstream with a page links there; a past one (no page) opens
+ * its signal instead.
+ */
+export function WorkstreamLine({
+  workstream,
+  onOpenSignal,
+}: {
+  workstream: { name: string; href?: string };
+  onOpenSignal?: () => void;
 }) {
   const { tokens } = useTheme();
-  const accent = tokens.semantic.color.accent;
-  if (!attention) return null;
+  const name = (
+    <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
+      {workstream.name}
+    </Typography>
+  );
+  return (
+    <Stack direction="row" alignItems="baseline" gap={SPACE.pair} sx={{ alignSelf: "flex-start", minWidth: 0 }}>
+      <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value, flexShrink: 0 }}>
+        Workstream:
+      </Typography>
+      {workstream.href ? (
+        <Link component={RouterLink} to={workstream.href} underline="hover">
+          {name}
+        </Link>
+      ) : (
+        <Link component="button" type="button" underline="hover" onClick={onOpenSignal} sx={{ textAlign: "left" }}>
+          {name}
+        </Link>
+      )}
+    </Stack>
+  );
+}
 
-  if (attention === "nudge") {
+/** The owner, in the default color, then Cowork's line on the latest activity, as one sentence. */
+export function OwnerActivity({ event, clamp }: { event: CalendarEvent; clamp?: number }) {
+  const { tokens } = useTheme();
+  return (
+    <Typography
+      variant="body1"
+      sx={{
+        color: tokens.semantic.color.type.muted.value,
+        ...(clamp
+          ? { display: "-webkit-box", WebkitLineClamp: clamp, WebkitBoxOrient: "vertical", overflow: "hidden" }
+          : {}),
+      }}
+    >
+      {event.owner ? (
+        <Box component="span" sx={{ color: tokens.semantic.color.type.default.value }}>
+          {event.owner}
+        </Box>
+      ) : null}
+      {event.owner ? " · " : ""}
+      {event.summary}
+    </Typography>
+  );
+}
+
+/** The inline action a row calls for: Nudge when overdue, Review when the owner says it's done. */
+export function NudgeAction({
+  event,
+  nudged,
+  onNudge,
+  onOpen,
+}: {
+  event: CalendarEvent;
+  nudged: boolean;
+  onNudge: (event: CalendarEvent) => void;
+  onOpen?: (event: CalendarEvent) => void;
+}) {
+  if (event.attention === "review" && onOpen) {
     return (
       <Button
         variant="outlined"
         size="xsmall"
-        disabled={nudged}
-        onClick={onNudge}
-        aria-label={owner ? `Nudge ${owner}` : "Nudge"}
+        onClick={() => onOpen(event)}
+        aria-label={`Review ${event.title}`}
+        sx={{ flexShrink: 0 }}
       >
-        {nudged ? "Nudged" : "Nudge"}
+        Review
       </Button>
     );
   }
-
-  const badge =
-    attention === "new-status"
-      ? { label: "New status", bg: accent.blue.background.value, fg: accent.blue.content.value }
-      : { label: "Awaiting your response", bg: accent.yellow.background.value, fg: accent.yellow.content.value };
-
+  if (event.attention !== "nudge") return null;
   return (
-    <Box
-      component="span"
-      sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        height: 24,
-        px: SPACE.item,
-        borderRadius: tokens.semantic.radius.full.value,
-        bgcolor: badge.bg,
-        color: badge.fg,
-        whiteSpace: "nowrap",
-      }}
+    <Button
+      variant="outlined"
+      size="xsmall"
+      disabled={nudged}
+      onClick={() => onNudge(event)}
+      aria-label={event.owner ? `Nudge ${event.owner}` : "Nudge"}
+      sx={{ flexShrink: 0 }}
     >
-      <Typography variant="textMd" sx={{ color: "inherit", fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-        {badge.label}
-      </Typography>
-    </Box>
+      {nudged ? "Nudged" : "Nudge"}
+    </Button>
   );
 }

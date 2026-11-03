@@ -57,6 +57,8 @@ export type PastWorkstreamTask = {
   /** ISO date, yyyy-mm-dd. */
   due: string;
   status: TaskStatus;
+  /** One line on the latest status and activity, as Cowork would write it. */
+  statusSummary: string;
 };
 
 /** Something Cowork noticed that the GC may need to act on. Extends the OOUX regulatory change object. */

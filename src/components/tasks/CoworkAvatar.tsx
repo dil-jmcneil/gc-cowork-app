@@ -1,21 +1,18 @@
-import { Avatar, useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 
 import coworkAvatarUrl from "@/assets/cowork-avatar.svg";
 
-/** The Diligent D, used wherever Cowork speaks or acts. */
-export function CoworkAvatar({ size = "small" }: { size?: "small" | "medium" }) {
-  const { presets, tokens } = useTheme();
+const SIZE = { small: 24, medium: 32 } as const;
+
+/** The Diligent D, used wherever Cowork speaks or acts. The bare logo: no circle or border. */
+export function CoworkAvatar({ size = "small" }: { size?: keyof typeof SIZE }) {
   return (
-    <Avatar
-      {...presets.AvatarPresets.getAvatarProps({ size, color: "blue" })}
+    <Box
+      component="img"
       src={coworkAvatarUrl}
       alt=""
       aria-hidden
-      sx={{
-        bgcolor: tokens.semantic.color.surface.default.value,
-        border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
-        "& img": { objectFit: "contain", p: "15%" },
-      }}
+      sx={{ width: SIZE[size], height: SIZE[size], flexShrink: 0, display: "block" }}
     />
   );
 }

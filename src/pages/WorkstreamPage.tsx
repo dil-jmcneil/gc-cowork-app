@@ -1,5 +1,4 @@
 import { Box, Button, Container, GridLegacy as Grid, Link, Stack, Typography, useTheme } from "@mui/material";
-import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
@@ -8,7 +7,6 @@ import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { PlanMilestones } from "@/components/workstreams/PlanMilestones";
 import { RuleTable } from "@/components/workstreams/RuleTable";
 import { HistoryList } from "@/components/tasks/History";
-import { TaskQuickView } from "@/components/tasks/TaskQuickView";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { SIGNALS } from "@/signals/signals";
@@ -23,7 +21,6 @@ export default function WorkstreamPage() {
   const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.id === workstreamId));
   const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
 
   if (!workstream) {
     return (
@@ -39,9 +36,9 @@ export default function WorkstreamPage() {
   const signal = SIGNALS.find((c) => c.id === workstream.sourceSignalId);
   const muted = tokens.semantic.color.type.muted.value;
   const planAccepted = workstream.plan.status === "accepted";
-  const history = workstream.plan.tasks
-    .flatMap((task) => task.history.map((entry) => ({ entry, context: task.description })))
-    .sort((a, b) => b.entry.sentAt.localeCompare(a.entry.sentAt));
+  const history = workstream.plan.tasks.flatMap((task) =>
+    task.history.map((entry) => ({ entry, context: task.description })),
+  );
 
   return (
     <Container maxWidth="xl" sx={{ py: SPACE.section }}>
@@ -98,7 +95,7 @@ export default function WorkstreamPage() {
             <FieldLabel>Proposed approach</FieldLabel>
             <Typography variant="body1">{workstream.plan.proposedApproach}</Typography>
           </Stack>
-          <PlanMilestones plan={workstream.plan} onOpenTask={setOpenTaskId} />
+          <PlanMilestones plan={workstream.plan} onOpenTask={(taskId) => navigate(`/workstreams/${workstream.id}/tasks/${taskId}`)} />
           <Stack direction="row" gap={SPACE.group} justifyContent="flex-end">
             <Button
               variant="outlined"
@@ -135,10 +132,6 @@ export default function WorkstreamPage() {
           </SectionCard>
         ) : null}
       </Stack>
-      <TaskQuickView
-        taskRef={openTaskId ? { workstreamId: workstream.id, taskId: openTaskId } : null}
-        onClose={() => setOpenTaskId(null)}
-      />
     </Container>
   );
 }

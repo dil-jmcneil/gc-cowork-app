@@ -14,6 +14,7 @@ import {
   reassignmentEmail,
   relayEmail,
   reminderEmail,
+  confirmedDoneNote,
   statusChangeNote,
 } from "./threadMessages";
 
@@ -35,6 +36,8 @@ type WorkstreamStoreState = {
   updatePlan: (id: string, plan: WorkstreamPlan) => void;
   assignTask: (workstreamId: string, taskId: string, owner: TaskOwner) => void;
   setTaskStatus: (workstreamId: string, taskId: string, status: TaskStatus) => void;
+  /** The GC confirms an owner's "done": the task closes. */
+  confirmTaskDone: (workstreamId: string, taskId: string) => void;
   nudgeTask: (workstreamId: string, taskId: string) => void;
   messageDelegate: (workstreamId: string, taskId: string, text: string) => void;
   addChatNote: (workstreamId: string, taskId: string, text: string) => void;
@@ -114,7 +117,25 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
 
     setTaskStatus: (workstreamId, taskId, status) => {
       updateTask(workstreamId, taskId, (task) =>
-        append({ ...task, status, statusSummary: undefined }, statusChangeNote(status, nowIso())),
+        append(
+          // Marking it done yourself also settles any review you were asked for.
+          { ...task, status, statusSummary: undefined, ...(status === "Done" ? { awaitingReview: false } : {}) },
+          statusChangeNote(status, nowIso()),
+        ),
+      );
+      set((state) => ({
+        workstreams: state.workstreams.map((p) =>
+          p.id === workstreamId ? { ...p, statusSummary: summarizeWorkstream(p) } : p,
+        ),
+      }));
+    },
+
+    confirmTaskDone: (workstreamId, taskId) => {
+      updateTask(workstreamId, taskId, (task) =>
+        append(
+          { ...task, status: "Done", awaitingReview: false, statusSummary: undefined },
+          confirmedDoneNote(nowIso()),
+        ),
       );
       set((state) => ({
         workstreams: state.workstreams.map((p) =>

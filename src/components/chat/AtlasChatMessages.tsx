@@ -7,13 +7,23 @@ import { BrandSpinner } from "./BrandSpinner";
 import { DiligentLogo } from "./DiligentLogo";
 
 /** Owns placement once per conversation, including the idle prompt-ready position. */
-export function AtlasChatMessages({ messages }: { messages: ChatMessage[] }) {
+export function AtlasChatMessages({
+  messages,
+  hideAgentHeader = false,
+}: {
+  messages: ChatMessage[];
+  /** Side chats show agent messages with no timestamp. */
+  hideAgentHeader?: boolean;
+}) {
   const refreshed = useThemeVariantStore((state) => state.variant === "refreshed");
   const placement = brandActivityPlacement(messages);
   return (
     <>
       {messages.map((message) => (
-        <AtlasChatMessage key={message.id} message={message}
+        <AtlasChatMessage
+          key={message.id}
+          message={message}
+          hideAgentHeader={hideAgentHeader}
           showWorkingIndicator={refreshed && placement.kind === "working" && placement.messageId === message.id}
         />
       ))}
@@ -24,13 +34,21 @@ export function AtlasChatMessages({ messages }: { messages: ChatMessage[] }) {
         // the static Diligent logo, signaling the system has settled and is
         // ready for the next instruction.
         placement.working ? (
-          <Box role="status" aria-label="Working"
-            data-brand-activity="below-message" sx={{ alignSelf: "flex-start", py: 1 }}>
+          <Box
+            role="status"
+            aria-label="Working"
+            data-brand-activity="below-message"
+            sx={{ alignSelf: "flex-start", py: 1 }}
+          >
             <BrandSpinner size={16} />
           </Box>
         ) : (
-          <Box role="status" aria-label="Ready for your next message"
-            data-brand-activity="ready" sx={{ alignSelf: "flex-start", py: 1 }}>
+          <Box
+            role="status"
+            aria-label="Ready for your next message"
+            data-brand-activity="ready"
+            sx={{ alignSelf: "flex-start", py: 1 }}
+          >
             <DiligentLogo size={32} aria-hidden />
           </Box>
         )

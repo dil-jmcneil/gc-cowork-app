@@ -1,7 +1,7 @@
 import type { WorkstreamTask } from "./workstream";
 import { isMessage } from "./thread";
 
-export type TaskAttention = "overdue" | "new-status";
+export type TaskAttention = "overdue" | "review" | "new-status";
 
 const SHORT_DATE = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -18,15 +18,23 @@ export function isTaskOverdue(task: Pick<WorkstreamTask, "status" | "deadline">,
 }
 
 /** What a task needs from the GC right now, if anything. */
-export function taskAttention(task: Pick<WorkstreamTask, "status" | "deadline">, now: Date): TaskAttention | undefined {
+export function taskAttention(
+  task: Pick<WorkstreamTask, "status" | "deadline" | "awaitingReview">,
+  now: Date,
+): TaskAttention | undefined {
   if (task.status === "Done") return undefined;
+  // Waiting on the GC outranks overdue: the owner has delivered.
+  if (task.awaitingReview) return "review";
   if (isTaskOverdue(task, now)) return "overdue";
   if (task.status === "In progress") return "new-status";
   return undefined;
 }
 
 function latestFromOwner(task: WorkstreamTask) {
-  return task.history.filter(isMessage).reverse().find((m) => m.authorRole === "delegate");
+  return task.history
+    .filter(isMessage)
+    .reverse()
+    .find((m) => m.authorRole === "delegate");
 }
 
 /** One or two sentences on where a task stands, from its status, deadline and history. */
@@ -40,9 +48,9 @@ export function summarizeTask(task: WorkstreamTask, now: Date): string {
     return reply ? `${owner} marked this done on ${formatShortDate(reply.sentAt)}.` : `Done. ${owner} closed it out.`;
   }
   if (isTaskOverdue(task, now)) {
-    const reminders = task.history.filter(isMessage).filter(
-      (m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body),
-    ).length;
+    const reminders = task.history
+      .filter(isMessage)
+      .filter((m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body)).length;
     const chased = reminders > 0 ? ` after ${reminders} reminder${reminders === 1 ? "" : "s"}` : "";
     return `Past due since ${due}. ${owner} hasn't responded${chased} — a nudge is recommended.`;
   }
@@ -52,4 +60,31 @@ export function summarizeTask(task: WorkstreamTask, now: Date): string {
       : `${owner} is working on it. Due ${due}.`;
   }
   return `Assigned to ${owner}. Due ${due}.`;
+}
+
+function clip(text: string, max = 100): string {
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
+}
+
+/**
+ * One line on a task's latest activity, written to follow the owner's name
+ * (the calendar shows the name first, so this never repeats it).
+ */
+export function taskActivity(task: WorkstreamTask, now: Date): string {
+  if (task.statusSummary) return task.statusSummary;
+  const reply = latestFromOwner(task);
+  const due = formatShortDate(task.deadline);
+
+  if (task.status === "Done") return reply ? `Marked done ${formatShortDate(reply.sentAt)}.` : "Done.";
+  if (isTaskOverdue(task, now)) {
+    const reminders = task.history
+      .filter(isMessage)
+      .filter((m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body)).length;
+    const chased = reminders > 0 ? ` after ${reminders} reminder${reminders === 1 ? "" : "s"}` : "";
+    return `Past due since ${due}, with no reply${chased}. A nudge is recommended.`;
+  }
+  if (reply) return `Latest update ${formatShortDate(reply.sentAt)}: "${clip(reply.body)}"`;
+  if (task.status === "In progress") return `Working on it. Due ${due}.`;
+  const assigned = task.history[0]?.sentAt;
+  return assigned ? `Assigned ${formatShortDate(assigned)}, no reply yet. Due ${due}.` : `Not started. Due ${due}.`;
 }

@@ -11,32 +11,15 @@ import {
 import CopyIcon from "@diligentcorp/atlas-react-bundle/icons/Copy";
 import DownloadIcon from "@diligentcorp/atlas-react-bundle/icons/Download";
 import ExpandDownIcon from "@diligentcorp/atlas-react-bundle/icons/ExpandDown";
-import {
-  Box,
-  Button,
-  Collapse,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import { Box, Button, Collapse, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useId, useState } from "react";
 
 import { extractTextFromParts } from "@/chat/chatMessageUtils";
-import type {
-  ChatMessage,
-  ChatPart,
-  ChatReasoningPart,
-  ChatToolPart,
-  ChatSignalListPart,
-} from "@/chat/chatTypes";
+import type { ChatMessage, ChatPart, ChatReasoningPart, ChatToolPart, ChatSignalListPart } from "@/chat/chatTypes";
 import { ToolCall, ToolGroup } from "@/components/chat/ToolCall";
 import { SignalList } from "@/components/chat/SignalList";
 import { chatBodyTypography } from "./chatTypography";
 import { BrandSpinner } from "@/components/chat/BrandSpinner";
-import { coworkAvatarUrl } from "@/components/tasks/CoworkAvatar";
 import { useThemeVariantStore } from "@/demo/themeVariantStore";
 import { LOGGED_IN_USER } from "@/user";
 import { downloadTextFile } from "@/utils/downloadFile";
@@ -74,12 +57,24 @@ function ReasoningBlock({
     .trim();
 
   if (variant === "refreshed") {
-    const summary = reasoning.map((part) => part.summary?.trim()).filter(Boolean).join(" ");
+    const summary = reasoning
+      .map((part) => part.summary?.trim())
+      .filter(Boolean)
+      .join(" ");
     if (!summary && !isActive) return null;
     return (
-      <Stack direction="row" alignItems="flex-start" gap={1} role={isActive ? "status" : undefined} data-brand-activity={isActive ? "working" : undefined}>
+      <Stack
+        direction="row"
+        alignItems="flex-start"
+        gap={1}
+        role={isActive ? "status" : undefined}
+        data-brand-activity={isActive ? "working" : undefined}
+      >
         {isActive ? <BrandSpinner size={16} /> : null}
-        <Typography variant="body1" sx={(theme) => ({ ...chatBodyTypography(theme), color: "var(--refresh-type-default)" })}>
+        <Typography
+          variant="body1"
+          sx={(theme) => ({ ...chatBodyTypography(theme), color: "var(--refresh-type-default)" })}
+        >
           {summary || "Working…"}
         </Typography>
       </Stack>
@@ -119,10 +114,7 @@ function ToolSlot({ tool }: { tool: ChatToolPart }) {
   if (!tool.detail) return null;
 
   return (
-    <Typography
-      variant="textMd"
-      sx={{ color: tokens.semantic.color.type.muted.value }}
-    >
+    <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
       {tool.detail}
     </Typography>
   );
@@ -132,17 +124,21 @@ function ToolCallList({ tools }: { tools: ChatToolPart[] }) {
   // The group force-expands while any tool is still running or awaiting an
   // approval gate. Once settled, it only auto-collapses when every call
   // succeeded — a group containing a failure stays open so the error is visible.
-  const active = tools.some(
-    (tool) => tool.status === "running" || tool.status === "paused",
-  );
-  const autoCollapse =
-    !active && tools.every((tool) => tool.status === "success");
+  const active = tools.some((tool) => tool.status === "running" || tool.status === "paused");
+  const autoCollapse = !active && tools.every((tool) => tool.status === "success");
 
   return (
-    <ToolGroup count={tools.length} active={active} autoCollapse={autoCollapse}
+    <ToolGroup
+      count={tools.length}
+      active={active}
+      autoCollapse={autoCollapse}
       awaitingApproval={tools.some((tool) => tool.status === "paused")}
       activityLabel={tools.find((tool) => tool.status === "running")?.toolName}
-      completeLabel={tools.some((tool) => tool.status === "failed") ? "Some tools need attention" : `${tools.length} ${tools.length === 1 ? "task" : "tasks"} completed`}
+      completeLabel={
+        tools.some((tool) => tool.status === "failed")
+          ? "Some tools need attention"
+          : `${tools.length} ${tools.length === 1 ? "task" : "tasks"} completed`
+      }
     >
       {tools.map((tool) => {
         const hasSlot = Boolean(tool.detail);
@@ -183,8 +179,7 @@ function buildSegments(parts: ChatPart[]): MessageSegment[] {
     const last = segments[segments.length - 1];
     if (part.type === "reasoning") {
       if (last?.kind === "reasoning") last.reasoning.push(part);
-      else
-        segments.push({ kind: "reasoning", key: `r-${index}`, reasoning: [part] });
+      else segments.push({ kind: "reasoning", key: `r-${index}`, reasoning: [part] });
     } else if (part.type === "tool") {
       if (last?.kind === "tools") last.tools.push(part);
       else segments.push({ kind: "tools", key: `t-${index}`, tools: [part] });
@@ -258,9 +253,7 @@ function WorkGroup({
   }
 
   const elapsedSeconds =
-    finishedAtMs !== null
-      ? Math.max(1, Math.round((finishedAtMs - new Date(startedAt).getTime()) / 1000))
-      : null;
+    finishedAtMs !== null ? Math.max(1, Math.round((finishedAtMs - new Date(startedAt).getTime()) / 1000)) : null;
   const expanded = userOpen ?? false;
   const toggle = () => setUserOpen((prev) => !(prev ?? false));
 
@@ -361,8 +354,11 @@ function CopyMessageAction({ text }: { text: string }) {
 export function AtlasChatMessage({
   message,
   showWorkingIndicator = false,
+  hideAgentHeader = false,
 }: {
   message: ChatMessage;
+  /** The side chat shows agent messages without the timestamp header. */
+  hideAgentHeader?: boolean;
   /** The conversation owns which single Working/Thinking block gets the mark. */
   showWorkingIndicator?: boolean;
 }) {
@@ -380,24 +376,59 @@ export function AtlasChatMessage({
         <Box
           sx={{
             "&:hover .refreshed-user-message-meta, &:focus-within .refreshed-user-message-meta": { opacity: 1 },
-            "&:hover .AtlasAIChatUserMessage > .MuiStack-root, &:focus-within .AtlasAIChatUserMessage > .MuiStack-root": {
-              backgroundColor: "var(--refresh-bubble-hover)", borderColor: "var(--refresh-bubble-border-hover)",
-              color: "#1a1a1e",
-            },
+            "&:hover .AtlasAIChatUserMessage > .MuiStack-root, &:focus-within .AtlasAIChatUserMessage > .MuiStack-root":
+              {
+                backgroundColor: "var(--refresh-bubble-hover)",
+                borderColor: "var(--refresh-bubble-border-hover)",
+                color: "#1a1a1e",
+              },
             "@media (hover: none)": { "& .refreshed-user-message-meta": { opacity: 1 } },
           }}
         >
-          <AIChatUserMessage alignment="end" message={text} header={null} slotProps={{ root: { sx: (theme) => ({
-            "& > .MuiStack-root": {
-              bgcolor: "var(--refresh-bubble)", border: "1px solid var(--refresh-bubble-border)",
-              borderRadius: "8px", px: "20px", py: "12px", maxWidth: "min(600px, 100%)",
-              boxShadow: "none", color: "var(--refresh-type-default)",
-              "& .MuiTypography-root": { ...chatBodyTypography(theme), color: "inherit", overflowWrap: "anywhere" },
-            },
-          }) } }} />
-          <Stack className="refreshed-user-message-meta" direction="row" justifyContent="flex-end"
-            alignItems="center" gap={1} sx={{ opacity: 0, transition: "opacity 120ms ease", mt: "8px", minHeight: "24px", "& button": { width: "24px", height: "24px", padding: "4px" } }}>
-            <Typography variant="body1" sx={(theme) => ({ ...chatBodyTypography(theme), color: "var(--refresh-type-muted)" })}>
+          <AIChatUserMessage
+            alignment="end"
+            message={text}
+            header={null}
+            slotProps={{
+              root: {
+                sx: (theme) => ({
+                  "& > .MuiStack-root": {
+                    bgcolor: "var(--refresh-bubble)",
+                    border: "1px solid var(--refresh-bubble-border)",
+                    borderRadius: "8px",
+                    px: "20px",
+                    py: "12px",
+                    maxWidth: "min(600px, 100%)",
+                    boxShadow: "none",
+                    color: "var(--refresh-type-default)",
+                    "& .MuiTypography-root": {
+                      ...chatBodyTypography(theme),
+                      color: "inherit",
+                      overflowWrap: "anywhere",
+                    },
+                  },
+                }),
+              },
+            }}
+          />
+          <Stack
+            className="refreshed-user-message-meta"
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            gap={1}
+            sx={{
+              opacity: 0,
+              transition: "opacity 120ms ease",
+              mt: "8px",
+              minHeight: "24px",
+              "& button": { width: "24px", height: "24px", padding: "4px" },
+            }}
+          >
+            <Typography
+              variant="body1"
+              sx={(theme) => ({ ...chatBodyTypography(theme), color: "var(--refresh-type-muted)" })}
+            >
               {time}
             </Typography>
             <CopyMessageAction text={text} />
@@ -414,12 +445,7 @@ export function AtlasChatMessage({
           <AIChatMessageHeader
             name={name}
             time={time}
-            avatar={
-              <AIChatMessageAvatar
-                uniqueId="local-user"
-                initials={getInitials(name)}
-              />
-            }
+            avatar={<AIChatMessageAvatar uniqueId="local-user" initials={getInitials(name)} />}
           />
         }
       />
@@ -427,9 +453,7 @@ export function AtlasChatMessage({
   }
 
   if (message.role === "system") {
-    return (
-      <AIChatSystemMessage description={extractTextFromParts(message.parts)} />
-    );
+    return <AIChatSystemMessage description={extractTextFromParts(message.parts)} />;
   }
 
   const segments = buildSegments(message.parts);
@@ -445,34 +469,37 @@ export function AtlasChatMessage({
   // yet (there's no non-work segment at all), which is also how we tell
   // "still working" from "done working, now writing the answer".
   const workEndIndex = (() => {
-    const idx = segments.findIndex(
-      (segment) => segment.kind === "text" || segment.kind === "signal-list",
-    );
+    const idx = segments.findIndex((segment) => segment.kind === "text" || segment.kind === "signal-list");
     return idx === -1 ? segments.length : idx;
   })();
   const workSegments = segments.slice(0, workEndIndex);
   const hasPendingApproval = workSegments.some(
-    (segment) =>
-      segment.kind === "tools" &&
-      segment.tools.some((tool) => tool.status === "paused"),
+    (segment) => segment.kind === "tools" && segment.tools.some((tool) => tool.status === "paused"),
   );
-  const isWorkActiveNow =
-    isStreaming && workEndIndex === segments.length && workSegments.length > 0;
+  const isWorkActiveNow = isStreaming && workEndIndex === segments.length && workSegments.length > 0;
   const keepWorkExpanded = isWorkActiveNow || hasPendingApproval;
 
   return (
     <AIChatAIMessage
-      header={variant === "refreshed" ? null : (
-        <AIChatMessageHeader
-          name="Cowork"
-          time={time}
-          avatar={<AIChatMessageAvatar uniqueId="assistant" initials="C" imageUrl={coworkAvatarUrl} />}
-        />
-      )}
+      header={
+        variant === "refreshed" || hideAgentHeader ? null : (
+          // The home chat keeps a timestamp-only header: styles.css hides this avatar and the name.
+          <AIChatMessageHeader
+            name="Cowork"
+            time={time}
+            avatar={<AIChatMessageAvatar uniqueId="assistant" initials="C" />}
+          />
+        )
+      }
       footer={
         !isStreaming && text ? (
-          variant === "refreshed" ? <Stack alignItems="flex-end"><CopyMessageAction text={text} /></Stack> :
-          <AIChatMessageFooter trailingActions={<CopyMessageAction text={text} />} />
+          variant === "refreshed" ? (
+            <Stack alignItems="flex-end">
+              <CopyMessageAction text={text} />
+            </Stack>
+          ) : (
+            <AIChatMessageFooter trailingActions={<CopyMessageAction text={text} />} />
+          )
         ) : undefined
       }
     >

@@ -225,8 +225,8 @@ function AttentionCard({
         "&:hover": { bgcolor: tokens.semantic.color.surface.variant.value },
       }}
     >
-      <CardContent sx={{ p: SPACE.section, "&:last-child": { pb: SPACE.section } }}>
-        <Stack gap={SPACE.block}>
+      <CardContent sx={{ px: SPACE.section, py: SPACE.block, "&:last-child": { pb: SPACE.block } }}>
+        <Stack gap={SPACE.item}>
           {/* Header: source · time and status on the left; snooze chip and menu on the right. */}
           <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.item} flexWrap="wrap">
             <Stack direction="row" alignItems="center" gap={SPACE.group} flexWrap="wrap" sx={{ minHeight: 32 }}>

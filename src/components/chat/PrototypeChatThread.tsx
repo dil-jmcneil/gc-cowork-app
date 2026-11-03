@@ -1,7 +1,4 @@
-import {
-  AIChatContent,
-  AIChatContextProvider,
-} from "@diligentcorp/atlas-react-bundle";
+import { AIChatContent, AIChatContextProvider } from "@diligentcorp/atlas-react-bundle";
 import { Box, Stack } from "@mui/material";
 import { useEffect, useRef, type ReactNode } from "react";
 
@@ -25,12 +22,7 @@ type PrototypeChatThreadProps = {
 const CHAT_CONTENT_MAX_WIDTH = 916;
 const CHAT_CONTENT_PX = { xs: 2, sm: 3 };
 
-export function PrototypeChatThread({
-  chatId,
-  header,
-  surface = "subtle",
-  onUserMessage,
-}: PrototypeChatThreadProps) {
+export function PrototypeChatThread({ chatId, header, surface = "subtle", onUserMessage }: PrototypeChatThreadProps) {
   const { messages, sendMessage, stop, isStreaming } = useChatRuntime(chatId);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -83,10 +75,7 @@ export function PrototypeChatThread({
             </Box>
           </Box>
         ) : null}
-        <Box
-          ref={scrollRef}
-          sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}
-        >
+        <Box ref={scrollRef} sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           <Box
             sx={{
               width: "100%",
@@ -101,7 +90,7 @@ export function PrototypeChatThread({
             }}
           >
             <AIChatContent>
-              <AtlasChatMessages messages={messages} />
+              <AtlasChatMessages messages={messages} hideAgentHeader={surface === "default"} />
             </AIChatContent>
             {/* Breathing room so the last message isn't flush against the
                 composer once scrolled to the bottom. */}
