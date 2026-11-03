@@ -42,6 +42,8 @@ export type Insight = {
   summary: string;
   /** Who issued it, e.g. a court or a regulator. */
   source: string;
+  /** The source document, e.g. the court's PDF of the opinion. */
+  sourceUrl?: string;
   /** Formal citation, when the source has one. */
   citation?: string;
   /** Later events, e.g. an appeal. */
@@ -69,6 +71,14 @@ export const ISSUED_LABEL: Record<InsightType, string> = {
   "Regulatory change": "Effective",
   "Enforcement action": "Announced",
   "Peer filing": "Filed",
+};
+
+/** Link text for each type's source document. */
+export const SOURCE_LINK_LABEL: Record<InsightType, string> = {
+  "Court ruling": "Read the opinion (PDF)",
+  "Regulatory change": "Read the rule",
+  "Enforcement action": "Read the announcement",
+  "Peer filing": "Read the filing",
 };
 
 /** What each type calls its "why it's relevant" list. */

@@ -1,6 +1,6 @@
 import ArrowRightIcon from "@diligentcorp/atlas-react-bundle/icons/ArrowRight";
 import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
-import { Box, Button, Card, Divider, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Card, Divider, Link, Stack, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/dates";
 import type { Project } from "@/projects/project";
 import { useProjectStore } from "@/projects/projectStore";
 import { InsightTags } from "@/components/insights/InsightTags";
-import { ISSUED_LABEL, RELEVANCE_LABEL, insightType, type Insight } from "@/insights/insight";
+import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
 import { STATUS_COLOR } from "@/insights/insightStatus";
 
 export function InsightList({ items }: { items: Insight[] }) {
@@ -45,6 +45,19 @@ function InsightCard({ insight }: { insight: Insight }) {
 
         <InsightTags tags={insight.tags} />
         <Typography variant="textMd">{insight.summary}</Typography>
+        {insight.sourceUrl ? (
+          <Link
+            href={insight.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            sx={{ alignSelf: "flex-start" }}
+          >
+            <Typography variant="textMd" sx={{ color: "inherit" }}>
+              {SOURCE_LINK_LABEL[insightType(insight)]}
+            </Typography>
+          </Link>
+        ) : null}
 
         <Box
           sx={{

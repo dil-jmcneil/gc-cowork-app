@@ -1,9 +1,9 @@
 import ScaleIcon from "@diligentcorp/atlas-react-bundle/icons/Scale";
-import { Stack, Typography, useTheme } from "@mui/material";
+import { Link, Stack, Typography, useTheme } from "@mui/material";
 
 import { formatDate } from "@/lib/dates";
 import { InsightTags } from "@/components/insights/InsightTags";
-import { ISSUED_LABEL, insightType, type Insight } from "@/insights/insight";
+import { ISSUED_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
 import { STATUS_COLOR } from "@/insights/insightStatus";
 
 import { FieldLabel, SectionCard } from "./SectionCard";
@@ -20,6 +20,19 @@ export function SourceInsightCard({ insight }: { insight: Insight }) {
         </Stack>
         <Typography variant="textMd">{insight.title}</Typography>
         <InsightTags tags={insight.tags} />
+        {insight.sourceUrl ? (
+          <Link
+            href={insight.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            sx={{ alignSelf: "flex-start" }}
+          >
+            <Typography variant="textMd" sx={{ color: "inherit" }}>
+              {SOURCE_LINK_LABEL[insightType(insight)]}
+            </Typography>
+          </Link>
+        ) : null}
         <Stack gap={0.25}>
           <FieldLabel>{ISSUED_LABEL[insightType(insight)]}</FieldLabel>
           <Typography variant="textMd">{formatDate(insight.issuedDate)}</Typography>

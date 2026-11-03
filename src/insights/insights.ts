@@ -11,6 +11,7 @@ export const ATG_RULING: Insight = {
   summary:
     "In ATG v. Lane, the Court of Chancery held that a board can enforce only what its advance notice bylaw states: it \"cannot … enforce a requirement that a bylaw does not contain.\" Acme's Article II, Section 8 hasn't changed since 2008, and the 2027 nomination window opens Jan 8.",
   source: "Delaware Court of Chancery",
+  sourceUrl: "https://www.courts.delaware.gov/opinions/download.aspx?id=400580",
   citation: "ATG Capital Opportunities Fund LP v. Lane, C.A. No. 2026-0447-LWW",
   history: "Affirmed by the Delaware Supreme Court on Oct 8, 2026",
   tags: [

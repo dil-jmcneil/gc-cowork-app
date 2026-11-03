@@ -22,7 +22,7 @@ import { startChatFromPrompt } from "@/chat/startChat";
 import { formatDate } from "@/lib/dates";
 import { InsightTags } from "@/components/insights/InsightTags";
 import { useProjectStore } from "@/projects/projectStore";
-import { ISSUED_LABEL, RELEVANCE_LABEL, insightType, type Insight } from "@/insights/insight";
+import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
 import { projectActionForInsight } from "@/insights/insightActions";
 import { STATUS_COLOR } from "@/insights/insightStatus";
 
@@ -53,6 +53,19 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
             {insight.source}
             {insight.citation ? ` · ${insight.citation}` : ""}
           </Typography>
+          {insight.sourceUrl ? (
+            <Link
+              href={insight.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+              sx={{ alignSelf: "flex-start" }}
+            >
+              <Typography variant="textMd" sx={{ color: "inherit" }}>
+                {SOURCE_LINK_LABEL[insightType(insight)]}
+              </Typography>
+            </Link>
+          ) : null}
         </Stack>
         <IconButton aria-label="Close" onClick={onClose} size="small" sx={{ position: "absolute", top: 12, right: 12 }}>
           <CloseIcon />
