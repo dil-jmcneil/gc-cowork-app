@@ -24,7 +24,15 @@ export function RuleTable({ rules, ariaLabel }: { rules: PlanRule[]; ariaLabel: 
 
   return (
     <TableContainer>
-      <Table size="small" aria-label={ariaLabel} sx={(theme) => ({ "& .MuiTableCell-body": theme.typography.body1 })}>
+      <Table
+        size="small"
+        aria-label={ariaLabel}
+        sx={(theme) => ({
+          "& .MuiTableCell-body": theme.typography.body1,
+          // No divider under the last row; the card edge ends the table.
+          "& .MuiTableBody-root .MuiTableRow-root:last-of-type .MuiTableCell-root": { borderBottom: "none" },
+        })}
+      >
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: "34%" }}>When</TableCell>
