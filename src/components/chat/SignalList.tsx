@@ -1,4 +1,3 @@
-import ArrowRightIcon from "@diligentcorp/atlas-react-bundle/icons/ArrowRight";
 import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
 import { Box, Button, Card, Divider, Link, Stack, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
@@ -16,7 +15,6 @@ import {
   type Signal,
   hasPlan,
   pastWorkstreamProgress,
-  type PastWorkstream,
 } from "@/signals/signal";
 import { STATUS_COLOR, currentStatus } from "@/signals/signalStatus";
 import { SPACE } from "@/lib/layout";
@@ -44,11 +42,6 @@ function SignalCard({ signal }: { signal: Signal }) {
   return (
     <Card sx={{ px: SPACE.block, py: SPACE.group }}>
       <Stack gap={SPACE.item}>
-        {workstream ? (
-          <WorkstreamLink workstream={workstream} />
-        ) : signal.pastWorkstream ? (
-          <PastWorkstreamLine workstream={signal.pastWorkstream} />
-        ) : null}
         <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap">
           <StatusIndicator color={STATUS_COLOR[status]} label={status} />
           <Typography variant="body1" component="h3" sx={{ fontWeight: emphasis, flex: 1, minWidth: 200 }}>
@@ -107,7 +100,21 @@ function SignalCard({ signal }: { signal: Signal }) {
         {workstream ? (
           <>
             <Divider />
-            <WorkstreamSummary workstream={workstream} />
+            <WorkstreamFooter
+              name={workstream.name}
+              to={`/workstreams/${workstream.id}`}
+              progress={workstreamProgress(workstream)}
+            />
+          </>
+        ) : signal.pastWorkstream ? (
+          <>
+            <Divider />
+            {/* Past workstreams have no page; their tasks are on the compliance calendar. */}
+            <WorkstreamFooter
+              name={signal.pastWorkstream.name}
+              to="/compliance-calendar"
+              progress={pastWorkstreamProgress(signal.pastWorkstream)}
+            />
           </>
         ) : signal.outcome ? (
           <>
@@ -116,7 +123,7 @@ function SignalCard({ signal }: { signal: Signal }) {
               {signal.outcome}
             </Typography>
           </>
-        ) : signal.pastWorkstream || !hasPlan(signal) ? null : (
+        ) : !hasPlan(signal) ? null : (
           <>
             <Divider />
             <NoWorkstream signalId={signal.id} />
@@ -127,69 +134,34 @@ function SignalCard({ signal }: { signal: Signal }) {
   );
 }
 
-function WorkstreamSummary({ workstream }: { workstream: Workstream }) {
+/** Done tasks over all tasks, e.g. "1 of 7 tasks done". */
+function workstreamProgress(workstream: Workstream): string {
+  const { tasks } = workstream.plan;
+  return `${tasks.filter((t) => t.status === "Done").length} of ${tasks.length} tasks done`;
+}
+
+/** Below the divider: the signal's workstream as a link, then one status line. */
+function WorkstreamFooter({ name, to, progress }: { name: string; to: string; progress: string }) {
   const { tokens } = useTheme();
-  const muted = tokens.semantic.color.type.muted.value;
   return (
-    <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} gap={SPACE.group}>
-      <Typography variant="body1" sx={{ flex: 1, minWidth: 0, color: muted }}>
-        {workstream.statusSummary}
-      </Typography>
-      <Button
+    <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap">
+      <Link
         component={RouterLink}
-        to={`/workstreams/${workstream.id}`}
-        variant="outlined"
-        size="small"
-        endIcon={<ArrowRightIcon aria-hidden style={{ width: 14, height: 14 }} />}
-        sx={{ flexShrink: 0 }}
+        to={to}
+        underline="hover"
+        sx={{ display: "inline-flex", alignItems: "center", gap: SPACE.pair }}
       >
-        Open workstream
-      </Button>
-    </Stack>
-  );
-}
-
-/** Above the title: the signal's workstream, linked. */
-function WorkstreamLink({ workstream }: { workstream: Workstream }) {
-  const { tokens } = useTheme();
-  return (
-    <Link
-      component={RouterLink}
-      to={`/workstreams/${workstream.id}`}
-      underline="hover"
-      sx={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: SPACE.pair }}
-    >
-      <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
-      <Typography
-        variant="body1"
-        component="span"
-        sx={{ color: "inherit", fontWeight: tokens.semantic.fontWeight.emphasis.value }}
-      >
-        Workstream: {workstream.name}
-      </Typography>
-    </Link>
-  );
-}
-
-/**
- * Above the title: a workstream from before the prototype's story. It has no
- * page, so it's a label with its progress instead of a link.
- */
-function PastWorkstreamLine({ workstream }: { workstream: PastWorkstream }) {
-  const { tokens } = useTheme();
-  const muted = tokens.semantic.color.type.muted.value;
-  return (
-    <Stack direction="row" alignItems="center" gap={SPACE.pair} flexWrap="wrap" sx={{ color: muted }}>
-      <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
-      <Typography
-        variant="body1"
-        component="span"
-        sx={{ color: "inherit", fontWeight: tokens.semantic.fontWeight.emphasis.value }}
-      >
-        Workstream: {workstream.name}
-      </Typography>
-      <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
-        · {workstream.status} · {pastWorkstreamProgress(workstream)}
+        <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
+        <Typography
+          variant="body1"
+          component="span"
+          sx={{ color: "inherit", fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+        >
+          Workstream: {name}
+        </Typography>
+      </Link>
+      <Typography variant="body1" component="span" sx={{ color: tokens.semantic.color.type.muted.value }}>
+        {progress}
       </Typography>
     </Stack>
   );
