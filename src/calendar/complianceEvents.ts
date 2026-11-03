@@ -51,8 +51,8 @@ type EventBase = {
 export type CalendarEvent =
   | (EventBase & { kind: "task"; workstreamId: string; taskId: string })
   | (EventBase & { kind: "external"; signalId: string })
-  /** A past workstream's task. Display only: no dialog or page. */
-  | (EventBase & { kind: "reference" });
+  /** A past workstream's task. No task dialog; its workstream link opens the signal. */
+  | (EventBase & { kind: "reference"; signalId: string });
 
 type TaskFacts = Pick<WorkstreamTask, "status" | "deadline">;
 
@@ -124,9 +124,15 @@ function taskEvent(workstream: Workstream, task: WorkstreamTask, now: Date): Cal
 }
 
 /** A task of a past workstream: shown on the calendar, but it opens nothing. */
-function referenceTaskEvent(workstream: PastWorkstream, task: PastWorkstreamTask, now: Date): CalendarEvent {
+function referenceTaskEvent(
+  signalId: string,
+  workstream: PastWorkstream,
+  task: PastWorkstreamTask,
+  now: Date,
+): CalendarEvent {
   return {
     kind: "reference",
+    signalId,
     id: task.id,
     date: task.due,
     title: task.description,
@@ -134,7 +140,7 @@ function referenceTaskEvent(workstream: PastWorkstream, task: PastWorkstreamTask
     owner: task.owner,
     linkLabel: `Task in ${workstream.name}`,
     summary: task.statusSummary,
-    // Past workstreams have no page, so the name isn't a link.
+    // Past workstreams have no page; the link opens the signal, which shows the workstream.
     workstream: { name: workstream.name },
     ...taskState({ status: task.status, deadline: task.due }, task.owner, workstream.name, now),
   };
@@ -186,7 +192,7 @@ export function deriveCalendarEvents(workstreams: Workstream[], now: Date): Cale
 
   const referenceEvents = SIGNALS.flatMap((signal) =>
     signal.pastWorkstream
-      ? signal.pastWorkstream.tasks.map((task) => referenceTaskEvent(signal.pastWorkstream!, task, now))
+      ? signal.pastWorkstream.tasks.map((task) => referenceTaskEvent(signal.id, signal.pastWorkstream!, task, now))
       : [],
   );
 

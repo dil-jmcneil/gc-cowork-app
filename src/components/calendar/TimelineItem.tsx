@@ -1,4 +1,3 @@
-import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
 import { Box, Button, Link, Stack, Tooltip, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
@@ -65,7 +64,7 @@ export function TimelineItem({
       <StatusDot status={event.status} />
       <Stack gap={SPACE.pair} sx={{ flex: 1, minWidth: 0 }}>
         <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} showStatus={false} prominent />
-        {event.workstream ? <WorkstreamLine workstream={event.workstream} /> : null}
+        {event.workstream ? <WorkstreamLine workstream={event.workstream} onOpenSignal={() => onOpen(event)} /> : null}
         <OwnerActivity
           event={event}
           action={
@@ -133,24 +132,39 @@ export function EventTitle({
   );
 }
 
-/** The workstream, linked when it has a page (past workstreams don't). Regular weight. */
-export function WorkstreamLine({ workstream }: { workstream: { name: string; href?: string } }) {
-  const { tokens } = useTheme();
-  const content = (
-    <>
-      <ProjectsIcon aria-hidden style={{ width: 16, height: 16, flexShrink: 0 }} />
-      <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
-        Workstream: {workstream.name}
-      </Typography>
-    </>
+/**
+ * "Workstream: name" as a link in link color, no icon. A workstream with a
+ * page links there; a past one (no page) opens its signal instead.
+ */
+export function WorkstreamLine({
+  workstream,
+  onOpenSignal,
+}: {
+  workstream: { name: string; href?: string };
+  onOpenSignal?: () => void;
+}) {
+  const label = (
+    <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
+      Workstream: {workstream.name}
+    </Typography>
   );
-  const sx = { alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: SPACE.pair };
-  return workstream.href ? (
-    <Link component={RouterLink} to={workstream.href} underline="hover" sx={sx}>
-      {content}
+  if (workstream.href) {
+    return (
+      <Link component={RouterLink} to={workstream.href} underline="hover" sx={{ alignSelf: "flex-start" }}>
+        {label}
+      </Link>
+    );
+  }
+  return (
+    <Link
+      component="button"
+      type="button"
+      underline="hover"
+      onClick={onOpenSignal}
+      sx={{ alignSelf: "flex-start", textAlign: "left" }}
+    >
+      {label}
     </Link>
-  ) : (
-    <Box sx={{ ...sx, color: tokens.semantic.color.type.muted.value }}>{content}</Box>
   );
 }
 

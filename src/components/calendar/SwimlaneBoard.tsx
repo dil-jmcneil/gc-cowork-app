@@ -184,7 +184,9 @@ function SwimCard({
             </Box>
             <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} showStatus={false} />
           </Stack>
-          {event.workstream ? <WorkstreamLine workstream={event.workstream} /> : null}
+          {event.workstream ? (
+            <WorkstreamLine workstream={event.workstream} onOpenSignal={() => onOpen(event)} />
+          ) : null}
           <OwnerActivity event={event} clamp={2} />
           <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.item}>
             <StatusIndicator color={event.priority.color} label={event.priority.label} />

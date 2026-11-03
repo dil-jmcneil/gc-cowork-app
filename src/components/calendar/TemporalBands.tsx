@@ -11,20 +11,22 @@ import { SPACE } from "@/lib/layout";
 export function useBandLook(band: TemporalBand) {
   const { tokens } = useTheme();
   const { color } = tokens.semantic;
-  // This week: blue header and accent. Next week: gray header, mid-gray accent.
-  // Further out: the lightest header, a faint accent, and shaded, faded rows.
+  // Atlas status colors: This week uses the informational blue, Next week the
+  // neutral (generic) gray, from the StatusIndicator component tokens. Further
+  // out is lighter still, with shaded, faded rows.
+  const status = tokens.component.statusIndicator.colors;
   const near = {
-    accent: color.accent.blue.content.value,
-    headerBg: color.accent.blue.background.value,
-    label: color.accent.blue.content.value,
+    accent: status.information.color.value,
+    headerBg: status.information.backgroundColor.value,
+    label: status.information.color.value,
     rowBg: color.surface.default.value,
-    rowHoverBg: color.accent.blue.background.value,
+    rowHoverBg: status.information.backgroundColor.value,
     faded: false,
   };
   const next = {
-    accent: color.ui.divider.secondary.value,
-    headerBg: color.status.neutral.backgroundVariant.value,
-    label: color.type.default.value,
+    accent: status.generic.color.value,
+    headerBg: status.generic.backgroundColor.value,
+    label: status.generic.color.value,
     rowBg: color.surface.default.value,
     rowHoverBg: color.surface.subtle.value,
     faded: false,

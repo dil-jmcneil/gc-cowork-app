@@ -47,7 +47,10 @@ export function DateChip({ date, tense }: { date: string; tense: DateTense }) {
         fontVariantNumeric: "lining-nums tabular-nums",
       }}
     >
-      <Typography variant="body1" sx={{ color: look.day, lineHeight: "18px" }}>
+      <Typography
+        variant="body1"
+        sx={{ color: look.day, lineHeight: "18px", fontWeight: tokens.semantic.fontWeight.bold.value }}
+      >
         {DAY.format(parsed)}
       </Typography>
       <Typography variant="textMd" sx={{ color: look.month, lineHeight: "14px", textTransform: "uppercase" }}>
