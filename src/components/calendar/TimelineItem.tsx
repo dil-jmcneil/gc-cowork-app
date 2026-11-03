@@ -133,8 +133,9 @@ export function EventTitle({
 }
 
 /**
- * "Workstream: name" as a link in link color, no icon. A workstream with a
- * page links there; a past one (no page) opens its signal instead.
+ * "Workstream:" in muted text, then the workstream's name as a blue link, with
+ * no icon. A workstream with a page links there; a past one (no page) opens
+ * its signal instead.
  */
 export function WorkstreamLine({
   workstream,
@@ -143,28 +144,27 @@ export function WorkstreamLine({
   workstream: { name: string; href?: string };
   onOpenSignal?: () => void;
 }) {
-  const label = (
+  const { tokens } = useTheme();
+  const name = (
     <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
-      Workstream: {workstream.name}
+      {workstream.name}
     </Typography>
   );
-  if (workstream.href) {
-    return (
-      <Link component={RouterLink} to={workstream.href} underline="hover" sx={{ alignSelf: "flex-start" }}>
-        {label}
-      </Link>
-    );
-  }
   return (
-    <Link
-      component="button"
-      type="button"
-      underline="hover"
-      onClick={onOpenSignal}
-      sx={{ alignSelf: "flex-start", textAlign: "left" }}
-    >
-      {label}
-    </Link>
+    <Stack direction="row" alignItems="baseline" gap={SPACE.pair} sx={{ alignSelf: "flex-start", minWidth: 0 }}>
+      <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value, flexShrink: 0 }}>
+        Workstream:
+      </Typography>
+      {workstream.href ? (
+        <Link component={RouterLink} to={workstream.href} underline="hover">
+          {name}
+        </Link>
+      ) : (
+        <Link component="button" type="button" underline="hover" onClick={onOpenSignal} sx={{ textAlign: "left" }}>
+          {name}
+        </Link>
+      )}
+    </Stack>
   );
 }
 

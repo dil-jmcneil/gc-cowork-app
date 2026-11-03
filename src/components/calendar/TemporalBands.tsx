@@ -15,8 +15,11 @@ export function useBandLook(band: TemporalBand) {
   // neutral (generic) gray, from the StatusIndicator component tokens. Further
   // out is lighter still, with shaded, faded rows.
   const status = tokens.component.statusIndicator.colors;
+  // The accent bars follow the app's blue theme (the same indigo as links and
+  // primary actions), stepping lighter as the band gets further out.
+  const indigo = tokens.core.color.indigo;
   const near = {
-    accent: status.information.color.value,
+    accent: indigo["40"].value,
     headerBg: status.information.backgroundColor.value,
     label: status.information.color.value,
     rowBg: color.surface.default.value,
@@ -24,7 +27,7 @@ export function useBandLook(band: TemporalBand) {
     faded: false,
   };
   const next = {
-    accent: status.generic.color.value,
+    accent: indigo["60"].value,
     headerBg: status.generic.backgroundColor.value,
     label: status.generic.color.value,
     rowBg: color.surface.default.value,
@@ -32,7 +35,7 @@ export function useBandLook(band: TemporalBand) {
     faded: false,
   };
   const far = {
-    accent: color.status.neutral.background.value,
+    accent: indigo["80"].value,
     headerBg: color.surface.subtle.value,
     label: color.type.muted.value,
     rowBg: color.surface.subtle.value,
