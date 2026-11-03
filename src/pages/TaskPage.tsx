@@ -107,7 +107,7 @@ function TaskDetail({
               Task
             </Typography>
           </Breadcrumbs>
-          <Typography variant="h5" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
             {task.description}
           </Typography>
           <TaskBadges task={task} now={now} />

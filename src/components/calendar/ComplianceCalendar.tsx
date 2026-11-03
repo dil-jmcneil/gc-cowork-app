@@ -109,7 +109,7 @@ export function ComplianceCalendar({
         <Stack gap={SPACE.pair}>
           <Typography
             id={`compliance-calendar-${variant}`}
-            variant={variant === "page" ? "h5" : "h6"}
+            variant={variant === "page" ? "h4" : "h6"}
             component={variant === "page" ? "h1" : "h2"}
             sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
           >

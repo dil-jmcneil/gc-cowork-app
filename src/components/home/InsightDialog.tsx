@@ -48,12 +48,12 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
       {/* 48px right padding leaves room for the close button. */}
       <DialogTitle component="div" sx={{ pr: 6 }}>
         <Stack gap={SPACE.pair} alignItems="flex-start" sx={{ width: "100%", minWidth: 0, textAlign: "left" }}>
-          {/* The Atlas dialog title styles any h2 at 22px; keep the 16px h5. */}
+          {/* The Atlas dialog title styles any h2 at 22px; keep the 18px h4. */}
           <Typography
-            variant="h5"
+            variant="h4"
             component="h2"
             sx={(theme) => ({
-              "&.MuiTypography-root": { ...theme.typography.h5, fontWeight: tokens.semantic.fontWeight.emphasis.value },
+              "&.MuiTypography-root": { ...theme.typography.h4, fontWeight: tokens.semantic.fontWeight.emphasis.value },
             })}
           >
             {insight.title}

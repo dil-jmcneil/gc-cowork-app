@@ -84,7 +84,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
       <Container maxWidth="xl" sx={{ py: SPACE.section }}>
         <Stack gap={SPACE.section}>
           <Stack gap={SPACE.pair}>
-            <Typography variant="h5" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
               Create workstream
             </Typography>
             <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>

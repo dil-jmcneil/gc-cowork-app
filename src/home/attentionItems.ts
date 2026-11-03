@@ -11,6 +11,8 @@ export type AttentionItem = {
   title: string;
   summary: string;
   relatedPolicy: string;
+  /** Why Cowork surfaced it to this user, shown in the title's info tooltip. */
+  whySurfaced: string;
 };
 
 export const ATTENTION_ITEMS: AttentionItem[] = [
@@ -22,5 +24,7 @@ export const ATTENTION_ITEMS: AttentionItem[] = [
     title: ATG_RULING.title,
     summary: ATG_RULING.summary,
     relatedPolicy: "Bylaws Article II, Section 8: advance notice of director nominations",
+    whySurfaced:
+      "Surfaced because Acme is a Delaware company, your advance notice bylaw predates the ruling, and you own the bylaws.",
   },
 ];

@@ -55,7 +55,7 @@ export default function WorkstreamPage() {
           >
             Workstream
           </Typography>
-          <Typography variant="h5" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
             {workstream.name}
           </Typography>
         </Stack>

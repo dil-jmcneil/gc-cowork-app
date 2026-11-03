@@ -47,18 +47,20 @@ You can use the MCP server to search for design tokens by path or value.
 
 ### Typography
 
-Text stays between 12px and 16px. In this bundle the MUI variants render a step below their token names, so pick by rendered size:
+Text stays between 12px and 18px. In this bundle the MUI variants render a step below their token names, so pick by rendered size:
 
 | Rendered | Variant | Use for |
 | --- | --- | --- |
-| 16px semibold | `h5` + emphasis weight | Important headers only: page titles, dialog titles, the one headline on a card |
+| 18px semibold | `h4` + emphasis weight | Page titles and dialog titles |
+| 16px semibold | `h5` + emphasis weight | The one headline on a card, e.g. an attention card's title |
 | 14px semibold | `h6` + emphasis weight | Card and section headings, milestone titles |
 | 14px (Type/Md) | `body1` | The default for content: values, table cells, messages, summaries. Add emphasis weight for names and subjects |
 | 12px | `textMd` | Sparingly, for helper text an experienced user can skip: field labels, timestamps, meta lines, table headers |
 
-- Never use `textSm` (10px), `labelXs` (11px), or `h4` and larger (18px+) on these screens. The home hero is the one exception.
+- Never use `textSm` (10px), `labelXs` (11px), or `h3` and larger (22px+) on these screens. The home hero is the one exception.
+- The attention card follows its Figma (3274:11121): 16px semibold title over a 16px regular muted summary.
 - `h5` and `h6` render at regular weight; add `fontWeight: tokens.semantic.fontWeight.emphasis.value` for headings.
-- The Atlas dialog title styles any `h2` inside it at 22px. Re-apply `theme.typography.h5` on the title.
+- The Atlas dialog title styles any `h2` inside it at 22px. Re-apply `theme.typography.h4` on the title.
 
 ### Spacing
 
