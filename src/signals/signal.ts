@@ -44,6 +44,8 @@ export type PastWorkstream = {
   status: "Active" | "Closed";
   /** ISO date, yyyy-mm-dd. */
   startedOn: string;
+  /** One or two sentences on where it stands, with the task count, as Cowork would write it. */
+  statusSummary: string;
   tasks: PastWorkstreamTask[];
 };
 

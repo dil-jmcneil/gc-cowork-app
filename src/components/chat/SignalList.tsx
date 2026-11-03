@@ -79,6 +79,14 @@ function SignalCard({ signal }: { signal: Signal }) {
             rowGap: SPACE.item,
           }}
         >
+          {/* Every signal has Relevance; only some have deadlines, so Relevance takes the left column. */}
+          <Detail label={RELEVANCE_LABEL} fullWidth={signal.deadlines.length === 0}>
+            {signal.reasonsRelevant.map((reason) => (
+              <Typography key={reason} variant="body1">
+                {reason}
+              </Typography>
+            ))}
+          </Detail>
           {signal.deadlines.length ? (
             <Detail label={signal.deadlines.length === 1 ? "Deadline" : "Deadlines"}>
               {signal.deadlines.map((deadline) => (
@@ -88,13 +96,6 @@ function SignalCard({ signal }: { signal: Signal }) {
               ))}
             </Detail>
           ) : null}
-          <Detail label={RELEVANCE_LABEL}>
-            {signal.reasonsRelevant.map((reason) => (
-              <Typography key={reason} variant="body1">
-                {reason}
-              </Typography>
-            ))}
-          </Detail>
         </Box>
 
         {workstream ? (
@@ -103,7 +104,7 @@ function SignalCard({ signal }: { signal: Signal }) {
             <WorkstreamFooter
               name={workstream.name}
               to={`/workstreams/${workstream.id}`}
-              progress={workstreamProgress(workstream)}
+              summary={withTaskCount(workstream.statusSummary, workstreamProgress(workstream))}
             />
           </>
         ) : signal.pastWorkstream ? (
@@ -113,7 +114,10 @@ function SignalCard({ signal }: { signal: Signal }) {
             <WorkstreamFooter
               name={signal.pastWorkstream.name}
               to="/compliance-calendar"
-              progress={pastWorkstreamProgress(signal.pastWorkstream)}
+              summary={withTaskCount(
+                signal.pastWorkstream.statusSummary,
+                pastWorkstreamProgress(signal.pastWorkstream),
+              )}
             />
           </>
         ) : signal.outcome ? (
@@ -140,16 +144,21 @@ function workstreamProgress(workstream: Workstream): string {
   return `${tasks.filter((t) => t.status === "Done").length} of ${tasks.length} tasks done`;
 }
 
-/** Below the divider: the signal's workstream as a link, then one status line. */
-function WorkstreamFooter({ name, to, progress }: { name: string; to: string; progress: string }) {
+/** Leads a status summary with the task count, unless it already starts with one. */
+function withTaskCount(summary: string, progress: string): string {
+  return /^\d+ of \d+ tasks done/.test(summary) ? summary : `${progress}. ${summary}`;
+}
+
+/** Below the divider: the signal's workstream as a link, then a one-line status summary. */
+function WorkstreamFooter({ name, to, summary }: { name: string; to: string; summary: string }) {
   const { tokens } = useTheme();
   return (
-    <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap">
+    <Stack gap={SPACE.pair}>
       <Link
         component={RouterLink}
         to={to}
         underline="hover"
-        sx={{ display: "inline-flex", alignItems: "center", gap: SPACE.pair }}
+        sx={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: SPACE.pair }}
       >
         <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
         <Typography
@@ -160,8 +169,8 @@ function WorkstreamFooter({ name, to, progress }: { name: string; to: string; pr
           Workstream: {name}
         </Typography>
       </Link>
-      <Typography variant="body1" component="span" sx={{ color: tokens.semantic.color.type.muted.value }}>
-        {progress}
+      <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value }}>
+        {summary}
       </Typography>
     </Stack>
   );
@@ -187,10 +196,10 @@ function NoWorkstream({ signalId }: { signalId: string }) {
   );
 }
 
-function Detail({ label, children }: { label: string; children: ReactNode }) {
+function Detail({ label, fullWidth = false, children }: { label: string; fullWidth?: boolean; children: ReactNode }) {
   const { tokens } = useTheme();
   return (
-    <Stack gap={SPACE.pair}>
+    <Stack gap={SPACE.pair} sx={fullWidth ? { gridColumn: "1 / -1" } : undefined}>
       <Typography
         variant="textMd"
         sx={{

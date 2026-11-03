@@ -342,6 +342,8 @@ export const PAST_SIGNALS: Signal[] = [
       name: "Online cancellation update",
       status: "Active",
       startedOn: "2026-10-08",
+      statusSummary:
+        "2 of 4 tasks done. Jordan's update to customer terms §7 slipped past Nov 2 and needs a nudge; Chris ships the online flow Nov 19, ahead of the Nov 30 target.",
       tasks: [
         {
           id: "ftc-gap",
@@ -396,6 +398,8 @@ export const PAST_SIGNALS: Signal[] = [
       name: "Cyber 8-K readiness",
       status: "Active",
       startedOn: "2026-09-24",
+      statusSummary:
+        "3 of 4 tasks done. The plan now says four business days, Raj signs 8-K cyber filings, and the tabletop ran Nov 2; Alex adds the plan to the Nov 12 Audit Committee pre-read.",
       tasks: [
         {
           id: "cyber-irp",

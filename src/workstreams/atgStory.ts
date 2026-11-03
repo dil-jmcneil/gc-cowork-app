@@ -197,6 +197,6 @@ export function progressAtgWorkstream(workstream: Workstream): Workstream {
     createdAt: STARTED_AT,
     plan: { ...workstream.plan, tasks: workstream.plan.tasks.map(storyFor) },
     statusSummary:
-      "Milestone 1 of 4, Get counsel's view. Dana's memo is due Dec 8, and the Dec 15 committee slot is booked. Morgan hasn't replied yet (follow-up 1 of 3).",
+      "Getting counsel's view: Dana's memo is due Dec 8 and the Dec 15 committee slot is booked; Morgan hasn't replied yet (follow-up 1 of 3).",
   };
 }
