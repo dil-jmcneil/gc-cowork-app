@@ -98,6 +98,10 @@ The org name and logo you can set on the `AppLayout` component in `App.tsx` shou
 
 Anything Cowork surfaces for the GC is an **insight** (`src/insights`). Its kind is a metadata tag, not a separate object: each insight has exactly one `type` tag ("Court ruling", "Regulatory change", "Enforcement action", "Peer filing") plus optional `jurisdiction` and `topic` tags. Don't call an insight a "regulatory change" in code or copy unless its type tag says so. The primary demo insight is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`).
 
+### Workstreams and history
+
+The OOUX Project object is called a **workstream** in the UI and in routes (`/workstreams/...`). Code still names it `Project` (`src/projects`, `useProjectStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the workstream page rolls every task's history into one list.
+
 ### Plans are milestones plus rule rows
 
 Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into Boxes and Arrows"):

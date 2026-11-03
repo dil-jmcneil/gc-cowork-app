@@ -22,7 +22,7 @@ test("each milestone's task templates become draft tasks with their owner and du
     expect(task.delegate.id.replace(/^email:/, "")).toBe(template.ownerEmail);
     expect(task.delegator).toBe("Peter");
     expect(task.status).toBe("Not started");
-    expect(task.thread).toEqual([]);
+    expect(task.history).toEqual([]);
   });
 });
 

@@ -5,7 +5,7 @@ import { CHANNEL_LABEL, type MessageAuthorRole, type TaskMessage } from "@/proje
 
 import { PersonLine } from "./PersonLine";
 
-const WHEN = new Intl.DateTimeFormat("en-US", {
+export const WHEN = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
   hour: "numeric",
@@ -19,12 +19,12 @@ const ROLE_LABEL: Record<MessageAuthorRole, string> = {
   cc: "CC",
 };
 
-/** One message in a task's communication thread: who, how, when, then the content. */
-export function ThreadMessage({ message }: { message: TaskMessage }) {
+/** One message in a task's history: who, how, when, then the content. `context` replaces the role line, e.g. with the task name. */
+export function ThreadMessage({ message, context }: { message: TaskMessage; context?: string }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const fromGc = message.authorRole === "delegator";
-  const detail = [ROLE_LABEL[message.authorRole], message.to ? `to ${message.to.join(", ")}` : null]
+  const detail = [context ?? ROLE_LABEL[message.authorRole], message.to ? `to ${message.to.join(", ")}` : null]
     .filter(Boolean)
     .join(" · ");
 

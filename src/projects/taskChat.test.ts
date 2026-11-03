@@ -16,18 +16,18 @@ beforeEach(() => {
 });
 
 test("a status question gets the status summary and leaves the thread alone", () => {
-  const before = task().thread.length;
+  const before = task().history.length;
   const reply = handleTaskChatMessage(PROJECT_ID, task().id, "Where does this stand?", NOW);
   expect(reply).toMatch(/Morgan hasn't replied/);
-  expect(task().thread).toHaveLength(before);
+  expect(task().history).toHaveLength(before);
 });
 
 test("anything else is recorded in the thread and passed on to the owner", () => {
-  const before = task().thread.length;
+  const before = task().history.length;
   const reply = handleTaskChatMessage(PROJECT_ID, task().id, "Please send the vendor list today.", NOW);
   expect(reply).toContain("Morgan Diaz");
-  expect(task().thread).toHaveLength(before + 2);
-  expect(task().thread[before]).toMatchObject({
+  expect(task().history).toHaveLength(before + 2);
+  expect(task().history[before]).toMatchObject({
     channel: "chat",
     authorRole: "delegator",
   });

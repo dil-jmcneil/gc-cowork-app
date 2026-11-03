@@ -46,8 +46,8 @@ export default function CreateProjectPage() {
   if (existing) {
     return (
       <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">There's already a project for this insight.</Typography>
-        <Link component={RouterLink} to={`/projects/${existing.id}`}>
+        <Typography variant="textMd">There's already a workstream for this insight.</Typography>
+        <Link component={RouterLink} to={`/workstreams/${existing.id}`}>
           Open {existing.name}
         </Link>
       </Stack>
@@ -74,7 +74,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
       ...draft,
       plan: { ...draft.plan, status: "accepted" },
     });
-    navigate(`/projects/${project.id}`);
+    navigate(`/workstreams/${project.id}`);
   };
 
   return (
@@ -83,17 +83,17 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
         <Stack gap={3}>
           <Stack gap={0.5}>
             <Typography variant="h4" component="h1">
-              Create project
+              Create workstream
             </Typography>
             <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-              Cowork drafted this from the insight. Review the plan, then start the project.
+              Cowork drafted this from the insight. Review the plan, then start the workstream.
             </Typography>
           </Stack>
 
           <Grid {...presets.GridPresets.page}>
             <Grid item sm={4} md={8} lg={5} xl={8}>
               <Stack gap={2}>
-                <SectionCard title="Project Details">
+                <SectionCard title="Workstream Details">
                   <Stack gap={2}>
                     <FormControl fullWidth>
                       <FormLabel htmlFor="project-name">Name</FormLabel>
@@ -175,7 +175,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
               Cancel
             </Button>
             <Button variant="contained" onClick={handleCreate}>
-              Accept plan and start project
+              Accept plan and start workstream
             </Button>
           </Stack>
         </Stack>

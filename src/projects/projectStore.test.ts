@@ -49,7 +49,7 @@ describe("task actions", () => {
     useProjectStore.getState().assignTask(PROJECT_ID, firstTask().id, jordan);
     const task = firstTask();
     expect(task.delegate.label).toBe("Jordan Lee");
-    const last = task.thread[task.thread.length - 1];
+    const last = task.history[task.history.length - 1];
     expect(last).toMatchObject({
       authorRole: "cowork",
       channel: "email",
@@ -57,42 +57,42 @@ describe("task actions", () => {
     });
   });
 
-  test("setTaskStatus updates the status and records it in the thread", () => {
+  test("setTaskStatus updates the status and records it as an action in the history", () => {
     useProjectStore.getState().setTaskStatus(PROJECT_ID, firstTask().id, "Done");
     const task = firstTask();
     expect(task.status).toBe("Done");
-    expect(task.thread[task.thread.length - 1].body).toMatch(/Done/);
+    expect(task.history[task.history.length - 1]).toMatchObject({ kind: "action", actor: "Peter", summary: "Set the status to Done" });
   });
 
   test("nudgeTask sends the owner a reminder email", () => {
-    const before = firstTask().thread.length;
+    const before = firstTask().history.length;
     useProjectStore.getState().nudgeTask(PROJECT_ID, firstTask().id);
     const task = firstTask();
-    expect(task.thread).toHaveLength(before + 1);
-    expect(task.thread[before]).toMatchObject({
+    expect(task.history).toHaveLength(before + 1);
+    expect(task.history[before]).toMatchObject({
       authorRole: "cowork",
       channel: "email",
     });
-    expect(task.thread[before].body).toMatch(/reminder|following up/i);
+    expect(task.history[before].body).toMatch(/reminder|following up/i);
   });
 
   test("messageDelegate sends the owner an email on Peter's behalf", () => {
     useProjectStore.getState().messageDelegate(PROJECT_ID, firstTask().id, "Can you send the list today?");
-    const last = firstTask().thread.at(-1)!;
+    const last = firstTask().history.at(-1)!;
     expect(last).toMatchObject({ authorRole: "cowork", channel: "email" });
     expect(last.body).toContain("Can you send the list today?");
   });
 
   test("addChatNote records Peter's chat message, then Cowork passes it on by email", () => {
-    const before = firstTask().thread.length;
+    const before = firstTask().history.length;
     useProjectStore.getState().addChatNote(PROJECT_ID, firstTask().id, "Loop in legal ops too.");
     const task = firstTask();
-    expect(task.thread[before]).toMatchObject({
+    expect(task.history[before]).toMatchObject({
       authorRole: "delegator",
       channel: "chat",
       body: "Loop in legal ops too.",
     });
-    expect(task.thread[before + 1]).toMatchObject({
+    expect(task.history[before + 1]).toMatchObject({
       authorRole: "cowork",
       channel: "email",
     });

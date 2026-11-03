@@ -27,7 +27,7 @@ export function draftProjectFromInsight(insight: Insight): ProjectDraft {
       ccs: defaultCcs(template.ownerEmail),
       deadline: template.due,
       status: "Not started",
-      thread: [],
+      history: [],
     })),
   );
 

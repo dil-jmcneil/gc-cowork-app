@@ -3,7 +3,7 @@ import { LOGGED_IN_USER } from "@/user";
 import { ownerShortName, type TaskOwner } from "./people";
 import type { ProjectTask, TaskStatus } from "./project";
 import { formatShortDate } from "./taskStatus";
-import { makeMessageId, type TaskMessage } from "./thread";
+import { makeMessageId, type HistoryAction, type HistoryFile, type TaskMessage } from "./thread";
 
 const GC = LOGGED_IN_USER.firstName;
 
@@ -16,6 +16,7 @@ function asPhrase(description: string): string {
 
 export function coworkEmail(to: TaskOwner, subject: string, body: string, sentAt: string): TaskMessage {
   return {
+    kind: "message",
     id: makeMessageId(),
     channel: "email",
     authorRole: "cowork",
@@ -74,21 +75,29 @@ export function reassignmentEmail(task: ProjectTask, newOwner: TaskOwner, sentAt
   );
 }
 
-/** A note in the thread recording a status change the GC made. */
-export function statusChangeNote(status: TaskStatus, sentAt: string): TaskMessage {
-  return {
-    id: makeMessageId(),
-    channel: "chat",
-    authorRole: "cowork",
-    authorName: "Cowork",
-    body: `${GC} set the status to ${status}.`,
-    sentAt,
-  };
+/** The GC changed a task's status. */
+export function statusChangeNote(status: TaskStatus, sentAt: string): HistoryAction {
+  return { kind: "action", id: makeMessageId(), actor: GC, summary: `Set the status to ${status}`, sentAt };
+}
+
+/** Something Cowork did, with the plan rule it applied when there is one. */
+export function coworkAction(
+  summary: string,
+  sentAt: string,
+  extra: { detail?: string; rule?: string } = {},
+): HistoryAction {
+  return { kind: "action", id: makeMessageId(), actor: "Cowork", summary, sentAt, ...extra };
+}
+
+/** A file added to the task. */
+export function fileAdded(name: string, addedBy: string, sentAt: string, note?: string): HistoryFile {
+  return { kind: "file", id: makeMessageId(), name, addedBy, sentAt, ...(note ? { note } : {}) };
 }
 
 /** Cowork tells the GC something in chat, such as which rule it applied. */
 export function coworkNote(body: string, sentAt: string): TaskMessage {
   return {
+    kind: "message",
     id: makeMessageId(),
     channel: "chat",
     authorRole: "cowork",
@@ -102,6 +111,7 @@ export function coworkNote(body: string, sentAt: string): TaskMessage {
 /** The GC's own message, added through the chat surface. */
 export function gcChatMessage(text: string, sentAt: string): TaskMessage {
   return {
+    kind: "message",
     id: makeMessageId(),
     channel: "chat",
     authorRole: "delegator",
@@ -114,6 +124,7 @@ export function gcChatMessage(text: string, sentAt: string): TaskMessage {
 /** An owner's reply by email. */
 export function ownerReply(owner: TaskOwner, body: string, sentAt: string, attachments?: string[]): TaskMessage {
   return {
+    kind: "message",
     id: makeMessageId(),
     channel: "email",
     authorRole: "delegate",

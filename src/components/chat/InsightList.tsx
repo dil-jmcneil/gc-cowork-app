@@ -111,13 +111,13 @@ function ProjectSummary({ project }: { project: Project }) {
       </Stack>
       <Button
         component={RouterLink}
-        to={`/projects/${project.id}`}
+        to={`/workstreams/${project.id}`}
         variant="outlined"
         size="small"
         endIcon={<ArrowRightIcon aria-hidden style={{ width: 14, height: 14 }} />}
         sx={{ flexShrink: 0 }}
       >
-        Open project
+        Open workstream
       </Button>
     </Stack>
   );
@@ -128,16 +128,16 @@ function NoProject({ insightId }: { insightId: string }) {
   return (
     <Stack direction="row" alignItems="center" gap={1.5}>
       <Typography variant="textMd" sx={{ flex: 1, color: tokens.semantic.color.type.muted.value }}>
-        No project yet
+        No workstream yet
       </Typography>
       <Button
         component={RouterLink}
-        to={`/projects/new?insight=${encodeURIComponent(insightId)}`}
+        to={`/workstreams/new?insight=${encodeURIComponent(insightId)}`}
         variant="contained"
         size="small"
         sx={{ flexShrink: 0 }}
       >
-        Create project
+        Create workstream
       </Button>
     </Stack>
   );

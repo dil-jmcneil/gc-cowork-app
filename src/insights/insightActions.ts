@@ -7,11 +7,11 @@ export function projectActionForInsight(insightId: string, project: Project | un
   if (project)
     return {
       kind: "view",
-      href: `/projects/${project.id}`,
+      href: `/workstreams/${project.id}`,
       projectName: project.name,
     };
   return {
     kind: "create",
-    href: `/projects/new?insight=${encodeURIComponent(insightId)}`,
+    href: `/workstreams/new?insight=${encodeURIComponent(insightId)}`,
   };
 }

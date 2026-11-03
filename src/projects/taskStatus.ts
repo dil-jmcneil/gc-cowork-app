@@ -1,4 +1,5 @@
 import type { ProjectTask } from "./project";
+import { isMessage } from "./thread";
 
 export type TaskAttention = "overdue" | "new-status";
 
@@ -25,10 +26,10 @@ export function taskAttention(task: ProjectTask, now: Date): TaskAttention | und
 }
 
 function latestFromOwner(task: ProjectTask) {
-  return [...task.thread].reverse().find((m) => m.authorRole === "delegate");
+  return task.history.filter(isMessage).reverse().find((m) => m.authorRole === "delegate");
 }
 
-/** One or two sentences on where a task stands, from its status, deadline and thread. */
+/** One or two sentences on where a task stands, from its status, deadline and history. */
 export function summarizeTask(task: ProjectTask, now: Date): string {
   if (task.statusSummary) return task.statusSummary;
   const owner = task.delegate.label;
@@ -39,7 +40,7 @@ export function summarizeTask(task: ProjectTask, now: Date): string {
     return reply ? `${owner} marked this done on ${formatShortDate(reply.sentAt)}.` : `Done. ${owner} closed it out.`;
   }
   if (isTaskOverdue(task, now)) {
-    const reminders = task.thread.filter(
+    const reminders = task.history.filter(isMessage).filter(
       (m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body),
     ).length;
     const chased = reminders > 0 ? ` after ${reminders} reminder${reminders === 1 ? "" : "s"}` : "";

@@ -7,6 +7,7 @@ import { FieldLabel, SectionCard } from "@/components/projects/SectionCard";
 import { SourceInsightCard } from "@/components/projects/SourceInsightCard";
 import { PlanMilestones } from "@/components/projects/PlanMilestones";
 import { RuleTable } from "@/components/projects/RuleTable";
+import { HistoryList } from "@/components/tasks/History";
 import { TaskQuickView } from "@/components/tasks/TaskQuickView";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useProjectStore } from "@/projects/projectStore";
@@ -25,7 +26,7 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">Project not found.</Typography>
+        <Typography variant="textMd">Workstream not found.</Typography>
         <Link component={RouterLink} to="/">
           Go to home
         </Link>
@@ -36,6 +37,9 @@ export default function ProjectPage() {
   const insight = INSIGHTS.find((c) => c.id === project.sourceInsightId);
   const muted = tokens.semantic.color.type.muted.value;
   const planAccepted = project.plan.status === "accepted";
+  const history = project.plan.tasks
+    .flatMap((task) => task.history.map((entry) => ({ entry, context: task.description })))
+    .sort((a, b) => b.entry.sentAt.localeCompare(a.entry.sentAt));
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -48,7 +52,7 @@ export default function ProjectPage() {
               fontWeight: tokens.semantic.fontWeight.emphasis.value,
             }}
           >
-            Project
+            Workstream
           </Typography>
           <Typography variant="h4" component="h1">
             {project.name}
@@ -106,6 +110,13 @@ export default function ProjectPage() {
               </Button>
             )}
           </Stack>
+        </SectionCard>
+
+        <SectionCard title="History">
+          <Typography variant="textMd" sx={{ color: muted }}>
+            Messages, Cowork's actions, and files across every task, newest first.
+          </Typography>
+          <HistoryList items={history} ariaLabel="Workstream history" limit={8} />
         </SectionCard>
 
         {showRules ? (

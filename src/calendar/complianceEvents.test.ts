@@ -29,7 +29,7 @@ const PROJECT: Project = {
         ccs: [],
         deadline: "2026-10-20",
         status: "Done",
-        thread: [],
+        history: [],
       },
       {
         id: "t2",
@@ -40,7 +40,7 @@ const PROJECT: Project = {
         ccs: [],
         deadline: "2026-10-25",
         status: "In progress",
-        thread: [],
+        history: [],
       },
       {
         id: "t3",
@@ -51,7 +51,7 @@ const PROJECT: Project = {
         ccs: [],
         deadline: "2026-12-01",
         status: "In progress",
-        thread: [],
+        history: [],
       },
       {
         id: "t4",
@@ -62,7 +62,7 @@ const PROJECT: Project = {
         ccs: [],
         deadline: "2027-03-01",
         status: "Not started",
-        thread: [],
+        history: [],
       },
     ],
   },

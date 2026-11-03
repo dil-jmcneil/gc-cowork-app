@@ -45,7 +45,7 @@ function taskEvent(project: Project, task: ProjectTask, now: Date): CalendarEven
     title: task.description,
     source: project.name,
     owner,
-    href: `/projects/${project.id}/tasks/${task.id}`,
+    href: `/workstreams/${project.id}/tasks/${task.id}`,
     linkLabel: `Task in ${project.name}`,
   };
 
@@ -105,9 +105,9 @@ export function deriveCalendarEvents(projects: Project[], now: Date): CalendarEv
         status: "External" as const,
         ...(hasProject ? {} : { attention: "awaiting-response" as const }),
         source: insight.title,
-        href: hasProject ? "/" : `/projects/new?insight=${encodeURIComponent(insight.id)}`,
+        href: hasProject ? "/" : `/workstreams/new?insight=${encodeURIComponent(insight.id)}`,
         linkLabel: `${insightType(insight)}: ${insight.title}`,
-        nextStep: hasProject ? "Track it through the project's tasks" : "Create a project to assign owners",
+        nextStep: hasProject ? "Track it through the workstream's tasks" : "Create a workstream to assign owners",
       };
     }),
   );

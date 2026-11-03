@@ -6,7 +6,7 @@ import { isAtgProject, progressAtgProject } from "./atgStory";
 import type { TaskOwner } from "./people";
 import type { Project, ProjectDraft, ProjectTask, TaskStatus } from "./project";
 import { summarizeProject } from "./projectDraft";
-import type { TaskMessage } from "./thread";
+import type { HistoryEntry } from "./thread";
 import {
   assignmentEmail,
   gcChatMessage,
@@ -18,7 +18,7 @@ import {
 } from "./threadMessages";
 
 function makeId() {
-  return `project-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `workstream-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /** Projects that already exist when the app loads. The demo starts with none. */
@@ -54,16 +54,16 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => {
       }),
     }));
 
-  const append = (task: ProjectTask, ...messages: TaskMessage[]): ProjectTask => ({
+  const append = (task: ProjectTask, ...entries: HistoryEntry[]): ProjectTask => ({
     ...task,
-    thread: [...task.thread, ...messages],
+    history: [...task.history, ...entries],
   });
 
   return {
     projects: [...SEED_PROJECTS],
 
     createProject: (draft) => {
-      const fallbackName = INSIGHTS.find((c) => c.id === draft.sourceInsightId)?.title ?? "Untitled project";
+      const fallbackName = INSIGHTS.find((c) => c.id === draft.sourceInsightId)?.title ?? "Untitled workstream";
       const createdAt = nowIso();
       const base: Project = {
         ...draft,
@@ -75,7 +75,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => {
           ...draft.plan,
           tasks: draft.plan.tasks.map((t) => ({
             ...t,
-            thread: [assignmentEmail(t, createdAt)],
+            history: [assignmentEmail(t, createdAt)],
           })),
         },
       };

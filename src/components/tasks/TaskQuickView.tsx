@@ -18,7 +18,7 @@ import { Link as RouterLink, useNavigate } from "react-router";
 import { formatDate } from "@/lib/dates";
 import { useProjectStore } from "@/projects/projectStore";
 import { summarizeTask, taskAttention } from "@/projects/taskStatus";
-import { CHANNEL_LABEL } from "@/projects/thread";
+import { CHANNEL_LABEL, isMessage } from "@/projects/thread";
 
 import { PersonLine } from "./PersonLine";
 import { TaskBadges } from "./TaskBadges";
@@ -47,8 +47,9 @@ export function TaskQuickView({
   if (!taskRef || !project || !task) return null;
 
   const now = new Date();
-  const latest = task.thread[task.thread.length - 1];
-  const taskHref = `/projects/${project.id}/tasks/${task.id}`;
+  const messages = task.history.filter(isMessage);
+  const latest = messages[messages.length - 1];
+  const taskHref = `/workstreams/${project.id}/tasks/${task.id}`;
   const muted = tokens.semantic.color.type.muted.value;
   const overdue = taskAttention(task, now) === "overdue";
 
@@ -61,7 +62,7 @@ export function TaskQuickView({
           </Typography>
           <Link
             component={RouterLink}
-            to={`/projects/${project.id}`}
+            to={`/workstreams/${project.id}`}
             onClick={onClose}
             underline="hover"
             sx={{ alignSelf: "flex-start" }}
@@ -71,12 +72,7 @@ export function TaskQuickView({
             </Typography>
           </Link>
         </Stack>
-        <IconButton
-          aria-label="Close"
-          onClick={onClose}
-          size="small"
-          sx={{ position: "absolute", top: 12, right: 12 }}
-        >
+        <IconButton aria-label="Close" onClick={onClose} size="small" sx={{ position: "absolute", top: 12, right: 12 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -126,9 +122,9 @@ export function TaskQuickView({
               >
                 {latest.body}
               </Typography>
-              <Link component={RouterLink} to={`${taskHref}#thread`} onClick={onClose} underline="hover">
+              <Link component={RouterLink} to={`${taskHref}#history`} onClick={onClose} underline="hover">
                 <Typography variant="textMd" sx={{ color: "inherit" }}>
-                  View thread ({task.thread.length})
+                  View history ({task.history.length})
                 </Typography>
               </Link>
             </Field>

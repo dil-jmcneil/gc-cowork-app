@@ -14,7 +14,7 @@ function task(patch: Partial<ProjectTask>): ProjectTask {
     ccs: [],
     deadline: "2026-11-10",
     status: "Not started",
-    thread: [],
+    history: [],
     ...patch,
   };
 }
@@ -47,8 +47,9 @@ test("an in-progress summary quotes the owner's latest reply", () => {
   const summary = summarizeTask(
     task({
       status: "In progress",
-      thread: [
+      history: [
         {
+          kind: "message",
           id: "m1",
           channel: "email",
           authorRole: "delegate",

@@ -143,7 +143,7 @@ export default function CommandCenterNavigation() {
           onClick={() => navigate("/")}
         />
         <CommandCenterCompactNavButton
-          label="Projects"
+          label="Workstreams"
           icon={<ProjectsIcon aria-hidden fontSize="small" />}
           onClick={() => expandPrototypeSideNav()}
         />
@@ -167,13 +167,13 @@ export default function CommandCenterNavigation() {
   );
 }
 
-/** Collapsible list of projects, one sub-item per project. */
+/** Collapsible list of workstreams, one sub-item per workstream. */
 function ProjectsNavSection() {
   const projects = useProjectStore((s) => s.projects);
   const [open, setOpen] = useState(true);
   return (
     <AINavSection
-      label="Projects"
+      label="Workstreams"
       isOpen={open}
       childCount={projects.length}
       onOpen={() => setOpen(true)}
@@ -181,12 +181,12 @@ function ProjectsNavSection() {
     >
       <ProjectsIcon slot="icon" />
       {projects.length === 0 ? (
-        <CommandCenterEmptyHint message="No projects yet" />
+        <CommandCenterEmptyHint message="No workstreams yet" />
       ) : (
         projects.map((project) => (
           <RoutedAINavLink
             key={project.id}
-            to={`/projects/${project.id}`}
+            to={`/workstreams/${project.id}`}
             label={truncateLabel(project.name)}
           />
         ))

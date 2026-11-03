@@ -47,9 +47,9 @@ export default function App() {
         <Route index element={<IndexPage />} />
         <Route path="chats/new" element={<NewChatPage />} />
         <Route path="chats/:chatId" element={<ChatPage />} />
-        <Route path="projects/new" element={<CreateProjectPage />} />
-        <Route path="projects/:projectId" element={<ProjectPage />} />
-        <Route path="projects/:projectId/tasks/:taskId" element={<TaskPage />} />
+        <Route path="workstreams/new" element={<CreateProjectPage />} />
+        <Route path="workstreams/:projectId" element={<ProjectPage />} />
+        <Route path="workstreams/:projectId/tasks/:taskId" element={<TaskPage />} />
         <Route path="compliance-calendar" element={<ComplianceCalendarPage />} />
       </Route>
       </Routes>
@@ -60,7 +60,7 @@ export default function App() {
 function Shell() {
   useSideNavAppKey("launchpad");
   const { pathname } = useLocation();
-  const hasSideChat = pathname === "/projects/new" || /^\/projects\/[^/]+\/tasks\//.test(pathname);
+  const hasSideChat = pathname === "/workstreams/new" || /^\/workstreams\/[^/]+\/tasks\//.test(pathname);
 
   return (
     <AppLayout

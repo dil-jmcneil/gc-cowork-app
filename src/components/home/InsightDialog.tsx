@@ -147,17 +147,17 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
           <Stack gap={1}>
             <Stack direction="row" alignItems="center" gap={1}>
               <OpenFileIcon aria-hidden style={{ width: 16, height: 16, color: muted }} />
-              <SectionLabel>Linked Projects</SectionLabel>
+              <SectionLabel>Linked Workstreams</SectionLabel>
             </Stack>
             {project ? (
-              <Link component={RouterLink} to={`/projects/${project.id}`} onClick={onClose} underline="hover">
+              <Link component={RouterLink} to={`/workstreams/${project.id}`} onClick={onClose} underline="hover">
                 <Typography variant="textMd" sx={{ color: "inherit", fontWeight: emphasis }}>
                   {project.name}
                 </Typography>
               </Link>
             ) : (
               <Typography variant="textMd" sx={{ color: muted }}>
-                No project yet.
+                No workstream yet.
               </Typography>
             )}
           </Stack>
@@ -181,7 +181,7 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
             navigate(action.href);
           }}
         >
-          {action.kind === "create" ? "Create project" : `View project`}
+          {action.kind === "create" ? "Create workstream" : "View workstream"}
         </Button>
       </DialogActions>
     </Dialog>
