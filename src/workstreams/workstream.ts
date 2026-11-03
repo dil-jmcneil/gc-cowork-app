@@ -1,10 +1,10 @@
 import type { TaskOwner } from "./people";
 import type { HistoryEntry } from "./thread";
 
-/** Project, Plan and Task follow the GC Cowork OOUX object model. */
+/** Workstream, Plan and Task follow the GC Cowork OOUX object model. */
 export type TaskStatus = "Not started" | "In progress" | "Done";
 
-export type ProjectTask = {
+export type WorkstreamTask = {
   id: string;
   /** The milestone this task belongs to. */
   milestoneId: string;
@@ -61,27 +61,27 @@ export type Milestone = {
 
 export type PlanStatus = "draft" | "accepted";
 
-export type ProjectPlan = {
+export type WorkstreamPlan = {
   proposedApproach: string;
   status: PlanStatus;
   /** The plan's spine, in order. */
   milestones: Milestone[];
   /** Rules that apply in every milestone. */
   rules: PlanRule[];
-  tasks: ProjectTask[];
+  tasks: WorkstreamTask[];
 };
 
-export type ProjectDraft = {
+export type WorkstreamDraft = {
   name: string;
   sourceInsightId: string;
   description: string;
   reasonsRelevant: string[];
-  plan: ProjectPlan;
+  plan: WorkstreamPlan;
 };
 
-export type Project = ProjectDraft & {
+export type Workstream = WorkstreamDraft & {
   id: string;
-  /** One or two sentences on where the project stands, from plan and task progress. */
+  /** One or two sentences on where the workstream stands, from plan and task progress. */
   statusSummary: string;
   createdAt: string;
 };

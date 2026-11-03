@@ -100,7 +100,7 @@ Anything Cowork surfaces for the GC is an **insight** (`src/insights`). Its kind
 
 ### Workstreams and history
 
-The OOUX Project object is called a **workstream** in the UI and in routes (`/workstreams/...`). Code still names it `Project` (`src/projects`, `useProjectStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the workstream page rolls every task's history into one list.
+The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the workstream page rolls every task's history into one list.
 
 ### Plans are milestones plus rule rows
 

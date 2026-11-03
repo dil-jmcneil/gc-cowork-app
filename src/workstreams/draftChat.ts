@@ -3,7 +3,7 @@ import type { Insight } from "@/insights/insight";
 
 /** Chat thread id for the Create workstream side panel; kept out of chat history. */
 export function draftChatId(insightId: string): string {
-  return `project-draft-${insightId}`;
+  return `workstream-draft-${insightId}`;
 }
 
 export function seedDraftChat(insight: Insight): void {

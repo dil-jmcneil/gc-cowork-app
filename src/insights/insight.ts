@@ -1,4 +1,4 @@
-import type { Milestone, PlanRule } from "@/projects/project";
+import type { Milestone, PlanRule } from "@/workstreams/workstream";
 
 export type InsightStatus = "New" | "In review" | "Closed";
 
@@ -17,7 +17,7 @@ export type InsightDeadline = {
   description?: string;
 };
 
-/** A task Cowork proposes when a project is drafted from the insight. */
+/** A task Cowork proposes when a workstream is drafted from the insight. */
 export type TaskTemplate = {
   /** Stable within the insight, so stories can find the task again. */
   id: string;

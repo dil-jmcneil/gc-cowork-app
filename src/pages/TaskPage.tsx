@@ -16,23 +16,23 @@ import { useEffect, useState } from "react";
 import { Link as RouterLink, useLocation, useParams } from "react-router";
 
 import { SideChatLayout } from "@/components/chat/SideChatLayout";
-import { SectionCard } from "@/components/projects/SectionCard";
+import { SectionCard } from "@/components/workstreams/SectionCard";
 import { TaskBadges } from "@/components/tasks/TaskBadges";
 import { TaskDetailsCard } from "@/components/tasks/TaskDetailsCard";
 import { HistoryList } from "@/components/tasks/History";
-import type { ProjectTask } from "@/projects/project";
-import { useProjectStore } from "@/projects/projectStore";
-import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/projects/taskChat";
-import { summarizeTask } from "@/projects/taskStatus";
-import { CHANNEL_LABEL, isMessage } from "@/projects/thread";
+import type { WorkstreamTask } from "@/workstreams/workstream";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
+import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/workstreams/taskChat";
+import { summarizeTask } from "@/workstreams/taskStatus";
+import { CHANNEL_LABEL, isMessage } from "@/workstreams/thread";
 
 export default function TaskPage() {
-  const { projectId = "", taskId = "" } = useParams<{
-    projectId: string;
+  const { workstreamId = "", taskId = "" } = useParams<{
+    workstreamId: string;
     taskId: string;
   }>();
-  const project = useProjectStore((s) => s.projects.find((p) => p.id === projectId));
-  const task = project?.plan.tasks.find((t) => t.id === taskId);
+  const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.id === workstreamId));
+  const task = workstream?.plan.tasks.find((t) => t.id === taskId);
 
   useEffect(() => {
     if (task) seedTaskChat(task);
@@ -40,7 +40,7 @@ export default function TaskPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id]);
 
-  if (!project || !task) {
+  if (!workstream || !task) {
     return (
       <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
         <Typography variant="textMd">Task not found.</Typography>
@@ -54,17 +54,17 @@ export default function TaskPage() {
   return (
     <SideChatLayout
       chatId={taskChatId(task.id)}
-      onUserMessage={(text) => handleTaskChatMessage(project.id, task.id, text, new Date())}
+      onUserMessage={(text) => handleTaskChatMessage(workstream.id, task.id, text, new Date())}
     >
-      <TaskDetail projectId={project.id} projectName={project.name} task={task} />
+      <TaskDetail workstreamId={workstream.id} workstreamName={workstream.name} task={task} />
     </SideChatLayout>
   );
 }
 
-function TaskDetail({ projectId, projectName, task }: { projectId: string; projectName: string; task: ProjectTask }) {
+function TaskDetail({ workstreamId, workstreamName, task }: { workstreamId: string; workstreamName: string; task: WorkstreamTask }) {
   const { tokens } = useTheme();
   const location = useLocation();
-  const { assignTask, setTaskStatus, nudgeTask, messageDelegate } = useProjectStore.getState();
+  const { assignTask, setTaskStatus, nudgeTask, messageDelegate } = useWorkstreamStore.getState();
   const [composing, setComposing] = useState(false);
   const [draft, setDraft] = useState("");
   const [toast, setToast] = useState<string | null>(null);
@@ -79,7 +79,7 @@ function TaskDetail({ projectId, projectName, task }: { projectId: string; proje
   const sendMessage = () => {
     const text = draft.trim();
     if (!text) return;
-    messageDelegate(projectId, task.id, text);
+    messageDelegate(workstreamId, task.id, text);
     setDraft("");
     setComposing(false);
     setToast(`Message sent to ${task.delegate.label}.`);
@@ -91,12 +91,12 @@ function TaskDetail({ projectId, projectName, task }: { projectId: string; proje
         <Stack gap={1}>
           <Link
             component={RouterLink}
-            to={`/workstreams/${projectId}`}
+            to={`/workstreams/${workstreamId}`}
             underline="hover"
             sx={{ alignSelf: "flex-start" }}
           >
             <Typography variant="textMd" sx={{ color: "inherit" }}>
-              {projectName}
+              {workstreamName}
             </Typography>
           </Link>
           <Typography variant="h4" component="h1">
@@ -113,10 +113,10 @@ function TaskDetail({ projectId, projectName, task }: { projectId: string; proje
           <TaskDetailsCard
             task={task}
             onAssign={(owner) => {
-              assignTask(projectId, task.id, owner);
+              assignTask(workstreamId, task.id, owner);
               setToast(`Assigned to ${owner.label}. Cowork emailed them.`);
             }}
-            onStatusChange={(status) => setTaskStatus(projectId, task.id, status)}
+            onStatusChange={(status) => setTaskStatus(workstreamId, task.id, status)}
           />
 
           <Box id="history" sx={{ scrollMarginTop: 16 }}>
@@ -131,7 +131,7 @@ function TaskDetail({ projectId, projectName, task }: { projectId: string; proje
                     variant="outlined"
                     size="small"
                     onClick={() => {
-                      nudgeTask(projectId, task.id);
+                      nudgeTask(workstreamId, task.id);
                       setToast(`Nudge sent to ${task.delegate.label}.`);
                     }}
                   >

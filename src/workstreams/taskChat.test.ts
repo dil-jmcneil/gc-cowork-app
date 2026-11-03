@@ -1,30 +1,30 @@
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import { ATG_RULING } from "@/insights/insights";
-import { draftProjectFromInsight } from "@/projects/projectDraft";
-import { SEED_PROJECTS, useProjectStore } from "@/projects/projectStore";
-import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/projects/taskChat";
+import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
+import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
+import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/workstreams/taskChat";
 
 const NOW = new Date("2026-11-03T12:00:00Z");
-let PROJECT_ID = "";
+let WORKSTREAM_ID = "";
 const task = () =>
-  useProjectStore.getState().getProject(PROJECT_ID)!.plan.tasks.find((t) => t.id === `${ATG_RULING.id}-website`)!;
+  useWorkstreamStore.getState().getWorkstream(WORKSTREAM_ID)!.plan.tasks.find((t) => t.id === `${ATG_RULING.id}-website`)!;
 
 beforeEach(() => {
-  useProjectStore.setState({ projects: [...SEED_PROJECTS] });
+  useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] });
   useChatMessagesStore.setState({ messagesByChatId: {} });
-  PROJECT_ID = useProjectStore.getState().createProject(draftProjectFromInsight(ATG_RULING)).id;
+  WORKSTREAM_ID = useWorkstreamStore.getState().createWorkstream(draftWorkstreamFromInsight(ATG_RULING)).id;
 });
 
 test("a status question gets the status summary and leaves the thread alone", () => {
   const before = task().history.length;
-  const reply = handleTaskChatMessage(PROJECT_ID, task().id, "Where does this stand?", NOW);
+  const reply = handleTaskChatMessage(WORKSTREAM_ID, task().id, "Where does this stand?", NOW);
   expect(reply).toMatch(/Morgan hasn't replied/);
   expect(task().history).toHaveLength(before);
 });
 
 test("anything else is recorded in the thread and passed on to the owner", () => {
   const before = task().history.length;
-  const reply = handleTaskChatMessage(PROJECT_ID, task().id, "Please send the vendor list today.", NOW);
+  const reply = handleTaskChatMessage(WORKSTREAM_ID, task().id, "Please send the vendor list today.", NOW);
   expect(reply).toContain("Morgan Diaz");
   expect(task().history).toHaveLength(before + 2);
   expect(task().history[before]).toMatchObject({

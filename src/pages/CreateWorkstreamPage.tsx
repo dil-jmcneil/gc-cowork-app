@@ -15,22 +15,22 @@ import { useEffect, useState } from "react";
 import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 
 import { SideChatLayout } from "@/components/chat/SideChatLayout";
-import { FieldLabel, SectionCard } from "@/components/projects/SectionCard";
-import { SourceInsightCard } from "@/components/projects/SourceInsightCard";
-import { PlanMilestones } from "@/components/projects/PlanMilestones";
-import { RuleTable } from "@/components/projects/RuleTable";
-import { draftChatId, seedDraftChat } from "@/projects/draftChat";
-import type { ProjectDraft } from "@/projects/project";
-import { draftProjectFromInsight } from "@/projects/projectDraft";
+import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
+import { SourceInsightCard } from "@/components/workstreams/SourceInsightCard";
+import { PlanMilestones } from "@/components/workstreams/PlanMilestones";
+import { RuleTable } from "@/components/workstreams/RuleTable";
+import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
+import type { WorkstreamDraft } from "@/workstreams/workstream";
+import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
-import { useProjectStore } from "@/projects/projectStore";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { INSIGHTS } from "@/insights/insights";
 
-export default function CreateProjectPage() {
+export default function CreateWorkstreamPage() {
   const [params] = useSearchParams();
   const insight = INSIGHTS.find((c) => c.id === params.get("insight"));
-  const existing = useProjectStore((s) =>
-    insight ? s.projects.find((p) => p.sourceInsightId === insight.id) : undefined,
+  const existing = useWorkstreamStore((s) =>
+    insight ? s.workstreams.find((p) => p.sourceInsightId === insight.id) : undefined,
   );
 
   if (!insight) {
@@ -53,28 +53,28 @@ export default function CreateProjectPage() {
       </Stack>
     );
   }
-  return <CreateProjectForm key={insight.id} initialDraft={draftProjectFromInsight(insight)} />;
+  return <CreateWorkstreamForm key={insight.id} initialDraft={draftWorkstreamFromInsight(insight)} />;
 }
 
-function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
+function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft }) {
   const { tokens, presets } = useTheme();
   const showRules = usePlanRulesStore((s) => s.showRules);
   const navigate = useNavigate();
-  const createProject = useProjectStore((s) => s.createProject);
+  const createWorkstream = useWorkstreamStore((s) => s.createWorkstream);
   const [draft, setDraft] = useState(initialDraft);
   const insight = INSIGHTS.find((c) => c.id === draft.sourceInsightId)!;
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
 
   useEffect(() => seedDraftChat(insight), [insight]);
 
-  const setPlan = (patch: Partial<ProjectDraft["plan"]>) => setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
+  const setPlan = (patch: Partial<WorkstreamDraft["plan"]>) => setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
 
   const handleCreate = () => {
-    const project = createProject({
+    const workstream = createWorkstream({
       ...draft,
       plan: { ...draft.plan, status: "accepted" },
     });
-    navigate(`/workstreams/${project.id}`);
+    navigate(`/workstreams/${workstream.id}`);
   };
 
   return (
@@ -96,15 +96,15 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
                 <SectionCard title="Workstream Details">
                   <Stack gap={2}>
                     <FormControl fullWidth>
-                      <FormLabel htmlFor="project-name">Name</FormLabel>
+                      <FormLabel htmlFor="workstream-name">Name</FormLabel>
                       <TextField
                         value={draft.name}
                         onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                        slotProps={{ input: { id: "project-name" } }}
+                        slotProps={{ input: { id: "workstream-name" } }}
                       />
                     </FormControl>
                     <FormControl fullWidth>
-                      <FormLabel htmlFor="project-description">Description</FormLabel>
+                      <FormLabel htmlFor="workstream-description">Description</FormLabel>
                       <TextField
                         multiline
                         minRows={2}
@@ -115,7 +115,7 @@ function CreateProjectForm({ initialDraft }: { initialDraft: ProjectDraft }) {
                             description: e.target.value,
                           }))
                         }
-                        slotProps={{ input: { id: "project-description" } }}
+                        slotProps={{ input: { id: "workstream-description" } }}
                       />
                     </FormControl>
                     <Stack gap={0.5}>

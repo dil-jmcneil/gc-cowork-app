@@ -1,7 +1,7 @@
 import { Autocomplete, TextField, useTheme, type Theme } from "@mui/material";
 import { useMemo, useState } from "react";
 
-import { suggestOwners, type TaskOwner } from "@/projects/people";
+import { suggestOwners, type TaskOwner } from "@/workstreams/people";
 
 type UserLookup = Theme["presets"]["AutocompletePresets"]["userLookup"];
 /** The preset's User type; its OptionType enum isn't exported, but its runtime value is "user". */

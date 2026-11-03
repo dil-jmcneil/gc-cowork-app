@@ -1,5 +1,5 @@
 import {
-  OUTSIDE_CONTACTS, DIRECTORY, suggestOwners } from "@/projects/people";
+  OUTSIDE_CONTACTS, DIRECTORY, suggestOwners } from "@/workstreams/people";
 
 test("empty input lists the directory", () => {
   expect(suggestOwners("")).toEqual([...DIRECTORY, ...OUTSIDE_CONTACTS]);

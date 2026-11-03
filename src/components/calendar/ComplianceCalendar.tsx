@@ -16,7 +16,7 @@ import {
 } from "@/calendar/weeks";
 import { InsightDialog } from "@/components/home/InsightDialog";
 import { TaskQuickView, type TaskRef } from "@/components/tasks/TaskQuickView";
-import { useProjectStore } from "@/projects/projectStore";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { INSIGHTS } from "@/insights/insights";
 
 import { CalendarCell } from "./CalendarCell";
@@ -71,9 +71,9 @@ export function ComplianceCalendar({
   headerAction?: ReactNode;
 }) {
   const { tokens } = useTheme();
-  const projects = useProjectStore((s) => s.projects);
+  const workstreams = useWorkstreamStore((s) => s.workstreams);
   const today = todayIso();
-  const events = useMemo(() => deriveCalendarEvents(projects, new Date()), [projects]);
+  const events = useMemo(() => deriveCalendarEvents(workstreams, new Date()), [workstreams]);
 
   const [searchParams] = useSearchParams();
   // "View on calendar" links pass ?date= so the page opens on that month.
@@ -84,21 +84,21 @@ export function ComplianceCalendar({
   const [toast, setToast] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<TaskRef | null>(null);
   const [openInsightId, setOpenInsightId] = useState<string | null>(null);
-  const nudgeTask = useProjectStore((s) => s.nudgeTask);
+  const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
 
   const range = rangeFor(variant, view, anchor);
   const inRange = events.filter((e) => e.date >= range.start && e.date <= range.end);
   const unit = variant === "page" ? "month" : view === "timeline" ? "five weeks" : "two weeks";
 
   const handleNudge = (event: CalendarEvent) => {
-    if (event.kind === "task") nudgeTask(event.projectId, event.taskId);
+    if (event.kind === "task") nudgeTask(event.workstreamId, event.taskId);
     setNudged((prev) => new Set(prev).add(event.id));
     setToast(event.owner ? `Nudge sent to ${event.owner}.` : "Nudge sent.");
   };
 
   /** Tasks open the task quick view; external deadlines open their insight. */
   const handleOpen = (event: CalendarEvent) => {
-    if (event.kind === "task") setOpenTask({ projectId: event.projectId, taskId: event.taskId });
+    if (event.kind === "task") setOpenTask({ workstreamId: event.workstreamId, taskId: event.taskId });
     else setOpenInsightId(event.insightId);
   };
 

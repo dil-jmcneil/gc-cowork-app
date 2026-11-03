@@ -16,14 +16,14 @@ import type { ReactNode } from "react";
 import { Link as RouterLink, useNavigate } from "react-router";
 
 import { formatDate } from "@/lib/dates";
-import { useProjectStore } from "@/projects/projectStore";
-import { summarizeTask, taskAttention } from "@/projects/taskStatus";
-import { CHANNEL_LABEL, isMessage } from "@/projects/thread";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
+import { summarizeTask, taskAttention } from "@/workstreams/taskStatus";
+import { CHANNEL_LABEL, isMessage } from "@/workstreams/thread";
 
 import { PersonLine } from "./PersonLine";
 import { TaskBadges } from "./TaskBadges";
 
-export type TaskRef = { projectId: string; taskId: string };
+export type TaskRef = { workstreamId: string; taskId: string };
 
 const WHEN = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 
@@ -40,16 +40,16 @@ export function TaskQuickView({
 }) {
   const { tokens } = useTheme();
   const navigate = useNavigate();
-  const project = useProjectStore((s) => (taskRef ? s.projects.find((p) => p.id === taskRef.projectId) : undefined));
-  const task = project?.plan.tasks.find((t) => t.id === taskRef?.taskId);
-  const nudgeTask = useProjectStore((s) => s.nudgeTask);
+  const workstream = useWorkstreamStore((s) => (taskRef ? s.workstreams.find((p) => p.id === taskRef.workstreamId) : undefined));
+  const task = workstream?.plan.tasks.find((t) => t.id === taskRef?.taskId);
+  const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
 
-  if (!taskRef || !project || !task) return null;
+  if (!taskRef || !workstream || !task) return null;
 
   const now = new Date();
   const messages = task.history.filter(isMessage);
   const latest = messages[messages.length - 1];
-  const taskHref = `/workstreams/${project.id}/tasks/${task.id}`;
+  const taskHref = `/workstreams/${workstream.id}/tasks/${task.id}`;
   const muted = tokens.semantic.color.type.muted.value;
   const overdue = taskAttention(task, now) === "overdue";
 
@@ -62,13 +62,13 @@ export function TaskQuickView({
           </Typography>
           <Link
             component={RouterLink}
-            to={`/workstreams/${project.id}`}
+            to={`/workstreams/${workstream.id}`}
             onClick={onClose}
             underline="hover"
             sx={{ alignSelf: "flex-start" }}
           >
             <Typography variant="textMd" sx={{ color: "inherit" }}>
-              {project.name}
+              {workstream.name}
             </Typography>
           </Link>
         </Stack>
@@ -137,7 +137,7 @@ export function TaskQuickView({
           <Button
             variant="outlined"
             onClick={() => {
-              nudgeTask(project.id, task.id);
+              nudgeTask(workstream.id, task.id);
               onNudge?.(task.delegate.label);
             }}
           >

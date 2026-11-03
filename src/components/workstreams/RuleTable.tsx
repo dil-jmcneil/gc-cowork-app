@@ -10,7 +10,7 @@ import {
   useTheme,
 } from "@mui/material";
 
-import type { PlanRule } from "@/projects/project";
+import type { PlanRule } from "@/workstreams/workstream";
 
 /**
  * A plan's rules as rows: when the work looks like this, Cowork does these

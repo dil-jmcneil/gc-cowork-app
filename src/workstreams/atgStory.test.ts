@@ -1,24 +1,24 @@
 import { ATG_RULING } from "@/insights/insights";
-import { currentMilestone } from "@/projects/milestones";
-import { isMessage } from "@/projects/thread";
-import { draftProjectFromInsight } from "@/projects/projectDraft";
-import { SEED_PROJECTS, useProjectStore } from "@/projects/projectStore";
+import { currentMilestone } from "@/workstreams/milestones";
+import { isMessage } from "@/workstreams/thread";
+import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
+import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
 
-beforeEach(() => useProjectStore.setState({ projects: [...SEED_PROJECTS] }));
+beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
-function startAtgProject() {
-  const draft = draftProjectFromInsight(ATG_RULING);
-  return useProjectStore.getState().createProject({ ...draft, plan: { ...draft.plan, status: "accepted" } });
+function startAtgWorkstream() {
+  const draft = draftWorkstreamFromInsight(ATG_RULING);
+  return useWorkstreamStore.getState().createWorkstream({ ...draft, plan: { ...draft.plan, status: "accepted" } });
 }
 
-const byKey = (key: string) => startAtgProject().plan.tasks.find((t) => t.id === `${ATG_RULING.id}-${key}`)!;
+const byKey = (key: string) => startAtgWorkstream().plan.tasks.find((t) => t.id === `${ATG_RULING.id}-${key}`)!;
 
-test("starting the project fills its tasks in as if work began a few days ago", () => {
-  const project = startAtgProject();
-  for (const task of project.plan.tasks) expect(task.history.length).toBeGreaterThan(0);
-  expect(project.plan.tasks.find((t) => t.id.endsWith("-agenda"))!.status).toBe("Done");
-  expect(currentMilestone(project.plan.milestones, project.plan.tasks)?.id).toBe("assess");
-  expect(project.createdAt <= project.plan.tasks.flatMap((t) => t.history.map((e) => e.sentAt)).sort()[0]).toBe(true);
+test("starting the workstream fills its tasks in as if work began a few days ago", () => {
+  const workstream = startAtgWorkstream();
+  for (const task of workstream.plan.tasks) expect(task.history.length).toBeGreaterThan(0);
+  expect(workstream.plan.tasks.find((t) => t.id.endsWith("-agenda"))!.status).toBe("Done");
+  expect(currentMilestone(workstream.plan.milestones, workstream.plan.tasks)?.id).toBe("assess");
+  expect(workstream.createdAt <= workstream.plan.tasks.flatMap((t) => t.history.map((e) => e.sentAt)).sort()[0]).toBe(true);
 });
 
 test("Cowork shows Peter its first email to outside counsel, and sends it only after he says so", () => {
@@ -41,12 +41,12 @@ test("a silent owner is chased toward the circuit breaker", () => {
 });
 
 test("files owners attach and artifacts Cowork makes show up as file entries", () => {
-  const files = startAtgProject().plan.tasks.flatMap((t) => t.history.filter((e) => e.kind === "file"));
+  const files = startAtgWorkstream().plan.tasks.flatMap((t) => t.history.filter((e) => e.kind === "file"));
   expect(files.map((f) => f.kind === "file" && f.addedBy)).toEqual(expect.arrayContaining(["Cowork", "Alex Kim", "Pete Lin"]));
 });
 
 test("each thread is in time order", () => {
-  for (const task of startAtgProject().plan.tasks) {
+  for (const task of startAtgWorkstream().plan.tasks) {
     const times = task.history.map((m) => m.sentAt);
     expect(times).toEqual([...times].sort());
   }

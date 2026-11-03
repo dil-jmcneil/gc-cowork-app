@@ -1,7 +1,7 @@
 import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
 import { Box, Stack, Typography, useTheme } from "@mui/material";
 
-import { CHANNEL_LABEL, type MessageAuthorRole, type TaskMessage } from "@/projects/thread";
+import { CHANNEL_LABEL, type MessageAuthorRole, type TaskMessage } from "@/workstreams/thread";
 
 import { PersonLine } from "./PersonLine";
 

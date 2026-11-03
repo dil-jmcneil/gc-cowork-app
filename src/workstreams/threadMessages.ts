@@ -1,7 +1,7 @@
 import { LOGGED_IN_USER } from "@/user";
 
 import { ownerShortName, type TaskOwner } from "./people";
-import type { ProjectTask, TaskStatus } from "./project";
+import type { WorkstreamTask, TaskStatus } from "./workstream";
 import { formatShortDate } from "./taskStatus";
 import { makeMessageId, type HistoryAction, type HistoryFile, type TaskMessage } from "./thread";
 
@@ -29,7 +29,7 @@ export function coworkEmail(to: TaskOwner, subject: string, body: string, sentAt
 }
 
 /** Cowork's first email to the owner when a task is set up. */
-export function assignmentEmail(task: ProjectTask, sentAt: string): TaskMessage {
+export function assignmentEmail(task: WorkstreamTask, sentAt: string): TaskMessage {
   return coworkEmail(
     task.delegate,
     `New task: ${task.description}`,
@@ -39,7 +39,7 @@ export function assignmentEmail(task: ProjectTask, sentAt: string): TaskMessage 
 }
 
 /** A nudge from Cowork to the owner; `attempt` counts follow-ups against the circuit breaker. */
-export function reminderEmail(task: ProjectTask, sentAt: string, attempt?: { n: number; of: number }): TaskMessage {
+export function reminderEmail(task: WorkstreamTask, sentAt: string, attempt?: { n: number; of: number }): TaskMessage {
   const overdue = new Date(`${task.deadline}T00:00:00Z`) < new Date(sentAt);
   const when = overdue ? `was due ${formatShortDate(task.deadline)}` : `is due ${formatShortDate(task.deadline)}`;
   return coworkEmail(
@@ -51,12 +51,12 @@ export function reminderEmail(task: ProjectTask, sentAt: string, attempt?: { n: 
 }
 
 /** Cowork emails the owner a message the GC wrote. */
-export function messageEmail(task: ProjectTask, text: string, sentAt: string): TaskMessage {
+export function messageEmail(task: WorkstreamTask, text: string, sentAt: string): TaskMessage {
   return coworkEmail(task.delegate, `Re: ${task.description}`, `${text}\n\n— Sent by Cowork for ${GC}`, sentAt);
 }
 
 /** Cowork passes on a note the GC left in chat. */
-export function relayEmail(task: ProjectTask, note: string, sentAt: string): TaskMessage {
+export function relayEmail(task: WorkstreamTask, note: string, sentAt: string): TaskMessage {
   return coworkEmail(
     task.delegate,
     `Re: ${task.description}`,
@@ -66,7 +66,7 @@ export function relayEmail(task: ProjectTask, note: string, sentAt: string): Tas
 }
 
 /** Cowork briefs a new owner after a reassignment. */
-export function reassignmentEmail(task: ProjectTask, newOwner: TaskOwner, sentAt: string): TaskMessage {
+export function reassignmentEmail(task: WorkstreamTask, newOwner: TaskOwner, sentAt: string): TaskMessage {
   return coworkEmail(
     newOwner,
     `New task: ${task.description}`,

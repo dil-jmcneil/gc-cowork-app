@@ -3,7 +3,7 @@ import { Box, Button, Chip, Stack, Typography, useTheme } from "@mui/material";
 import { useState, type ReactNode } from "react";
 
 import { usePlanRulesStore } from "@/demo/planRulesStore";
-import type { HistoryAction, HistoryEntry, HistoryFile, HistoryKind } from "@/projects/thread";
+import type { HistoryAction, HistoryEntry, HistoryFile, HistoryKind } from "@/workstreams/thread";
 
 import { PersonLine } from "./PersonLine";
 import { ThreadMessage, WHEN } from "./ThreadMessages";

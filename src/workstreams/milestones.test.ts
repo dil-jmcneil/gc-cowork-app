@@ -1,9 +1,9 @@
-import { draftProjectFromInsight } from "@/projects/projectDraft";
+import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
 import { ATG_RULING } from "@/insights/insights";
 
 import { currentMilestone, milestoneStatuses } from "./milestones";
 
-const draft = draftProjectFromInsight(ATG_RULING);
+const draft = draftWorkstreamFromInsight(ATG_RULING);
 const { milestones, tasks } = draft.plan;
 
 test("a new plan's first milestone is current and the rest are upcoming", () => {

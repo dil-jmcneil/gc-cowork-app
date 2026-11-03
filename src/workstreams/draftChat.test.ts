@@ -1,6 +1,6 @@
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import { useChatStore } from "@/chat/chatStore";
-import { draftChatId, seedDraftChat } from "@/projects/draftChat";
+import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
 import { ATG_RULING } from "@/insights/insights";
 
 beforeEach(() => {

@@ -15,10 +15,10 @@ import { DemoSettingsFab } from "./components/demo/DemoSettingsFab.js";
 import { useThemeVariantStore } from "./demo/themeVariantStore.js";
 import ChatPage from "./pages/ChatPage.js";
 import ComplianceCalendarPage from "./pages/ComplianceCalendarPage.js";
-import CreateProjectPage from "./pages/CreateProjectPage.js";
+import CreateWorkstreamPage from "./pages/CreateWorkstreamPage.js";
 import IndexPage from "./pages/IndexPage.js";
 import NewChatPage from "./pages/NewChatPage.js";
-import ProjectPage from "./pages/ProjectPage.js";
+import WorkstreamPage from "./pages/WorkstreamPage.js";
 import TaskPage from "./pages/TaskPage.js";
 import { LOGGED_IN_USER } from "./user.js";
 
@@ -47,9 +47,9 @@ export default function App() {
         <Route index element={<IndexPage />} />
         <Route path="chats/new" element={<NewChatPage />} />
         <Route path="chats/:chatId" element={<ChatPage />} />
-        <Route path="workstreams/new" element={<CreateProjectPage />} />
-        <Route path="workstreams/:projectId" element={<ProjectPage />} />
-        <Route path="workstreams/:projectId/tasks/:taskId" element={<TaskPage />} />
+        <Route path="workstreams/new" element={<CreateWorkstreamPage />} />
+        <Route path="workstreams/:workstreamId" element={<WorkstreamPage />} />
+        <Route path="workstreams/:workstreamId/tasks/:taskId" element={<TaskPage />} />
         <Route path="compliance-calendar" element={<ComplianceCalendarPage />} />
       </Route>
       </Routes>

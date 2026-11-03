@@ -12,10 +12,10 @@ import {
 import { useState, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
-import { OwnerTypeahead } from "@/components/projects/OwnerTypeahead";
+import { OwnerTypeahead } from "@/components/workstreams/OwnerTypeahead";
 import { formatDate } from "@/lib/dates";
-import type { TaskOwner } from "@/projects/people";
-import type { ProjectTask, TaskStatus } from "@/projects/project";
+import type { TaskOwner } from "@/workstreams/people";
+import type { WorkstreamTask, TaskStatus } from "@/workstreams/workstream";
 
 const STATUSES: TaskStatus[] = ["Not started", "In progress", "Done"];
 
@@ -37,7 +37,7 @@ export function TaskDetailsCard({
   onAssign,
   onStatusChange,
 }: {
-  task: ProjectTask;
+  task: WorkstreamTask;
   onAssign: (owner: TaskOwner) => void;
   onStatusChange: (status: TaskStatus) => void;
 }) {

@@ -1,11 +1,11 @@
-import type { ProjectTask } from "@/projects/project";
-import { DIRECTORY } from "@/projects/people";
-import { summarizeTask, taskAttention } from "@/projects/taskStatus";
+import type { WorkstreamTask } from "@/workstreams/workstream";
+import { DIRECTORY } from "@/workstreams/people";
+import { summarizeTask, taskAttention } from "@/workstreams/taskStatus";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
 const MAYA = DIRECTORY.find((p) => p.label === "Maya Chen")!;
 
-function task(patch: Partial<ProjectTask>): ProjectTask {
+function task(patch: Partial<WorkstreamTask>): WorkstreamTask {
   return {
     id: "t",
     description: "Review the tools",

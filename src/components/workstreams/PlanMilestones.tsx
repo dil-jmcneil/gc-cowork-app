@@ -2,9 +2,9 @@ import { Accordion, AccordionDetails, AccordionSummary, Box, Stack, Typography, 
 
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 
-import { milestoneStatuses, type MilestoneStatus } from "@/projects/milestones";
-import type { TaskOwner } from "@/projects/people";
-import type { Milestone, ProjectPlan } from "@/projects/project";
+import { milestoneStatuses, type MilestoneStatus } from "@/workstreams/milestones";
+import type { TaskOwner } from "@/workstreams/people";
+import type { Milestone, WorkstreamPlan } from "@/workstreams/workstream";
 
 import { RuleTable } from "./RuleTable";
 import { FieldLabel } from "./SectionCard";
@@ -26,7 +26,7 @@ export function PlanMilestones({
   onOwnerChange,
   onOpenTask,
 }: {
-  plan: ProjectPlan;
+  plan: WorkstreamPlan;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   onOpenTask?: (taskId: string) => void;
 }) {
@@ -60,7 +60,7 @@ function MilestoneCard({
   milestone: Milestone;
   number: number;
   status: MilestoneStatus;
-  plan: ProjectPlan;
+  plan: WorkstreamPlan;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   onOpenTask?: (taskId: string) => void;
 }) {

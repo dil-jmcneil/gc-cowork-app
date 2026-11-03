@@ -2,7 +2,7 @@ import { ATG_RULING } from "@/insights/insights";
 import { LOGGED_IN_USER } from "@/user";
 
 import { findPerson } from "./people";
-import type { Project, ProjectTask } from "./project";
+import type { Workstream, WorkstreamTask } from "./workstream";
 import {
   assignmentEmail,
   coworkAction,
@@ -16,7 +16,7 @@ import {
 } from "./threadMessages";
 
 /**
- * Demo shortcut: when the GC starts the ATG v. Lane project, its tasks jump
+ * Demo shortcut: when the GC starts the ATG v. Lane workstream, its tasks jump
  * ahead to where they'd be after a few days (Tue Oct 27 to Mon Nov 2). Each
  * history shows a plan rule at work: the first email outside Acme waits for
  * Peter, a waiting owner's follow-ups are held, and a silent owner is chased
@@ -29,11 +29,11 @@ const DANA = findPerson("dana.whitfield@whitfieldcrane.com");
 const ALEX = findPerson("alex.kim@acme.com");
 const PETE = findPerson("pete.lin@acme.com");
 
-function withTask(task: ProjectTask, patch: Partial<ProjectTask>): ProjectTask {
+function withTask(task: WorkstreamTask, patch: Partial<WorkstreamTask>): WorkstreamTask {
   return { ...task, ...patch };
 }
 
-function storyFor(task: ProjectTask): ProjectTask {
+function storyFor(task: WorkstreamTask): WorkstreamTask {
   const key = task.id.slice(ATG_RULING.id.length + 1);
 
   if (key === "memo") {
@@ -186,16 +186,16 @@ function storyFor(task: ProjectTask): ProjectTask {
   });
 }
 
-export function isAtgProject(project: Pick<Project, "sourceInsightId">): boolean {
-  return project.sourceInsightId === ATG_RULING.id;
+export function isAtgWorkstream(workstream: Pick<Workstream, "sourceInsightId">): boolean {
+  return workstream.sourceInsightId === ATG_RULING.id;
 }
 
-/** The ATG v. Lane project as it stands a few days after it started. */
-export function progressAtgProject(project: Project): Project {
+/** The ATG v. Lane workstream as it stands a few days after it started. */
+export function progressAtgWorkstream(workstream: Workstream): Workstream {
   return {
-    ...project,
+    ...workstream,
     createdAt: STARTED_AT,
-    plan: { ...project.plan, tasks: project.plan.tasks.map(storyFor) },
+    plan: { ...workstream.plan, tasks: workstream.plan.tasks.map(storyFor) },
     statusSummary:
       "Milestone 1 of 4, Get counsel's view. Dana's memo is due Dec 8, and the Dec 15 committee slot is booked. Morgan hasn't replied yet (follow-up 1 of 3).",
   };

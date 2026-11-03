@@ -21,9 +21,9 @@ import { Link as RouterLink, useNavigate } from "react-router";
 import { startChatFromPrompt } from "@/chat/startChat";
 import { formatDate } from "@/lib/dates";
 import { InsightTags } from "@/components/insights/InsightTags";
-import { useProjectStore } from "@/projects/projectStore";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
-import { projectActionForInsight } from "@/insights/insightActions";
+import { workstreamActionForInsight } from "@/insights/insightActions";
 import { STATUS_COLOR } from "@/insights/insightStatus";
 
 const SEE_IN_CHAT_PROMPT_PREFIX = "Tell me about";
@@ -31,15 +31,15 @@ const SEE_IN_CHAT_PROMPT_PREFIX = "Tell me about";
 export function InsightDialog({ insight, onClose }: { insight: Insight | null; onClose: () => void }) {
   const { tokens, presets } = useTheme();
   const navigate = useNavigate();
-  const project = useProjectStore((s) =>
-    insight ? s.projects.find((p) => p.sourceInsightId === insight.id) : undefined,
+  const workstream = useWorkstreamStore((s) =>
+    insight ? s.workstreams.find((p) => p.sourceInsightId === insight.id) : undefined,
   );
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const muted = tokens.semantic.color.type.muted.value;
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
   if (!insight) return null;
-  const action = projectActionForInsight(insight.id, project);
+  const action = workstreamActionForInsight(insight.id, workstream);
   const type = insightType(insight);
 
   return (
@@ -149,10 +149,10 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
               <OpenFileIcon aria-hidden style={{ width: 16, height: 16, color: muted }} />
               <SectionLabel>Linked Workstreams</SectionLabel>
             </Stack>
-            {project ? (
-              <Link component={RouterLink} to={`/workstreams/${project.id}`} onClick={onClose} underline="hover">
+            {workstream ? (
+              <Link component={RouterLink} to={`/workstreams/${workstream.id}`} onClick={onClose} underline="hover">
                 <Typography variant="textMd" sx={{ color: "inherit", fontWeight: emphasis }}>
-                  {project.name}
+                  {workstream.name}
                 </Typography>
               </Link>
             ) : (

@@ -3,7 +3,7 @@ import { LOGGED_IN_USER } from "@/user";
 
 import { findPerson, ownerShortName } from "./people";
 import { formatShortDate } from "./taskStatus";
-import type { Project, ProjectDraft, ProjectTask } from "./project";
+import type { Workstream, WorkstreamDraft, WorkstreamTask } from "./workstream";
 
 const ASSOCIATE_GC = "pete.lin@acme.com";
 const CORPORATE_SECRETARY = "alex.kim@acme.com";
@@ -14,10 +14,10 @@ function defaultCcs(ownerEmail: string) {
 }
 
 /** Mocked "AI" draft: name, description, and the insight's plan, with one task per template. */
-export function draftProjectFromInsight(insight: Insight): ProjectDraft {
+export function draftWorkstreamFromInsight(insight: Insight): WorkstreamDraft {
   const { approach, milestones, rules } = insight.plan;
 
-  const tasks: ProjectTask[] = milestones.flatMap((milestone) =>
+  const tasks: WorkstreamTask[] = milestones.flatMap((milestone) =>
     milestone.tasks.map((template) => ({
       id: `${insight.id}-${template.id}`,
       milestoneId: milestone.id,
@@ -47,8 +47,8 @@ export function draftProjectFromInsight(insight: Insight): ProjectDraft {
 }
 
 /** Mocked "AI" status summary from task progress and the next deadline. */
-export function summarizeProject(project: Pick<Project, "plan">): string {
-  const { tasks, status } = project.plan;
+export function summarizeWorkstream(workstream: Pick<Workstream, "plan">): string {
+  const { tasks, status } = workstream.plan;
   const done = tasks.filter((t) => t.status === "Done").length;
   const next = tasks.filter((t) => t.status !== "Done").sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
   const progress = `${done} of ${tasks.length} tasks done`;

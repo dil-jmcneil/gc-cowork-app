@@ -1,5 +1,5 @@
-import type { Project, ProjectTask } from "@/projects/project";
-import { taskAttention } from "@/projects/taskStatus";
+import type { Workstream, WorkstreamTask } from "@/workstreams/workstream";
+import { taskAttention } from "@/workstreams/taskStatus";
 import { insightType } from "@/insights/insight";
 import { INSIGHTS } from "@/insights/insights";
 
@@ -18,7 +18,7 @@ type EventBase = {
   description: string;
   status: CalendarEventStatus;
   attention?: CalendarEventAttention;
-  /** The insight or project this event belongs to. */
+  /** The insight or workstream this event belongs to. */
   source: string;
   /** Who owns it, when someone does. */
   owner?: string;
@@ -31,29 +31,29 @@ type EventBase = {
 };
 
 export type CalendarEvent =
-  | (EventBase & { kind: "task"; projectId: string; taskId: string })
+  | (EventBase & { kind: "task"; workstreamId: string; taskId: string })
   | (EventBase & { kind: "external"; insightId: string });
 
-function taskEvent(project: Project, task: ProjectTask, now: Date): CalendarEvent {
+function taskEvent(workstream: Workstream, task: WorkstreamTask, now: Date): CalendarEvent {
   const owner = task.delegate.label;
   const base = {
     kind: "task" as const,
     id: task.id,
-    projectId: project.id,
+    workstreamId: workstream.id,
     taskId: task.id,
     date: task.deadline,
     title: task.description,
-    source: project.name,
+    source: workstream.name,
     owner,
-    href: `/workstreams/${project.id}/tasks/${task.id}`,
-    linkLabel: `Task in ${project.name}`,
+    href: `/workstreams/${workstream.id}/tasks/${task.id}`,
+    linkLabel: `Task in ${workstream.name}`,
   };
 
   if (task.status === "Done") {
     return {
       ...base,
       status: "Complete",
-      description: `${project.name} — ${owner} marked this done`,
+      description: `${workstream.name} — ${owner} marked this done`,
       nextStep: "Nothing to do — ready to close",
     };
   }
@@ -63,7 +63,7 @@ function taskEvent(project: Project, task: ProjectTask, now: Date): CalendarEven
       ...base,
       status: "Blocked",
       attention: "nudge",
-      description: `${project.name} — ${owner} hasn't responded; past due, nudge recommended`,
+      description: `${workstream.name} — ${owner} hasn't responded; past due, nudge recommended`,
       nextStep: `Nudge ${owner}, or reassign the task`,
     };
   }
@@ -72,29 +72,29 @@ function taskEvent(project: Project, task: ProjectTask, now: Date): CalendarEven
       ...base,
       status: "Assigned",
       attention: "new-status",
-      description: `${project.name} — ${owner} is working on it`,
+      description: `${workstream.name} — ${owner} is working on it`,
       nextStep: `Review ${owner}'s update`,
     };
   }
   return {
     ...base,
     status: "Assigned",
-    description: `${project.name} — assigned to ${owner}`,
+    description: `${workstream.name} — assigned to ${owner}`,
     nextStep: `Wait for ${owner}, or check in before the deadline`,
   };
 }
 
 /**
  * Compliance calendar events: every insight deadline as an external
- * deadline, plus the tasks of every project. A insight has no tasks until
- * its project exists.
+ * deadline, plus the tasks of every workstream. An insight has no tasks until
+ * its workstream exists.
  */
-export function deriveCalendarEvents(projects: Project[], now: Date): CalendarEvent[] {
-  const projectChangeIds = new Set(projects.map((p) => p.sourceInsightId));
+export function deriveCalendarEvents(workstreams: Workstream[], now: Date): CalendarEvent[] {
+  const workstreamChangeIds = new Set(workstreams.map((p) => p.sourceInsightId));
 
   const externalEvents: CalendarEvent[] = INSIGHTS.flatMap((insight) =>
     insight.deadlines.map((deadline, index) => {
-      const hasProject = projectChangeIds.has(insight.id);
+      const hasWorkstream = workstreamChangeIds.has(insight.id);
       return {
         kind: "external" as const,
         id: `${insight.id}-deadline-${index}`,
@@ -103,16 +103,16 @@ export function deriveCalendarEvents(projects: Project[], now: Date): CalendarEv
         title: deadline.label,
         description: `${insight.title} · ${insight.source}`,
         status: "External" as const,
-        ...(hasProject ? {} : { attention: "awaiting-response" as const }),
+        ...(hasWorkstream ? {} : { attention: "awaiting-response" as const }),
         source: insight.title,
-        href: hasProject ? "/" : `/workstreams/new?insight=${encodeURIComponent(insight.id)}`,
+        href: hasWorkstream ? "/" : `/workstreams/new?insight=${encodeURIComponent(insight.id)}`,
         linkLabel: `${insightType(insight)}: ${insight.title}`,
-        nextStep: hasProject ? "Track it through the workstream's tasks" : "Create a workstream to assign owners",
+        nextStep: hasWorkstream ? "Track it through the workstream's tasks" : "Create a workstream to assign owners",
       };
     }),
   );
 
-  const taskEvents = projects.flatMap((project) => project.plan.tasks.map((task) => taskEvent(project, task, now)));
+  const taskEvents = workstreams.flatMap((workstream) => workstream.plan.tasks.map((task) => taskEvent(workstream, task, now)));
 
   return [...externalEvents, ...taskEvents].sort((a, b) => a.date.localeCompare(b.date));
 }

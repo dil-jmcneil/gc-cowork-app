@@ -3,27 +3,27 @@ import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
-import { FieldLabel, SectionCard } from "@/components/projects/SectionCard";
-import { SourceInsightCard } from "@/components/projects/SourceInsightCard";
-import { PlanMilestones } from "@/components/projects/PlanMilestones";
-import { RuleTable } from "@/components/projects/RuleTable";
+import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
+import { SourceInsightCard } from "@/components/workstreams/SourceInsightCard";
+import { PlanMilestones } from "@/components/workstreams/PlanMilestones";
+import { RuleTable } from "@/components/workstreams/RuleTable";
 import { HistoryList } from "@/components/tasks/History";
 import { TaskQuickView } from "@/components/tasks/TaskQuickView";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
-import { useProjectStore } from "@/projects/projectStore";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { INSIGHTS } from "@/insights/insights";
 
-export default function ProjectPage() {
-  const { projectId } = useParams<{ projectId: string }>();
+export default function WorkstreamPage() {
+  const { workstreamId } = useParams<{ workstreamId: string }>();
   const { tokens, presets } = useTheme();
   const showRules = usePlanRulesStore((s) => s.showRules);
   const navigate = useNavigate();
-  const project = useProjectStore((s) => s.projects.find((p) => p.id === projectId));
-  const acceptPlan = useProjectStore((s) => s.acceptPlan);
+  const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.id === workstreamId));
+  const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
 
-  if (!project) {
+  if (!workstream) {
     return (
       <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
         <Typography variant="textMd">Workstream not found.</Typography>
@@ -34,10 +34,10 @@ export default function ProjectPage() {
     );
   }
 
-  const insight = INSIGHTS.find((c) => c.id === project.sourceInsightId);
+  const insight = INSIGHTS.find((c) => c.id === workstream.sourceInsightId);
   const muted = tokens.semantic.color.type.muted.value;
-  const planAccepted = project.plan.status === "accepted";
-  const history = project.plan.tasks
+  const planAccepted = workstream.plan.status === "accepted";
+  const history = workstream.plan.tasks
     .flatMap((task) => task.history.map((entry) => ({ entry, context: task.description })))
     .sort((a, b) => b.entry.sentAt.localeCompare(a.entry.sentAt));
 
@@ -55,7 +55,7 @@ export default function ProjectPage() {
             Workstream
           </Typography>
           <Typography variant="h4" component="h1">
-            {project.name}
+            {workstream.name}
           </Typography>
         </Stack>
 
@@ -63,14 +63,14 @@ export default function ProjectPage() {
           <Grid item sm={4} md={8} lg={5} xl={8}>
             <Stack gap={2}>
               <SectionCard title="Status Summary">
-                <Typography variant="textMd">{project.statusSummary}</Typography>
+                <Typography variant="textMd">{workstream.statusSummary}</Typography>
               </SectionCard>
               <SectionCard title="About This Insight">
-                <Typography variant="textMd">{project.description}</Typography>
+                <Typography variant="textMd">{workstream.description}</Typography>
                 <Stack gap={0.5}>
                   <FieldLabel>Why it's relevant</FieldLabel>
                   <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
-                    {project.reasonsRelevant.map((reason) => (
+                    {workstream.reasonsRelevant.map((reason) => (
                       <Typography component="li" variant="textMd" key={reason}>
                         {reason}
                       </Typography>
@@ -94,18 +94,18 @@ export default function ProjectPage() {
         >
           <Stack gap={0.5}>
             <FieldLabel>Proposed approach</FieldLabel>
-            <Typography variant="textMd">{project.plan.proposedApproach}</Typography>
+            <Typography variant="textMd">{workstream.plan.proposedApproach}</Typography>
           </Stack>
-          <PlanMilestones plan={project.plan} onOpenTask={setOpenTaskId} />
+          <PlanMilestones plan={workstream.plan} onOpenTask={setOpenTaskId} />
           <Stack direction="row" gap={1.5} justifyContent="flex-end">
             <Button
               variant="outlined"
-              onClick={() => startChatFromPrompt(`Help me revise the plan for "${project.name}".`, navigate)}
+              onClick={() => startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate)}
             >
               Revise via chat
             </Button>
             {planAccepted ? null : (
-              <Button variant="contained" onClick={() => acceptPlan(project.id)}>
+              <Button variant="contained" onClick={() => acceptPlan(workstream.id)}>
                 Accept plan
               </Button>
             )}
@@ -125,12 +125,12 @@ export default function ProjectPage() {
               Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits,
               it stops and asks you.
             </Typography>
-            <RuleTable rules={project.plan.rules} ariaLabel="Rules for every milestone" />
+            <RuleTable rules={workstream.plan.rules} ariaLabel="Rules for every milestone" />
           </SectionCard>
         ) : null}
       </Stack>
       <TaskQuickView
-        taskRef={openTaskId ? { projectId: project.id, taskId: openTaskId } : null}
+        taskRef={openTaskId ? { workstreamId: workstream.id, taskId: openTaskId } : null}
         onClose={() => setOpenTaskId(null)}
       />
     </Container>

@@ -5,8 +5,8 @@ import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
 import { formatDate } from "@/lib/dates";
-import type { Project } from "@/projects/project";
-import { useProjectStore } from "@/projects/projectStore";
+import type { Workstream } from "@/workstreams/workstream";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { InsightTags } from "@/components/insights/InsightTags";
 import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
 import { STATUS_COLOR } from "@/insights/insightStatus";
@@ -26,7 +26,7 @@ export function InsightList({ items }: { items: Insight[] }) {
 function InsightCard({ insight }: { insight: Insight }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  const project = useProjectStore((s) => s.projects.find((p) => p.sourceInsightId === insight.id));
+  const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.sourceInsightId === insight.id));
   const muted = tokens.semantic.color.type.muted.value;
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
@@ -87,13 +87,13 @@ function InsightCard({ insight }: { insight: Insight }) {
         </Box>
 
         <Divider />
-        {project ? <ProjectSummary project={project} /> : <NoProject insightId={insight.id} />}
+        {workstream ? <WorkstreamSummary workstream={workstream} /> : <NoWorkstream insightId={insight.id} />}
       </Stack>
     </Card>
   );
 }
 
-function ProjectSummary({ project }: { project: Project }) {
+function WorkstreamSummary({ workstream }: { workstream: Workstream }) {
   const { tokens } = useTheme();
   const muted = tokens.semantic.color.type.muted.value;
   return (
@@ -102,16 +102,16 @@ function ProjectSummary({ project }: { project: Project }) {
         <Stack direction="row" alignItems="center" gap={0.75}>
           <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
           <Typography variant="textMd" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-            {project.name}
+            {workstream.name}
           </Typography>
         </Stack>
         <Typography variant="textMd" sx={{ color: muted }}>
-          {project.statusSummary}
+          {workstream.statusSummary}
         </Typography>
       </Stack>
       <Button
         component={RouterLink}
-        to={`/workstreams/${project.id}`}
+        to={`/workstreams/${workstream.id}`}
         variant="outlined"
         size="small"
         endIcon={<ArrowRightIcon aria-hidden style={{ width: 14, height: 14 }} />}
@@ -123,7 +123,7 @@ function ProjectSummary({ project }: { project: Project }) {
   );
 }
 
-function NoProject({ insightId }: { insightId: string }) {
+function NoWorkstream({ insightId }: { insightId: string }) {
   const { tokens } = useTheme();
   return (
     <Stack direction="row" alignItems="center" gap={1.5}>

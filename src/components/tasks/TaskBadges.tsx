@@ -1,7 +1,7 @@
 import { Stack, useTheme } from "@mui/material";
 
-import type { ProjectTask, TaskStatus } from "@/projects/project";
-import { taskAttention } from "@/projects/taskStatus";
+import type { WorkstreamTask, TaskStatus } from "@/workstreams/workstream";
+import { taskAttention } from "@/workstreams/taskStatus";
 
 const STATUS_COLOR: Record<TaskStatus, "subtle" | "information" | "success"> = {
   "Not started": "subtle",
@@ -10,7 +10,7 @@ const STATUS_COLOR: Record<TaskStatus, "subtle" | "information" | "success"> = {
 };
 
 /** Status plus, when it needs the GC, an Overdue or New status badge. */
-export function TaskBadges({ task, now }: { task: ProjectTask; now: Date }) {
+export function TaskBadges({ task, now }: { task: WorkstreamTask; now: Date }) {
   const { presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const attention = taskAttention(task, now);

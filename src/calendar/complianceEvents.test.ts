@@ -1,13 +1,13 @@
 import { deriveCalendarEvents } from "@/calendar/complianceEvents";
-import type { Project } from "@/projects/project";
-import { DIRECTORY } from "@/projects/people";
+import type { Workstream } from "@/workstreams/workstream";
+import { DIRECTORY } from "@/workstreams/people";
 import { ATG_RULING, INSIGHTS } from "@/insights/insights";
 
 const NOW = new Date("2026-11-01T00:00:00Z");
 const owner = (name: string) => DIRECTORY.find((p) => p.label === name)!;
 
-const PROJECT: Project = {
-  id: "project-1",
+const WORKSTREAM: Workstream = {
+  id: "workstream-1",
   name: "Online cancellation update",
   sourceInsightId: "atg-v-lane",
   description: "d",
@@ -68,10 +68,10 @@ const PROJECT: Project = {
   },
 };
 
-const events = () => deriveCalendarEvents([PROJECT], NOW);
+const events = () => deriveCalendarEvents([WORKSTREAM], NOW);
 const byId = (id: string) => events().find((e) => e.id === id)!;
 
-test("every regulatory deadline shows as an external deadline, with or without a project", () => {
+test("every regulatory deadline shows as an external deadline, with or without a workstream", () => {
   const externals = events().filter((e) => e.kind === "external");
   const expected = INSIGHTS.reduce((n, c) => n + c.deadlines.length, 0);
   expect(externals).toHaveLength(expected);
@@ -81,28 +81,28 @@ test("every regulatory deadline shows as an external deadline, with or without a
   }
 });
 
-test("a change with no project yet has no tasks on the calendar, only its external deadlines", () => {
+test("a change with no workstream yet has no tasks on the calendar, only its external deadlines", () => {
   const ruling = deriveCalendarEvents([], NOW).filter((e) => e.source === ATG_RULING.title);
   expect(ruling.length).toBe(ATG_RULING.deadlines.length);
   expect(ruling.every((e) => e.kind === "external")).toBe(true);
 });
 
-test("an external deadline whose change has no project is awaiting your response", () => {
+test("an external deadline whose change has no workstream is awaiting your response", () => {
   const event = deriveCalendarEvents([], NOW).find((e) => e.kind === "external")!;
   expect(event.attention).toBe("awaiting-response");
 });
 
-test("an external deadline whose change has a project needs no attention", () => {
+test("an external deadline whose change has a workstream needs no attention", () => {
   const atg = events().filter((e) => e.kind === "external" && e.insightId === ATG_RULING.id);
   expect(atg.length).toBeGreaterThan(0);
   for (const event of atg) expect(event.attention).toBeUndefined();
 });
 
-test("task events point at their project and task", () => {
+test("task events point at their workstream and task", () => {
   const event = byId("t3");
   expect(event).toMatchObject({
     kind: "task",
-    projectId: "project-1",
+    workstreamId: "workstream-1",
     taskId: "t3",
   });
   expect(event.owner).toBe("Sam Ortiz");

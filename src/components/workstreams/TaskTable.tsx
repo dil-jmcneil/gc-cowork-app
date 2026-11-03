@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 
 import { formatDate } from "@/lib/dates";
-import type { ProjectTask, TaskStatus } from "@/projects/project";
-import type { TaskOwner } from "@/projects/people";
+import type { WorkstreamTask, TaskStatus } from "@/workstreams/workstream";
+import type { TaskOwner } from "@/workstreams/people";
 
 import { OwnerTypeahead } from "./OwnerTypeahead";
 
@@ -30,7 +30,7 @@ export function TaskTable({
   onOpenTask,
   ariaLabel = "Tasks",
 }: {
-  tasks: ProjectTask[];
+  tasks: WorkstreamTask[];
   ariaLabel?: string;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   /** Makes each task's description open it, e.g. in the quick view. */

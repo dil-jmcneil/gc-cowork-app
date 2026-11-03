@@ -1,4 +1,4 @@
-import type { Milestone, ProjectTask } from "./project";
+import type { Milestone, WorkstreamTask } from "./workstream";
 
 export type MilestoneStatus = "Done" | "Current" | "Upcoming";
 
@@ -7,7 +7,7 @@ export type MilestoneStatus = "Done" | "Current" | "Upcoming";
  * open tasks is current. Later milestones stay upcoming even if early work on
  * their tasks has started, because their gate hasn't been reached.
  */
-export function milestoneStatuses(milestones: Milestone[], tasks: ProjectTask[]): Record<string, MilestoneStatus> {
+export function milestoneStatuses(milestones: Milestone[], tasks: WorkstreamTask[]): Record<string, MilestoneStatus> {
   const statuses: Record<string, MilestoneStatus> = {};
   let currentFound = false;
   for (const milestone of milestones) {
@@ -24,7 +24,7 @@ export function milestoneStatuses(milestones: Milestone[], tasks: ProjectTask[])
   return statuses;
 }
 
-export function currentMilestone(milestones: Milestone[], tasks: ProjectTask[]): Milestone | undefined {
+export function currentMilestone(milestones: Milestone[], tasks: WorkstreamTask[]): Milestone | undefined {
   const statuses = milestoneStatuses(milestones, tasks);
   return milestones.find((m) => statuses[m.id] === "Current");
 }
