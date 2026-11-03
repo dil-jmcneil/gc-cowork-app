@@ -1,5 +1,4 @@
-import { Box, Button, Link, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import type { ReactNode } from "react";
+import { Box, Button, Link, Stack, Tooltip, Typography, useTheme, type SxProps, type Theme } from "@mui/material";
 import { Link as RouterLink } from "react-router";
 
 import type { CalendarEvent } from "@/calendar/complianceEvents";
@@ -27,8 +26,8 @@ export function EventHoverDetails({ event }: { event: CalendarEvent }) {
  * One timeline row inside a temporal band, after the Temporal Bands iteration:
  * a compact date badge and status dot, then a 16px title, the workstream, and
  * who owns it with Cowork's line on the latest activity (the same order as the
- * signal cards in chat). Nudge sits at the end of that line when it's due.
- * Everything is centered vertically; rows further out are shaded and faded.
+ * signal cards in chat). When the row needs the GC, its badge and Nudge or
+ * Review sit in the top-right corner. Rows further out are shaded and faded.
  */
 export function TimelineItem({
   event,
@@ -53,7 +52,7 @@ export function TimelineItem({
       sx={(theme) => ({
         listStyle: "none",
         px: SPACE.block,
-        py: SPACE.group,
+        py: SPACE.item,
         bgcolor: look.rowBg,
         borderTop: `1px solid ${theme.tokens.semantic.color.ui.divider.default.value}`,
         transition: "background-color 120ms ease",
@@ -64,16 +63,60 @@ export function TimelineItem({
       <StatusDot status={event.status} />
       <Stack gap={SPACE.pair} sx={{ flex: 1, minWidth: 0 }}>
         <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} showStatus={false} prominent />
-        {event.workstream ? <WorkstreamLine workstream={event.workstream} onOpenSignal={() => onOpen(event)} /> : null}
-        <OwnerActivity
-          event={event}
-          action={
-            event.attention === "nudge" || event.attention === "review" ? (
-              <NudgeAction event={event} nudged={nudged} onNudge={onNudge} onOpen={onOpen} />
-            ) : undefined
-          }
-        />
+        <Stack>
+          {event.workstream ? (
+            <WorkstreamLine workstream={event.workstream} onOpenSignal={() => onOpen(event)} />
+          ) : null}
+          <OwnerActivity event={event} />
+        </Stack>
       </Stack>
+      {needsAttention(event) ? (
+        <AttentionActions
+          event={event}
+          nudged={nudged}
+          onNudge={onNudge}
+          onOpen={onOpen}
+          sx={{ alignSelf: "flex-start" }}
+        />
+      ) : null}
+    </Stack>
+  );
+}
+
+/** The row asks something of the GC: a nudge for overdue work, or a review of finished work. */
+function needsAttention(event: CalendarEvent) {
+  return event.attention === "nudge" || event.attention === "review";
+}
+
+/**
+ * Top-right corner of a row or card: the status badge, then the action it
+ * calls for (Nudge or Review). Rows show it only when the event needs the GC;
+ * swimlane cards always show the badge.
+ */
+export function AttentionActions({
+  event,
+  nudged,
+  onNudge,
+  onOpen,
+  sx,
+}: {
+  event: CalendarEvent;
+  nudged: boolean;
+  onNudge: (event: CalendarEvent) => void;
+  onOpen: (event: CalendarEvent) => void;
+  sx?: SxProps<Theme>;
+}) {
+  const { presets } = useTheme();
+  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      gap={SPACE.item}
+      sx={[{ flexShrink: 0 }, ...(Array.isArray(sx) ? sx : [sx])]}
+    >
+      <StatusIndicator color={event.priority.color} label={event.priority.label} />
+      <NudgeAction event={event} nudged={nudged} onNudge={onNudge} onOpen={onOpen} />
     </Stack>
   );
 }
@@ -171,16 +214,7 @@ export function WorkstreamLine({
 }
 
 /** The owner, in the default color, then Cowork's line on the latest activity, as one sentence. */
-export function OwnerActivity({
-  event,
-  clamp,
-  action,
-}: {
-  event: CalendarEvent;
-  clamp?: number;
-  /** Shown right after the summary, e.g. Nudge when it says one is recommended. */
-  action?: ReactNode;
-}) {
+export function OwnerActivity({ event, clamp }: { event: CalendarEvent; clamp?: number }) {
   const { tokens } = useTheme();
   return (
     <Typography
@@ -199,11 +233,6 @@ export function OwnerActivity({
       ) : null}
       {event.owner ? " · " : ""}
       {event.summary}
-      {action ? (
-        <Box component="span" sx={{ display: "inline-flex", verticalAlign: "middle", ml: SPACE.item }}>
-          {action}
-        </Box>
-      ) : null}
     </Typography>
   );
 }

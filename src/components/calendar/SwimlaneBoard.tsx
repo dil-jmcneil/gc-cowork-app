@@ -5,7 +5,7 @@ import { BAND_LABEL, bandDates, temporalBand, type TemporalBand } from "@/calend
 import { SPACE } from "@/lib/layout";
 
 import { useBandLook } from "./TemporalBands";
-import { EventTitle, NudgeAction, OwnerActivity, WorkstreamLine } from "./TimelineItem";
+import { AttentionActions, EventTitle, OwnerActivity, WorkstreamLine } from "./TimelineItem";
 
 const LANES: TemporalBand[] = ["this-week", "next-week", "further"];
 
@@ -141,7 +141,7 @@ function Lane({
   );
 }
 
-/** A compact card: date pill and title, the workstream, the owner and latest activity, then status and Nudge. */
+/** A compact card: the date pill with status and Nudge or Review top right, then the title, workstream, and latest activity. */
 function SwimCard({
   event,
   todayIso,
@@ -157,8 +157,7 @@ function SwimCard({
   onNudge: (event: CalendarEvent) => void;
   onOpen: (event: CalendarEvent) => void;
 }) {
-  const { tokens, presets } = useTheme();
-  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const { tokens } = useTheme();
   return (
     <Card
       component="li"
@@ -167,7 +166,7 @@ function SwimCard({
     >
       <CardContent sx={{ p: SPACE.group, "&:last-child": { pb: SPACE.group } }}>
         <Stack gap={SPACE.item}>
-          <Stack direction="row" alignItems="flex-start" gap={SPACE.item}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.item}>
             <Box
               component="span"
               sx={{
@@ -175,22 +174,20 @@ function SwimCard({
                 px: SPACE.pair,
                 borderRadius: tokens.semantic.radius.sm.value,
                 bgcolor: tokens.semantic.color.surface.variant.value,
-                mt: "2px",
               }}
             >
               <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value, whiteSpace: "nowrap" }}>
                 {SHORT_DATE.format(new Date(`${event.date}T00:00:00Z`))}
               </Typography>
             </Box>
-            <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} showStatus={false} />
+            <AttentionActions event={event} nudged={nudged} onNudge={onNudge} onOpen={onOpen} />
           </Stack>
-          {event.workstream ? (
-            <WorkstreamLine workstream={event.workstream} onOpenSignal={() => onOpen(event)} />
-          ) : null}
-          <OwnerActivity event={event} clamp={2} />
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.item}>
-            <StatusIndicator color={event.priority.color} label={event.priority.label} />
-            <NudgeAction event={event} nudged={nudged} onNudge={onNudge} onOpen={onOpen} />
+          <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} showStatus={false} />
+          <Stack>
+            {event.workstream ? (
+              <WorkstreamLine workstream={event.workstream} onOpenSignal={() => onOpen(event)} />
+            ) : null}
+            <OwnerActivity event={event} clamp={2} />
           </Stack>
         </Stack>
       </CardContent>
