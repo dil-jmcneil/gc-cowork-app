@@ -171,26 +171,24 @@ export default function CommandCenterNavigation() {
 function WorkstreamsNavSection() {
   const workstreams = useWorkstreamStore((s) => s.workstreams);
   const [open, setOpen] = useState(true);
+  /** Collapsed until a workstream exists; the GC's open/close choice applies once it does. */
+  const isOpen = open && workstreams.length > 0;
   return (
     <AINavSection
       label="Workstreams"
-      isOpen={open}
+      isOpen={isOpen}
       childCount={workstreams.length}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
     >
       <ProjectsIcon slot="icon" />
-      {workstreams.length === 0 ? (
-        <CommandCenterEmptyHint message="No workstreams yet" />
-      ) : (
-        workstreams.map((workstream) => (
-          <RoutedAINavLink
-            key={workstream.id}
-            to={`/workstreams/${workstream.id}`}
-            label={truncateLabel(workstream.name)}
-          />
-        ))
-      )}
+      {workstreams.map((workstream) => (
+        <RoutedAINavLink
+          key={workstream.id}
+          to={`/workstreams/${workstream.id}`}
+          label={truncateLabel(workstream.name)}
+        />
+      ))}
     </AINavSection>
   );
 }
