@@ -16,7 +16,7 @@ export function useBandLook(band: TemporalBand) {
   // out is lighter still, with shaded, faded rows.
   const status = tokens.component.statusIndicator.colors;
   // The accent bars follow the app's blue theme (the same indigo as links and
-  // primary actions), stepping lighter as the band gets further out.
+  // primary actions), with This Week the strong indigo and Next Week a lighter one. Further Out is neutral.
   const indigo = tokens.core.color.indigo;
   const near = {
     accent: indigo["40"].value,
@@ -35,7 +35,7 @@ export function useBandLook(band: TemporalBand) {
     faded: false,
   };
   const far = {
-    accent: indigo["80"].value,
+    accent: color.status.neutral.background.value,
     headerBg: color.surface.subtle.value,
     label: color.type.muted.value,
     rowBg: color.surface.subtle.value,
