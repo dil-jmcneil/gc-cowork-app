@@ -28,6 +28,7 @@ import { hasPlan } from "@/signals/signal";
 import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 import { RELEVANCE_LABEL } from "@/signals/signal";
+import { planEditFromChat } from "@/workstreams/planChat";
 
 export default function CreateWorkstreamPage() {
   const [params] = useSearchParams();
@@ -82,7 +83,15 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
   };
 
   return (
-    <SideChatLayout chatId={draftChatId(signal.id)}>
+    <SideChatLayout
+      chatId={draftChatId(signal.id)}
+      onUserMessage={(text) => {
+        const edit = planEditFromChat(draft.plan, text);
+        if (!edit) return undefined;
+        setPlan(edit.plan);
+        return edit.reply;
+      }}
+    >
       <Container maxWidth="xl" sx={{ py: SPACE.section }}>
         <Stack gap={SPACE.section}>
           <Stack gap={SPACE.pair}>

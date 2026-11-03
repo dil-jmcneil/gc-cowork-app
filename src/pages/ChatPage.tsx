@@ -5,6 +5,19 @@ import { useChatStore } from "@/chat/chatStore";
 import { PrototypeChatThread } from "@/components/chat/PrototypeChatThread";
 import { useThemeVariantStore } from "@/demo/themeVariantStore";
 import { useChatSession } from "@/runtime/useChatSession";
+import { planEditFromChat } from "@/workstreams/planChat";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
+
+/** In a chat opened from a workstream, a request to change the plan edits that workstream's plan. */
+function revisePlan(workstreamId: string, text: string): string | undefined {
+  const store = useWorkstreamStore.getState();
+  const workstream = store.getWorkstream(workstreamId);
+  if (!workstream) return undefined;
+  const edit = planEditFromChat(workstream.plan, text);
+  if (!edit) return undefined;
+  store.updatePlan(workstreamId, edit.plan);
+  return `${edit.reply} The plan for ${workstream.name} is updated.`;
+}
 
 export default function ChatPage() {
   const { chatId } = useParams<{ chatId: string }>();
@@ -38,7 +51,11 @@ export default function ChatPage() {
       }}
     >
       <Box sx={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-        <PrototypeChatThread chatId={chatId} header={header} />
+        <PrototypeChatThread
+          chatId={chatId}
+          header={header}
+          onUserMessage={chat.workstreamId ? (text) => revisePlan(chat.workstreamId!, text) : undefined}
+        />
       </Box>
     </Box>
   );

@@ -4,7 +4,7 @@ import { SIGNALS } from "@/signals/signals";
 
 import { isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
 import type { TaskOwner } from "./people";
-import type { Workstream, WorkstreamDraft, WorkstreamTask, TaskStatus } from "./workstream";
+import type { Workstream, WorkstreamDraft, WorkstreamTask, TaskStatus, WorkstreamPlan } from "./workstream";
 import { summarizeWorkstream } from "./workstreamDraft";
 import type { HistoryEntry } from "./thread";
 import {
@@ -31,6 +31,8 @@ type WorkstreamStoreState = {
   getWorkstreamForSignal: (signalId: string) => Workstream | undefined;
   getTask: (workstreamId: string, taskId: string) => WorkstreamTask | undefined;
   acceptPlan: (id: string) => void;
+  /** Replace a workstream's plan, e.g. after a revision in chat. */
+  updatePlan: (id: string, plan: WorkstreamPlan) => void;
   assignTask: (workstreamId: string, taskId: string, owner: TaskOwner) => void;
   setTaskStatus: (workstreamId: string, taskId: string, status: TaskStatus) => void;
   nudgeTask: (workstreamId: string, taskId: string) => void;
@@ -93,6 +95,9 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
         .workstreams.find((p) => p.id === workstreamId)
         ?.plan.tasks.find((t) => t.id === taskId),
 
+    updatePlan: (id, plan) =>
+      set((state) => ({ workstreams: state.workstreams.map((w) => (w.id === id ? { ...w, plan } : w)) })),
+
     acceptPlan: (id) =>
       set((state) => ({
         workstreams: state.workstreams.map((p) => {
@@ -112,7 +117,9 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
         append({ ...task, status, statusSummary: undefined }, statusChangeNote(status, nowIso())),
       );
       set((state) => ({
-        workstreams: state.workstreams.map((p) => (p.id === workstreamId ? { ...p, statusSummary: summarizeWorkstream(p) } : p)),
+        workstreams: state.workstreams.map((p) =>
+          p.id === workstreamId ? { ...p, statusSummary: summarizeWorkstream(p) } : p,
+        ),
       }));
     },
 

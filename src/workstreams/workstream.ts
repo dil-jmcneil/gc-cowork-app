@@ -56,6 +56,8 @@ export type Milestone = {
   doneWhen: string;
   /** Who approves the handover to the next milestone. */
   approver: string;
+  /** The words in the plan's approach that describe this milestone, removed with it. */
+  approachPhrase?: string;
   rules: PlanRule[];
 };
 

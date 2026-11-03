@@ -185,6 +185,7 @@ export const ATG_RULING: Signal = {
         startsWhen: "The new bylaws are in force.",
         doneWhen: "The window closed on Feb 6, and every notice that came in was reviewed under the new process.",
         approver: "Peter closes the signal",
+        approachPhrase: ", then watches the window",
         rules: [
           {
             id: "edgar",

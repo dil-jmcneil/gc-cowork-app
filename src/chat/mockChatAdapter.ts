@@ -1,8 +1,5 @@
 import type { ChatStreamChunk } from "@/chat/chatTypes";
-import {
-  isSignalsPrompt,
-  streamSignals,
-} from "@/chat/scenarios/signalsScenario";
+import { isSignalsPrompt, streamSignals } from "@/chat/scenarios/signalsScenario";
 import { streamText } from "@/chat/scenarios/streamHelpers";
 
 function buildGenericReply(prompt: string): string {
@@ -25,6 +22,11 @@ export async function* streamMockReply(
   try {
     if (replyText) {
       yield* streamText(replyText, signal);
+    } else if (/\brevise the plan\b/i.test(promptText)) {
+      yield* streamText(
+        "Sure. Tell me what to change. For example, ask me to remove a milestone and move its closing step to another one.",
+        signal,
+      );
     } else if (isSignalsPrompt(promptText)) {
       yield* streamSignals(signal);
     } else {

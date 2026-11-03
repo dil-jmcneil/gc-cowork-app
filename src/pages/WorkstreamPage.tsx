@@ -102,7 +102,11 @@ export default function WorkstreamPage() {
           <Stack direction="row" gap={SPACE.group} justifyContent="flex-end">
             <Button
               variant="outlined"
-              onClick={() => startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate)}
+              onClick={() =>
+                startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
+                  workstreamId: workstream.id,
+                })
+              }
             >
               Revise via chat
             </Button>
