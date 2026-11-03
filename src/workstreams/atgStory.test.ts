@@ -1,3 +1,4 @@
+import { temporalBand } from "@/calendar/weeks";
 import { ATG_RULING } from "@/signals/signals";
 import { currentMilestone } from "@/workstreams/milestones";
 import { isMessage } from "@/workstreams/thread";
@@ -52,3 +53,14 @@ test("each thread is in time order", () => {
   }
 });
 
+
+test("the early tasks land this week and next on the calendar, so the widget shows them", () => {
+  const TODAY = "2026-11-03";
+  const due = (key: string) => byKey(key).deadline;
+  expect(temporalBand(due("memo"), TODAY)).toBe("this-week");
+  expect(temporalBand(due("agenda"), TODAY)).toBe("next-week");
+  expect(temporalBand(due("questionnaire"), TODAY)).toBe("next-week");
+  // The questionnaire still follows counsel's memo, and everything stays ahead of the window.
+  expect(due("questionnaire") > due("memo")).toBe(true);
+  expect(due("questionnaire") < ATG_RULING.deadlines[0].date).toBe(true);
+});

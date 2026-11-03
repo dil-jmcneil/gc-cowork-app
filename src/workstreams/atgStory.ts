@@ -40,7 +40,7 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
     const firstEmail = coworkEmail(
       DANA,
       "Delaware ruling: memo on Acme's Article II, Section 8",
-      `Hi Dana, could you send ${GC} a memo on Article II, Section 8 of the Acme bylaws, with draft text, by Dec 8? The board must act before the nomination window opens on Jan 8. The points for counsel are the Section 8(c)(i) cross-reference, the nominee-only request right (slip op. 37), the missing Rule 14a-19 text, and agreements with other persons (slip op. 22). Please send the memo to ${GC} directly, and reply "done" to me when it's sent.`,
+      `Hi Dana, could you send ${GC} a memo on Article II, Section 8 of the Acme bylaws, with draft text, by Nov 6? The board must act before the nomination window opens on Jan 8. The points for counsel are the Section 8(c)(i) cross-reference, the nominee-only request right (slip op. 37), the missing Rule 14a-19 text, and agreements with other persons (slip op. 22). Please send the memo to ${GC} directly, and reply "done" to me when it's sent.`,
       "2026-10-27T14:03:00Z",
     );
     return withTask(task, {
@@ -70,11 +70,11 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         }),
         ownerReply(
           DANA,
-          `Happy to. I'll send the memo and a draft Section 8 to ${GC} directly by Dec 8, and reply "done" here when it's sent.`,
+          `Happy to. I'll send the memo and a draft Section 8 to ${GC} directly by Nov 6, and reply "done" here when it's sent.`,
           "2026-10-28T16:20:00Z",
         ),
       ],
-      statusSummary: `Dana confirmed on Oct 28. The memo and draft text go to you directly by Dec 8. When she says it's done, Cowork checks with you before closing the task.`,
+      statusSummary: `Dana confirmed on Oct 28. The memo and draft text go to you directly by Nov 6. When she says it's done, Cowork checks with you before closing the task.`,
     });
   }
 
@@ -197,6 +197,6 @@ export function progressAtgWorkstream(workstream: Workstream): Workstream {
     createdAt: STARTED_AT,
     plan: { ...workstream.plan, tasks: workstream.plan.tasks.map(storyFor) },
     statusSummary:
-      "Getting counsel's view: Dana's memo is due Dec 8 and the Dec 15 committee slot is booked; Morgan hasn't replied yet (follow-up 1 of 3).",
+      "Getting counsel's view: Dana's memo is due Nov 6 and the Dec 15 committee slot is booked; Morgan hasn't replied yet (follow-up 1 of 3).",
   };
 }
