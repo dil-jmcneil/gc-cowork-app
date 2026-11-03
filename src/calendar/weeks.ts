@@ -93,3 +93,33 @@ export function relativeBucket(iso: string, todayIso: string): string {
   if (months === 0) return "Later this month";
   return `${months} month${months === 1 ? "" : "s"} out`;
 }
+
+/** The temporal bands the timeline and swimlane group events into, nearest first. */
+export type TemporalBand = "earlier" | "this-week" | "next-week" | "further";
+
+export const BAND_LABEL: Record<TemporalBand, string> = {
+  earlier: "Earlier",
+  "this-week": "This Week",
+  "next-week": "Next Week",
+  further: "Further Out",
+};
+
+/** Which band a date falls in, relative to today's week (Monday to Sunday). */
+export function temporalBand(iso: string, todayIso: string): TemporalBand {
+  const thisWeek = startOfWeek(todayIso);
+  const weekOf = startOfWeek(iso);
+  if (weekOf < thisWeek) return "earlier";
+  if (weekOf === thisWeek) return "this-week";
+  if (weekOf === addDays(thisWeek, 7)) return "next-week";
+  return "further";
+}
+
+/** The band's dates, e.g. "Nov 2 – Nov 8", "Nov 16 and beyond", "Before Nov 2". */
+export function bandDates(band: TemporalBand, todayIso: string): string {
+  const thisWeek = startOfWeek(todayIso);
+  const day = (iso: string) => MONTH_DAY.format(parse(iso));
+  if (band === "earlier") return `Before ${day(thisWeek)}`;
+  if (band === "this-week") return `${day(thisWeek)} – ${day(addDays(thisWeek, 6))}`;
+  if (band === "next-week") return `${day(addDays(thisWeek, 7))} – ${day(addDays(thisWeek, 13))}`;
+  return `${day(addDays(thisWeek, 14))} and beyond`;
+}

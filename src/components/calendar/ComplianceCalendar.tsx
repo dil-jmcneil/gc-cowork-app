@@ -9,10 +9,12 @@ import {
   formatDateRange,
   formatMonthYear,
   monthGridDates,
-  relativeBucket,
+  BAND_LABEL,
   startOfMonth,
   startOfWeek,
+  temporalBand,
   workWeekDates,
+  type TemporalBand,
 } from "@/calendar/weeks";
 import { SignalDialog } from "@/components/home/SignalDialog";
 import { TaskQuickView, type TaskRef } from "@/components/tasks/TaskQuickView";
@@ -23,6 +25,8 @@ import { CalendarCell } from "./CalendarCell";
 import { CalendarViewToggle, type CalendarView } from "./CalendarViewToggle";
 import { CalendarLegend } from "./StatusDot";
 import { TimeSelector } from "./TimeSelector";
+import { SwimlaneBoard } from "./SwimlaneBoard";
+import { BandHeader, useBandLook } from "./TemporalBands";
 import { TimelineItem } from "./TimelineItem";
 import { SPACE } from "@/lib/layout";
 
@@ -52,7 +56,7 @@ function rangeFor(variant: ComplianceCalendarVariant, view: CalendarView, anchor
       step: (a, dir) => addMonths(a, dir),
     };
   }
-  const weeks = view === "timeline" ? WIDGET_TIMELINE_WEEKS : WIDGET_CALENDAR_WEEKS;
+  const weeks = view === "calendar" ? WIDGET_CALENDAR_WEEKS : WIDGET_TIMELINE_WEEKS;
   const start = startOfWeek(anchor);
   const end = addDays(start, weeks * 7 - 3); // ends on a Friday
   return {
@@ -89,7 +93,7 @@ export function ComplianceCalendar({
 
   const range = rangeFor(variant, view, anchor);
   const inRange = events.filter((e) => e.date >= range.start && e.date <= range.end);
-  const unit = variant === "page" ? "month" : view === "timeline" ? "five weeks" : "two weeks";
+  const unit = variant === "page" ? "month" : view === "calendar" ? "two weeks" : "five weeks";
 
   const handleNudge = (event: CalendarEvent) => {
     if (event.kind === "task") nudgeTask(event.workstreamId, event.taskId);
@@ -157,10 +161,11 @@ export function ComplianceCalendar({
 
         <Box sx={{ pt: SPACE.group }}>
           {view === "timeline" ? (
-            <TimelineBody
+            <TimelineBody events={inRange} todayIso={today} nudged={nudged} onNudge={handleNudge} onOpen={handleOpen} />
+          ) : view === "swimlane" ? (
+            <SwimlaneBoard
               events={inRange}
               todayIso={today}
-              groupBy={variant === "page" ? weekHeading(today) : (date) => relativeBucket(date, today)}
               nudged={nudged}
               onNudge={handleNudge}
               onOpen={handleOpen}
@@ -178,10 +183,7 @@ export function ComplianceCalendar({
         onClose={() => setOpenTask(null)}
         onNudge={(owner) => setToast(`Nudge sent to ${owner}.`)}
       />
-      <SignalDialog
-        signal={SIGNALS.find((c) => c.id === openSignalId) ?? null}
-        onClose={() => setOpenSignalId(null)}
-      />
+      <SignalDialog signal={SIGNALS.find((c) => c.id === openSignalId) ?? null} onClose={() => setOpenSignalId(null)} />
 
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
         <Alert severity="success" aria-live="polite" onClose={() => setToast(null)}>
@@ -192,46 +194,36 @@ export function ComplianceCalendar({
   );
 }
 
-/** Page timeline headings: "This week", otherwise the week's date range. */
-function weekHeading(today: string) {
-  return (date: string) => {
-    const week = startOfWeek(date);
-    if (week === startOfWeek(today)) return "This week";
-    return formatDateRange(week, addDays(week, 6));
-  };
-}
-
+/** Timeline view: events grouped into temporal bands, each with its accent, tinted header and divided rows. */
 function TimelineBody({
   events,
   todayIso,
-  groupBy,
   nudged,
   onNudge,
   onOpen,
 }: {
   events: CalendarEvent[];
   todayIso: string;
-  groupBy: (date: string) => string;
   nudged: Set<string>;
   onNudge: (event: CalendarEvent) => void;
   onOpen: (event: CalendarEvent) => void;
 }) {
   const { tokens } = useTheme();
-  const groups = useMemo(() => {
-    const ordered: [string, CalendarEvent[]][] = [];
+  const bands = useMemo(() => {
+    const ordered: [TemporalBand, CalendarEvent[]][] = [];
     for (const event of events) {
-      const heading = groupBy(event.date);
+      const band = temporalBand(event.date, todayIso);
       const last = ordered[ordered.length - 1];
-      if (last && last[0] === heading) last[1].push(event);
-      else ordered.push([heading, [event]]);
+      if (last && last[0] === band) last[1].push(event);
+      else ordered.push([band, [event]]);
     }
     return ordered;
-  }, [events, groupBy]);
+  }, [events, todayIso]);
 
-  if (groups.length === 0) {
+  if (bands.length === 0) {
     return (
       <Typography
-        variant="textMd"
+        variant="body1"
         sx={{ color: tokens.semantic.color.type.muted.value, px: SPACE.block, py: SPACE.block }}
       >
         Nothing due in this range.
@@ -241,36 +233,61 @@ function TimelineBody({
 
   return (
     <Stack>
-      {groups.map(([heading, groupEvents]) => (
-        <Box key={heading} component="section" aria-label={heading}>
-          <Typography
-            component="h3"
-            variant="textMd"
-            sx={{
-              px: SPACE.block,
-              pt: SPACE.item,
-              pb: SPACE.item,
-              color: tokens.semantic.color.type.muted.value,
-              fontWeight: tokens.semantic.fontWeight.emphasis.value,
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-            }}
-          >
-            {heading}
-          </Typography>
-          {groupEvents.map((event) => (
-            <TimelineItem
-              key={event.id}
-              event={event}
-              todayIso={todayIso}
-              nudged={nudged.has(event.id)}
-              onNudge={onNudge}
-              onOpen={onOpen}
-            />
-          ))}
-        </Box>
+      {bands.map(([band, bandEvents]) => (
+        <TimelineBand
+          key={band}
+          band={band}
+          events={bandEvents}
+          todayIso={todayIso}
+          nudged={nudged}
+          onNudge={onNudge}
+          onOpen={onOpen}
+        />
       ))}
     </Stack>
+  );
+}
+
+function TimelineBand({
+  band,
+  events,
+  todayIso,
+  nudged,
+  onNudge,
+  onOpen,
+}: {
+  band: TemporalBand;
+  events: CalendarEvent[];
+  todayIso: string;
+  nudged: Set<string>;
+  onNudge: (event: CalendarEvent) => void;
+  onOpen: (event: CalendarEvent) => void;
+}) {
+  const { tokens } = useTheme();
+  const look = useBandLook(band);
+  return (
+    <Box
+      component="section"
+      aria-label={BAND_LABEL[band]}
+      sx={{
+        borderLeft: `3px solid ${look.accent}`,
+        borderTop: `1px solid ${tokens.semantic.color.ui.divider.default.value}`,
+      }}
+    >
+      <BandHeader band={band} count={events.length} todayIso={todayIso} />
+      <Box component="ul" sx={{ m: 0, p: 0 }}>
+        {events.map((event) => (
+          <TimelineItem
+            key={event.id}
+            event={event}
+            todayIso={todayIso}
+            nudged={nudged.has(event.id)}
+            onNudge={onNudge}
+            onOpen={onOpen}
+          />
+        ))}
+      </Box>
+    </Box>
   );
 }
 

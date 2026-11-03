@@ -1,12 +1,13 @@
 import ProjectsIcon from "@diligentcorp/atlas-react-bundle/icons/Projects";
-import { Avatar, Box, Button, Link, Stack, Tooltip, Typography, useTheme } from "@mui/material";
+import { Box, Button, Link, Stack, Tooltip, Typography, useTheme } from "@mui/material";
 import { Link as RouterLink } from "react-router";
 
-import type { CalendarEvent, CalendarEventAttention } from "@/calendar/complianceEvents";
-import { dateTense } from "@/calendar/weeks";
+import type { CalendarEvent } from "@/calendar/complianceEvents";
+import { dateTense, temporalBand } from "@/calendar/weeks";
+import { SPACE } from "@/lib/layout";
 
 import { DateChip } from "./DateChip";
-import { SPACE } from "@/lib/layout";
+import { useBandLook } from "./TemporalBands";
 
 /** Tooltip body: what the event opens and Cowork's suggested next step. */
 export function EventHoverDetails({ event }: { event: CalendarEvent }) {
@@ -22,10 +23,10 @@ export function EventHoverDetails({ event }: { event: CalendarEvent }) {
 }
 
 /**
- * One timeline row: the date, then a status label and the task, who it's
- * assigned to with Cowork's one-line summary of the latest activity, and the
- * workstream it belongs to. Nothing is bold, so the status labels and links
- * carry the emphasis. The title opens the event when it has something to open.
+ * One timeline row inside a temporal band: a compact date badge, then the
+ * status label and title, the workstream, and who owns it with Cowork's line
+ * on the latest activity (the same order as the signal cards in chat).
+ * Nothing is bold. Rows further out are shaded and faded.
  */
 export function TimelineItem({
   event,
@@ -40,92 +41,91 @@ export function TimelineItem({
   onNudge: (event: CalendarEvent) => void;
   onOpen: (event: CalendarEvent) => void;
 }) {
-  const { tokens, presets } = useTheme();
-  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  const tense = dateTense(event.date, todayIso);
-  /** A past workstream's task has no dialog to open. */
-  const openable = event.kind !== "reference";
-  const settled = tense === "past" && event.status === "Complete";
-  const muted = tokens.semantic.color.type.muted.value;
-  const titleColor = settled ? tokens.semantic.color.type.disabled.value : tokens.semantic.color.type.default.value;
-
+  const look = useBandLook(temporalBand(event.date, todayIso));
   return (
     <Stack
+      component="li"
       direction="row"
       alignItems="flex-start"
-      gap={SPACE.block}
-      sx={{
+      gap={SPACE.group}
+      sx={(theme) => ({
+        listStyle: "none",
         px: SPACE.block,
         py: SPACE.group,
+        bgcolor: look.rowBg,
+        borderTop: `1px solid ${theme.tokens.semantic.color.ui.divider.default.value}`,
         transition: "background-color 120ms ease",
-        "&:hover, &:focus-within": { bgcolor: tokens.semantic.color.status.neutral.backgroundVariant.value },
-      }}
+        "&:hover, &:focus-within": { bgcolor: look.rowHoverBg },
+      })}
     >
-      <DateChip date={event.date} tense={tense} />
+      <DateChip date={event.date} tense={dateTense(event.date, todayIso)} />
       <Stack gap={SPACE.pair} sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap">
-          <StatusIndicator color={event.priority.color} label={event.priority.label} />
-          <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
-            {openable ? (
-              <Link
-                component="button"
-                type="button"
-                underline="hover"
-                onClick={() => onOpen(event)}
-                sx={{ textAlign: "left", color: titleColor }}
-              >
-                <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
-                  {event.title}
-                </Typography>
-              </Link>
-            ) : (
-              <Typography variant="body1" tabIndex={0} sx={{ color: titleColor }}>
-                {event.title}
-              </Typography>
-            )}
-          </Tooltip>
-        </Stack>
-
-        {/* Owner first, in the default color, then Cowork's line on the latest activity; it wraps as one sentence. */}
-        <Stack direction="row" alignItems="flex-start" gap={SPACE.item} sx={{ minWidth: 0 }}>
-          {event.owner ? (
-            <Box sx={{ flexShrink: 0 }}>
-              <Avatar {...presets.AvatarPresets.getAvatarProps({ size: "small", color: "blue" })} aria-hidden>
-                {initials(event.owner)}
-              </Avatar>
-            </Box>
-          ) : null}
-          <Typography variant="body1" sx={{ color: muted, minWidth: 0, pt: event.owner ? "2px" : 0 }}>
-            {event.owner ? (
-              <Box component="span" sx={{ color: tokens.semantic.color.type.default.value }}>
-                {event.owner}
-              </Box>
-            ) : null}
-            {event.owner ? " · " : ""}
-            {event.summary}
-          </Typography>
-        </Stack>
-
+        <EventTitle event={event} todayIso={todayIso} onOpen={onOpen} />
         {event.workstream ? <WorkstreamLine workstream={event.workstream} /> : null}
+        <OwnerActivity event={event} />
       </Stack>
-      <Box sx={{ flexShrink: 0, display: "flex", justifyContent: "flex-end", pt: SPACE.pair }}>
-        <AttentionSlot attention={event.attention} nudged={nudged} owner={event.owner} onNudge={() => onNudge(event)} />
-      </Box>
+      <NudgeAction event={event} nudged={nudged} onNudge={onNudge} />
     </Stack>
   );
 }
 
-function initials(name: string): string {
-  const parts = name.split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
+/** Status label, then the title. The title opens the task or signal, when there is one to open. */
+export function EventTitle({
+  event,
+  todayIso,
+  onOpen,
+  showStatus = true,
+}: {
+  event: CalendarEvent;
+  todayIso: string;
+  onOpen: (event: CalendarEvent) => void;
+  /** Swimlane cards show the status in their footer instead. */
+  showStatus?: boolean;
+}) {
+  const { tokens, presets } = useTheme();
+  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const look = useBandLook(temporalBand(event.date, todayIso));
+  const done = event.status === "Complete" && event.date < todayIso;
+  const color = done
+    ? tokens.semantic.color.type.disabled.value
+    : look.faded
+      ? tokens.semantic.color.type.muted.value
+      : tokens.semantic.color.type.default.value;
+  /** A past workstream's task has no dialog to open. */
+  const openable = event.kind !== "reference";
+
+  return (
+    <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap" sx={{ minWidth: 0 }}>
+      {showStatus ? <StatusIndicator color={event.priority.color} label={event.priority.label} /> : null}
+      <Tooltip title={<EventHoverDetails event={event} />} placement="top-start" enterDelay={300}>
+        {openable ? (
+          <Link
+            component="button"
+            type="button"
+            underline="hover"
+            onClick={() => onOpen(event)}
+            sx={{ textAlign: "left", color, minWidth: 0 }}
+          >
+            <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
+              {event.title}
+            </Typography>
+          </Link>
+        ) : (
+          <Typography variant="body1" tabIndex={0} sx={{ color, minWidth: 0 }}>
+            {event.title}
+          </Typography>
+        )}
+      </Tooltip>
+    </Stack>
+  );
 }
 
-/** The workstream, linked when it has a page (past workstreams don't). Regular weight, like the rest of the row. */
-function WorkstreamLine({ workstream }: { workstream: { name: string; href?: string } }) {
+/** The workstream, linked when it has a page (past workstreams don't). Regular weight. */
+export function WorkstreamLine({ workstream }: { workstream: { name: string; href?: string } }) {
   const { tokens } = useTheme();
   const content = (
     <>
-      <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
+      <ProjectsIcon aria-hidden style={{ width: 16, height: 16, flexShrink: 0 }} />
       <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
         Workstream: {workstream.name}
       </Typography>
@@ -141,33 +141,51 @@ function WorkstreamLine({ workstream }: { workstream: { name: string; href?: str
   );
 }
 
-function AttentionSlot({
-  attention,
+/** The owner, in the default color, then Cowork's line on the latest activity, as one sentence. */
+export function OwnerActivity({ event, clamp }: { event: CalendarEvent; clamp?: number }) {
+  const { tokens } = useTheme();
+  return (
+    <Typography
+      variant="body1"
+      sx={{
+        color: tokens.semantic.color.type.muted.value,
+        ...(clamp
+          ? { display: "-webkit-box", WebkitLineClamp: clamp, WebkitBoxOrient: "vertical", overflow: "hidden" }
+          : {}),
+      }}
+    >
+      {event.owner ? (
+        <Box component="span" sx={{ color: tokens.semantic.color.type.default.value }}>
+          {event.owner}
+        </Box>
+      ) : null}
+      {event.owner ? " · " : ""}
+      {event.summary}
+    </Typography>
+  );
+}
+
+/** Nudge, for an overdue task. The status label covers every other state. */
+export function NudgeAction({
+  event,
   nudged,
-  owner,
   onNudge,
 }: {
-  attention?: CalendarEventAttention;
+  event: CalendarEvent;
   nudged: boolean;
-  owner?: string;
-  onNudge: () => void;
+  onNudge: (event: CalendarEvent) => void;
 }) {
-  if (!attention) return null;
-
-  if (attention === "nudge") {
-    return (
-      <Button
-        variant="outlined"
-        size="xsmall"
-        disabled={nudged}
-        onClick={onNudge}
-        aria-label={owner ? `Nudge ${owner}` : "Nudge"}
-      >
-        {nudged ? "Nudged" : "Nudge"}
-      </Button>
-    );
-  }
-
-  // "New status" and "Awaiting your response" are covered by the status label (In progress, Due soon, Needs a workstream).
-  return null;
+  if (event.attention !== "nudge") return null;
+  return (
+    <Button
+      variant="outlined"
+      size="xsmall"
+      disabled={nudged}
+      onClick={() => onNudge(event)}
+      aria-label={event.owner ? `Nudge ${event.owner}` : "Nudge"}
+      sx={{ flexShrink: 0 }}
+    >
+      {nudged ? "Nudged" : "Nudge"}
+    </Button>
+  );
 }
