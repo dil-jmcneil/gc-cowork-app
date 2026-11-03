@@ -1,6 +1,7 @@
 import { Stack, Typography, useTheme } from "@mui/material";
 
 import type { DateTense } from "@/calendar/weeks";
+import { SPACE } from "@/lib/layout";
 
 const DAY = new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: "UTC" });
 const MONTH = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
@@ -39,7 +40,7 @@ export function DateChip({ date, tense }: { date: string; tense: DateTense }) {
       sx={{
         width: 44,
         flexShrink: 0,
-        p: 0.5,
+        p: SPACE.pair,
         borderRadius: tokens.semantic.radius.md.value,
         border: `1px solid ${look.border}`,
         bgcolor: look.bg,
@@ -47,12 +48,12 @@ export function DateChip({ date, tense }: { date: string; tense: DateTense }) {
       }}
     >
       <Typography
-        variant="textMd"
+        variant="body1"
         sx={{ color: look.day, fontWeight: tokens.semantic.fontWeight.emphasis.value, lineHeight: "20px" }}
       >
         {DAY.format(parsed)}
       </Typography>
-      <Typography variant="textSm" sx={{ color: look.month, lineHeight: "16px", textTransform: "uppercase" }}>
+      <Typography variant="textMd" sx={{ color: look.month, lineHeight: "16px", textTransform: "uppercase" }}>
         {MONTH.format(parsed)}
       </Typography>
     </Stack>

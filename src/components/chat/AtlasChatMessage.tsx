@@ -36,6 +36,7 @@ import { ToolCall, ToolGroup } from "@/components/chat/ToolCall";
 import { InsightList } from "@/components/chat/InsightList";
 import { chatBodyTypography } from "./chatTypography";
 import { BrandSpinner } from "@/components/chat/BrandSpinner";
+import { coworkAvatarUrl } from "@/components/tasks/CoworkAvatar";
 import { useThemeVariantStore } from "@/demo/themeVariantStore";
 import { LOGGED_IN_USER } from "@/user";
 import { downloadTextFile } from "@/utils/downloadFile";
@@ -463,9 +464,9 @@ export function AtlasChatMessage({
     <AIChatAIMessage
       header={variant === "refreshed" ? null : (
         <AIChatMessageHeader
-          name="Assistant"
+          name="Cowork"
           time={time}
-          avatar={<AIChatMessageAvatar uniqueId="assistant" initials="AI" />}
+          avatar={<AIChatMessageAvatar uniqueId="assistant" initials="C" imageUrl={coworkAvatarUrl} />}
         />
       )}
       footer={

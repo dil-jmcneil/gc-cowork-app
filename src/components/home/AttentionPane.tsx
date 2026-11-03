@@ -1,4 +1,5 @@
 import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
+import { ClickableCard } from "@diligentcorp/atlas-react-bundle";
 import ScaleIcon from "@diligentcorp/atlas-react-bundle/icons/Scale";
 import { Box, Stack, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
@@ -6,6 +7,7 @@ import { useState } from "react";
 import { InsightDialog } from "@/components/home/InsightDialog";
 import { ATTENTION_ITEMS, type AttentionItem } from "@/home/attentionItems";
 import { INSIGHTS } from "@/insights/insights";
+import { SPACE } from "@/lib/layout";
 
 /** Figma "Attention pane": a plain title, then one card per item that needs the GC. */
 export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { heading?: string }) {
@@ -14,7 +16,7 @@ export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { headi
   const openInsight = INSIGHTS.find((c) => c.id === openInsightId) ?? null;
 
   return (
-    <Stack gap={3} component="section" aria-labelledby="attention-pane-heading">
+    <Stack gap={SPACE.section} component="section" aria-labelledby="attention-pane-heading">
       {/* Figma Title/H6 Xs: 14px semibold. */}
       <Typography
         id="attention-pane-heading"
@@ -29,7 +31,7 @@ export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { headi
       </Typography>
       <Stack
         component="ul"
-        gap={1.5}
+        gap={SPACE.group}
         aria-label="Items that need your attention"
         sx={{ listStyle: "none", m: 0, p: 0 }}
       >
@@ -51,32 +53,11 @@ function AttentionCard({ item, onOpen }: { item: AttentionItem; onOpen: () => vo
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
   return (
-    <Box
-      component="button"
-      type="button"
-      onClick={onOpen}
-      sx={{
-        display: "block",
-        width: "100%",
-        textAlign: "left",
-        font: "inherit",
-        cursor: "pointer",
-        bgcolor: tokens.semantic.color.surface.default.value,
-        border: `1px solid ${tokens.semantic.color.action.secondary.outlineDisabled.value}`,
-        borderRadius: tokens.semantic.radius.lg.value,
-        p: 3,
-        transition: "background-color 150ms ease",
-        "&:hover": { bgcolor: tokens.semantic.color.surface.variant.value },
-        "&:focus-visible": {
-          outline: `${tokens.semantic.borderWidth.focusWidth.value} solid ${tokens.semantic.color.ui.focusRing.value}`,
-          outlineOffset: 2,
-        },
-      }}
-    >
-      <Stack gap={2}>
-        <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap" sx={{ minHeight: 32 }}>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: muted }}>
-            <Stack direction="row" alignItems="center" gap={0.5}>
+    <ClickableCard onClick={onOpen} sx={{ display: "block", width: "100%", textAlign: "left", p: SPACE.block }}>
+      <Stack gap={SPACE.group}>
+        <Stack direction="row" alignItems="center" gap={SPACE.group} flexWrap="wrap" sx={{ minHeight: 32 }}>
+          <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ color: muted }}>
+            <Stack direction="row" alignItems="center" gap={SPACE.pair}>
               <ScaleIcon aria-hidden style={{ width: 20, height: 20 }} />
               <Typography
                 variant="body1"
@@ -98,8 +79,8 @@ function AttentionCard({ item, onOpen }: { item: AttentionItem; onOpen: () => vo
           <StatusIndicator color="information" label={item.badge} />
         </Stack>
 
-        <Stack gap={0.5} sx={{ minWidth: 0 }}>
-          {/* Figma Title/H5 Sm (16px semibold) over Text/Body (16px regular). */}
+        <Stack gap={SPACE.pair} sx={{ minWidth: 0 }}>
+          {/* 16px semibold title: the one important header on the card. The summary is 14px body text. */}
           <Typography
             variant="h5"
             component="span"
@@ -111,18 +92,10 @@ function AttentionCard({ item, onOpen }: { item: AttentionItem; onOpen: () => vo
           >
             {item.title}
           </Typography>
-          <Typography
-            variant="h5"
-            component="span"
-            display="block"
-            sx={{
-              fontWeight: tokens.semantic.fontWeight.regular.value,
-              color: muted,
-            }}
-          >
+          <Typography variant="body1" component="span" display="block" sx={{ color: muted }}>
             {item.summary}
           </Typography>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: muted, pt: 0.5 }}>
+          <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ color: muted, pt: SPACE.item }}>
             <OpenFileIcon aria-hidden style={{ width: 16, height: 16, flexShrink: 0 }} />
             <Typography variant="body1" sx={{ color: "inherit" }}>
               {item.relatedPolicy}
@@ -130,6 +103,6 @@ function AttentionCard({ item, onOpen }: { item: AttentionItem; onOpen: () => vo
           </Stack>
         </Stack>
       </Stack>
-    </Box>
+    </ClickableCard>
   );
 }

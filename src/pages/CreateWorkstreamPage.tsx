@@ -25,6 +25,7 @@ import { draftWorkstreamFromInsight } from "@/workstreams/workstreamDraft";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { INSIGHTS } from "@/insights/insights";
+import { SPACE } from "@/lib/layout";
 
 export default function CreateWorkstreamPage() {
   const [params] = useSearchParams();
@@ -35,8 +36,8 @@ export default function CreateWorkstreamPage() {
 
   if (!insight) {
     return (
-      <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">We couldn't find that insight.</Typography>
+      <Stack gap={SPACE.item} sx={{ p: SPACE.section }} alignItems="flex-start">
+        <Typography variant="body1">We couldn't find that insight.</Typography>
         <Link component={RouterLink} to="/">
           Go to home
         </Link>
@@ -45,8 +46,8 @@ export default function CreateWorkstreamPage() {
   }
   if (existing) {
     return (
-      <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">There's already a workstream for this insight.</Typography>
+      <Stack gap={SPACE.item} sx={{ p: SPACE.section }} alignItems="flex-start">
+        <Typography variant="body1">There's already a workstream for this insight.</Typography>
         <Link component={RouterLink} to={`/workstreams/${existing.id}`}>
           Open {existing.name}
         </Link>
@@ -67,7 +68,8 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
 
   useEffect(() => seedDraftChat(insight), [insight]);
 
-  const setPlan = (patch: Partial<WorkstreamDraft["plan"]>) => setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
+  const setPlan = (patch: Partial<WorkstreamDraft["plan"]>) =>
+    setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));
 
   const handleCreate = () => {
     const workstream = createWorkstream({
@@ -79,10 +81,10 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
 
   return (
     <SideChatLayout chatId={draftChatId(insight.id)}>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Stack gap={3}>
-          <Stack gap={0.5}>
-            <Typography variant="h4" component="h1">
+      <Container maxWidth="xl" sx={{ py: SPACE.section }}>
+        <Stack gap={SPACE.section}>
+          <Stack gap={SPACE.pair}>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
               Create workstream
             </Typography>
             <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
@@ -92,9 +94,9 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
 
           <Grid {...presets.GridPresets.page}>
             <Grid item sm={4} md={8} lg={5} xl={8}>
-              <Stack gap={2}>
+              <Stack gap={SPACE.block}>
                 <SectionCard title="Workstream Details">
-                  <Stack gap={2}>
+                  <Stack gap={SPACE.block}>
                     <FormControl fullWidth>
                       <FormLabel htmlFor="workstream-name">Name</FormLabel>
                       <TextField
@@ -118,11 +120,11 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
                         slotProps={{ input: { id: "workstream-description" } }}
                       />
                     </FormControl>
-                    <Stack gap={0.5}>
+                    <Stack gap={SPACE.pair}>
                       <FieldLabel>Why it's relevant</FieldLabel>
-                      <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                      <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
                         {draft.reasonsRelevant.map((reason) => (
-                          <Typography component="li" variant="textMd" key={reason}>
+                          <Typography component="li" variant="body1" key={reason}>
                             {reason}
                           </Typography>
                         ))}
@@ -138,7 +140,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
           </Grid>
 
           <SectionCard title="Proposed Plan" action={<StatusIndicator color="subtle" label="Draft" />}>
-            <Stack gap={2}>
+            <Stack gap={SPACE.block}>
               <FormControl fullWidth>
                 <FormLabel htmlFor="plan-approach">Proposed approach</FormLabel>
                 <TextField
@@ -170,7 +172,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
             </SectionCard>
           ) : null}
 
-          <Stack direction="row" justifyContent="flex-end" gap={1.5}>
+          <Stack direction="row" justifyContent="flex-end" gap={SPACE.group}>
             <Button variant="outlined" onClick={() => navigate(-1)}>
               Cancel
             </Button>

@@ -41,7 +41,7 @@ export function TaskTable({
 
   return (
     <TableContainer>
-      <Table size="small" aria-label={ariaLabel}>
+      <Table size="small" aria-label={ariaLabel} sx={(theme) => ({ "& .MuiTableCell-body": theme.typography.body1 })}>
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: "38%" }}>Task</TableCell>
@@ -97,7 +97,7 @@ function OwnerCell({ owner }: { owner: TaskOwner }) {
   const { tokens } = useTheme();
   return (
     <Stack>
-      <Typography variant="textMd">{owner.label}</Typography>
+      <Typography variant="body1">{owner.label}</Typography>
       <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
         {owner.detail.split(" · ")[0]}
       </Typography>

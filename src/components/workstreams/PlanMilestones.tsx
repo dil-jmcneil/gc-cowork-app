@@ -1,4 +1,14 @@
-import { Accordion, AccordionDetails, AccordionSummary, Box, Stack, Typography, useTheme } from "@mui/material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Card,
+  CardContent,
+  Stack,
+  Typography,
+  useTheme,
+} from "@mui/material";
 
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 
@@ -9,6 +19,7 @@ import type { Milestone, WorkstreamPlan } from "@/workstreams/workstream";
 import { RuleTable } from "./RuleTable";
 import { FieldLabel } from "./SectionCard";
 import { TaskTable } from "./TaskTable";
+import { SPACE } from "@/lib/layout";
 
 const STATUS_COLOR: Record<MilestoneStatus, "success" | "information" | "subtle"> = {
   Done: "success",
@@ -32,7 +43,7 @@ export function PlanMilestones({
 }) {
   const statuses = milestoneStatuses(plan.milestones, plan.tasks);
   return (
-    <Stack component="ol" gap={2} aria-label="Milestones" sx={{ listStyle: "none", m: 0, p: 0 }}>
+    <Stack component="ol" gap={SPACE.block} aria-label="Milestones" sx={{ listStyle: "none", m: 0, p: 0 }}>
       {plan.milestones.map((milestone, index) => (
         <Box component="li" key={milestone.id}>
           <MilestoneCard
@@ -73,80 +84,74 @@ function MilestoneCard({
   const headingId = `milestone-${milestone.id}`;
 
   return (
-    <Box
-      component="section"
-      aria-labelledby={headingId}
-      sx={{
-        border: `1px solid ${tokens.semantic.color.action.secondary.outlineDisabled.value}`,
-        borderRadius: tokens.semantic.radius.lg.value,
-        p: 2,
-      }}
-    >
-      <Stack gap={2}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1.5} flexWrap="wrap">
-          <Stack gap={0.25}>
-            <Typography variant="textMd" sx={{ color: muted }}>
-              Milestone {number}
-            </Typography>
-            <Typography
-              id={headingId}
-              variant="h5"
-              component="h3"
-              sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
-            >
-              {milestone.title}
-            </Typography>
+    <Card component="section" variant="outlined" aria-labelledby={headingId} sx={{ p: 0 }}>
+      <CardContent sx={{ p: SPACE.block, "&:last-child": { pb: SPACE.block } }}>
+        <Stack gap={SPACE.group}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.group} flexWrap="wrap">
+            <Stack gap={SPACE.pair}>
+              <Typography variant="textMd" sx={{ color: muted }}>
+                Milestone {number}
+              </Typography>
+              <Typography
+                id={headingId}
+                variant="h6"
+                component="h3"
+                sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+              >
+                {milestone.title}
+              </Typography>
+            </Stack>
+            <StatusIndicator color={STATUS_COLOR[status]} label={status} />
           </Stack>
-          <StatusIndicator color={STATUS_COLOR[status]} label={status} />
+
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+              gap: SPACE.block,
+            }}
+          >
+            <Contract label="Starts when">{milestone.startsWhen}</Contract>
+            <Contract label="Done when">{milestone.doneWhen}</Contract>
+            <Contract label="Approval">{milestone.approver}</Contract>
+          </Box>
+
+          <TaskTable
+            tasks={tasks}
+            onOwnerChange={onOwnerChange}
+            onOpenTask={onOpenTask}
+            ariaLabel={`Tasks in ${milestone.title}`}
+          />
+
+          {/* Hidden unless the Demo settings toggle is on. */}
+          {showRules ? (
+            <Accordion disableGutters data-atlas-alignment="start">
+              <AccordionSummary aria-controls={`${headingId}-rules`} id={`${headingId}-rules-header`}>
+                <AccordionHeader
+                  titleTextProps={{
+                    text: "How Cowork Handles This",
+                    variant: "body1",
+                    component: "h4",
+                  }}
+                  subtitleText={`${milestone.rules.length} rules, plus the rules for every milestone`}
+                />
+              </AccordionSummary>
+              <AccordionDetails id={`${headingId}-rules`}>
+                <RuleTable rules={milestone.rules} ariaLabel={`Rules in ${milestone.title}`} />
+              </AccordionDetails>
+            </Accordion>
+          ) : null}
         </Stack>
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
-            gap: 2,
-          }}
-        >
-          <Contract label="Starts when">{milestone.startsWhen}</Contract>
-          <Contract label="Done when">{milestone.doneWhen}</Contract>
-          <Contract label="Approval">{milestone.approver}</Contract>
-        </Box>
-
-        <TaskTable
-          tasks={tasks}
-          onOwnerChange={onOwnerChange}
-          onOpenTask={onOpenTask}
-          ariaLabel={`Tasks in ${milestone.title}`}
-        />
-
-        {/* Hidden unless the Demo settings toggle is on. */}
-        {showRules ? (
-          <Accordion disableGutters data-atlas-alignment="start">
-            <AccordionSummary aria-controls={`${headingId}-rules`} id={`${headingId}-rules-header`}>
-              <AccordionHeader
-                titleTextProps={{
-                  text: "How Cowork Handles This",
-                  variant: "body1",
-                  component: "h4",
-                }}
-                subtitleText={`${milestone.rules.length} rules, plus the rules for every milestone`}
-              />
-            </AccordionSummary>
-            <AccordionDetails id={`${headingId}-rules`}>
-              <RuleTable rules={milestone.rules} ariaLabel={`Rules in ${milestone.title}`} />
-            </AccordionDetails>
-          </Accordion>
-        ) : null}
-      </Stack>
-    </Box>
+      </CardContent>
+    </Card>
   );
 }
 
 function Contract({ label, children }: { label: string; children: string }) {
   return (
-    <Stack gap={0.5}>
+    <Stack gap={SPACE.pair}>
       <FieldLabel>{label}</FieldLabel>
-      <Typography variant="textMd">{children}</Typography>
+      <Typography variant="body1">{children}</Typography>
     </Stack>
   );
 }

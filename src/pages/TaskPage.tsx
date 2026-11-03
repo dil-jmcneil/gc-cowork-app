@@ -1,5 +1,6 @@
 import {
   Alert,
+  Breadcrumbs,
   Box,
   Button,
   Container,
@@ -25,6 +26,7 @@ import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/workstreams/taskChat";
 import { summarizeTask } from "@/workstreams/taskStatus";
 import { CHANNEL_LABEL, isMessage } from "@/workstreams/thread";
+import { SPACE } from "@/lib/layout";
 
 export default function TaskPage() {
   const { workstreamId = "", taskId = "" } = useParams<{
@@ -42,8 +44,8 @@ export default function TaskPage() {
 
   if (!workstream || !task) {
     return (
-      <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">Task not found.</Typography>
+      <Stack gap={SPACE.item} sx={{ p: SPACE.section }} alignItems="flex-start">
+        <Typography variant="body1">Task not found.</Typography>
         <Link component={RouterLink} to="/">
           Go to home
         </Link>
@@ -61,7 +63,15 @@ export default function TaskPage() {
   );
 }
 
-function TaskDetail({ workstreamId, workstreamName, task }: { workstreamId: string; workstreamName: string; task: WorkstreamTask }) {
+function TaskDetail({
+  workstreamId,
+  workstreamName,
+  task,
+}: {
+  workstreamId: string;
+  workstreamName: string;
+  task: WorkstreamTask;
+}) {
   const { tokens } = useTheme();
   const location = useLocation();
   const { assignTask, setTaskStatus, nudgeTask, messageDelegate } = useWorkstreamStore.getState();
@@ -86,28 +96,26 @@ function TaskDetail({ workstreamId, workstreamName, task }: { workstreamId: stri
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Stack gap={3}>
-        <Stack gap={1}>
-          <Link
-            component={RouterLink}
-            to={`/workstreams/${workstreamId}`}
-            underline="hover"
-            sx={{ alignSelf: "flex-start" }}
-          >
-            <Typography variant="textMd" sx={{ color: "inherit" }}>
+    <Container maxWidth="xl" sx={{ py: SPACE.section }}>
+      <Stack gap={SPACE.section}>
+        <Stack gap={SPACE.item}>
+          <Breadcrumbs aria-label="Breadcrumbs">
+            <Link component={RouterLink} to={`/workstreams/${workstreamId}`} underline="hover">
               {workstreamName}
+            </Link>
+            <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+              Task
             </Typography>
-          </Link>
-          <Typography variant="h4" component="h1">
+          </Breadcrumbs>
+          <Typography variant="h5" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
             {task.description}
           </Typography>
           <TaskBadges task={task} now={now} />
         </Stack>
 
-        <Stack gap={2}>
+        <Stack gap={SPACE.block}>
           <SectionCard title="Status Summary">
-            <Typography variant="textMd">{summarizeTask(task, now)}</Typography>
+            <Typography variant="body1">{summarizeTask(task, now)}</Typography>
           </SectionCard>
 
           <TaskDetailsCard
@@ -119,11 +127,11 @@ function TaskDetail({ workstreamId, workstreamName, task }: { workstreamId: stri
             onStatusChange={(status) => setTaskStatus(workstreamId, task.id, status)}
           />
 
-          <Box id="history" sx={{ scrollMarginTop: 16 }}>
+          <Box id="history" sx={{ scrollMarginTop: (theme) => theme.spacing(SPACE.block) }}>
             <SectionCard
               title={`History (${task.history.length})`}
               action={
-                <Stack direction="row" gap={1}>
+                <Stack direction="row" gap={SPACE.item}>
                   <Button variant="outlined" size="small" onClick={() => setComposing((v) => !v)}>
                     Message {ownerFirst}
                   </Button>
@@ -146,7 +154,7 @@ function TaskDetail({ workstreamId, workstreamName, task }: { workstreamId: stri
               </Typography>
 
               {composing ? (
-                <Stack gap={1}>
+                <Stack gap={SPACE.item}>
                   <FormControl fullWidth>
                     <FormLabel htmlFor="message-owner">Message to {task.delegate.label}</FormLabel>
                     <TextField
@@ -158,7 +166,7 @@ function TaskDetail({ workstreamId, workstreamName, task }: { workstreamId: stri
                       slotProps={{ input: { id: "message-owner" } }}
                     />
                   </FormControl>
-                  <Stack direction="row" gap={1} justifyContent="flex-end">
+                  <Stack direction="row" gap={SPACE.item} justifyContent="flex-end">
                     <Button variant="outlined" size="small" onClick={() => setComposing(false)}>
                       Cancel
                     </Button>

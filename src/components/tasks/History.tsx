@@ -1,12 +1,13 @@
 import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
-import { Box, Button, Chip, Stack, Typography, useTheme } from "@mui/material";
-import { useState, type ReactNode } from "react";
+import { Button, Chip, Stack, Typography, useTheme } from "@mui/material";
+import { useState } from "react";
 
 import { usePlanRulesStore } from "@/demo/planRulesStore";
+import { SPACE } from "@/lib/layout";
 import type { HistoryAction, HistoryEntry, HistoryFile, HistoryKind } from "@/workstreams/thread";
 
 import { PersonLine } from "./PersonLine";
-import { ThreadMessage, WHEN } from "./ThreadMessages";
+import { HistoryCard, ThreadMessage } from "./ThreadMessages";
 
 /** A history entry, with an optional line saying which task it belongs to. */
 export type HistoryItem = { entry: HistoryEntry; context?: string };
@@ -27,11 +28,11 @@ export function HistoryList({ items, ariaLabel, limit }: { items: HistoryItem[];
   const shown = limit && !expanded ? matching.slice(0, limit) : matching;
 
   return (
-    <Stack gap={1.5}>
+    <Stack gap={SPACE.group}>
       <Stack
         component="ul"
         direction="row"
-        gap={1}
+        gap={SPACE.item}
         flexWrap="wrap"
         aria-label="Filter history"
         sx={{ listStyle: "none", m: 0, p: 0 }}
@@ -53,7 +54,7 @@ export function HistoryList({ items, ariaLabel, limit }: { items: HistoryItem[];
           );
         })}
       </Stack>
-      <Stack component="ol" gap={1} aria-label={ariaLabel} sx={{ m: 0, p: 0 }}>
+      <Stack component="ol" gap={SPACE.item} aria-label={ariaLabel} sx={{ m: 0, p: 0 }}>
         {shown.map(({ entry, context }) => (
           <HistoryRow key={entry.id} entry={entry} context={context} />
         ))}
@@ -64,7 +65,7 @@ export function HistoryList({ items, ariaLabel, limit }: { items: HistoryItem[];
         </Button>
       ) : null}
       {shown.length === 0 ? (
-        <Typography variant="textMd" sx={({ tokens }) => ({ color: tokens.semantic.color.type.muted.value })}>
+        <Typography variant="body1" sx={({ tokens }) => ({ color: tokens.semantic.color.type.muted.value })}>
           Nothing here yet.
         </Typography>
       ) : null}
@@ -78,68 +79,28 @@ function HistoryRow({ entry, context }: { entry: HistoryEntry; context?: string 
   return <FileRow file={entry} context={context} />;
 }
 
-function EntryFrame({
-  header,
-  label,
-  sentAt,
-  children,
-}: {
-  header: ReactNode;
-  label: string;
-  sentAt: string;
-  children?: ReactNode;
-}) {
-  const { tokens, presets } = useTheme();
-  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  return (
-    <Box
-      component="li"
-      sx={{
-        listStyle: "none",
-        p: 1.5,
-        borderRadius: tokens.semantic.radius.md.value,
-        border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
-        bgcolor: tokens.semantic.color.surface.default.value,
-      }}
-    >
-      <Stack gap={1}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-          {header}
-          <Stack direction="row" alignItems="center" gap={1} sx={{ flexShrink: 0 }}>
-            <StatusIndicator color="subtle" label={label} />
-            <Typography variant="textSm" sx={{ color: tokens.semantic.color.type.muted.value, whiteSpace: "nowrap" }}>
-              {WHEN.format(new Date(sentAt))}
-            </Typography>
-          </Stack>
-        </Stack>
-        {children}
-      </Stack>
-    </Box>
-  );
-}
-
 function ActionRow({ action, context }: { action: HistoryAction; context?: string }) {
   const { tokens } = useTheme();
   const showRules = usePlanRulesStore((s) => s.showRules);
   const muted = tokens.semantic.color.type.muted.value;
   return (
-    <EntryFrame
+    <HistoryCard
       label="Action"
       sentAt={action.sentAt}
-      header={
-        <PersonLine name={action.actor} detail={context ?? (action.actor === "Cowork" ? undefined : "You")} size={28} />
-      }
+      header={<PersonLine name={action.actor} detail={context ?? (action.actor === "Cowork" ? undefined : "You")} />}
     >
-      <Typography variant="textMd" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-        {action.summary}
-      </Typography>
-      {action.detail ? <Typography variant="textMd">{action.detail}</Typography> : null}
-      {showRules && action.rule ? (
-        <Typography variant="textMd" sx={{ color: muted }}>
-          Rule: {action.rule}
+      <Stack gap={SPACE.pair}>
+        <Typography variant="body1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          {action.summary}
         </Typography>
-      ) : null}
-    </EntryFrame>
+        {action.detail ? <Typography variant="body1">{action.detail}</Typography> : null}
+        {showRules && action.rule ? (
+          <Typography variant="textMd" sx={{ color: muted }}>
+            Rule: {action.rule}
+          </Typography>
+        ) : null}
+      </Stack>
+    </HistoryCard>
   );
 }
 
@@ -148,14 +109,14 @@ function FileRow({ file, context }: { file: HistoryFile; context?: string }) {
   const muted = tokens.semantic.color.type.muted.value;
   const source = [`Added by ${file.addedBy}`, file.note, context].filter(Boolean).join(" · ");
   return (
-    <EntryFrame
+    <HistoryCard
       label="File"
       sentAt={file.sentAt}
       header={
-        <Stack direction="row" alignItems="center" gap={1.25} sx={{ minWidth: 0 }}>
-          <OpenFileIcon aria-hidden style={{ width: 28, height: 28, flexShrink: 0, color: muted }} />
+        <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ minWidth: 0 }}>
+          <OpenFileIcon aria-hidden style={{ width: 24, height: 24, flexShrink: 0, color: muted }} />
           <Stack sx={{ minWidth: 0 }}>
-            <Typography variant="textMd" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+            <Typography variant="body1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
               {file.name}
             </Typography>
             <Typography variant="textMd" sx={{ color: muted }}>

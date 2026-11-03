@@ -25,6 +25,7 @@ import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
 import { workstreamActionForInsight } from "@/insights/insightActions";
 import { STATUS_COLOR } from "@/insights/insightStatus";
+import { DETAIL_DIALOG_PAPER, SPACE } from "@/lib/layout";
 
 const SEE_IN_CHAT_PROMPT_PREFIX = "Tell me about";
 
@@ -43,10 +44,18 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
   const type = insightType(insight);
 
   return (
-    <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open onClose={onClose} maxWidth="md" fullWidth slotProps={{ paper: DETAIL_DIALOG_PAPER }}>
+      {/* 48px right padding leaves room for the close button. */}
       <DialogTitle component="div" sx={{ pr: 6 }}>
-        <Stack gap={0.5} sx={{ minWidth: 0 }}>
-          <Typography variant="h4" component="h2">
+        <Stack gap={SPACE.pair} alignItems="flex-start" sx={{ width: "100%", minWidth: 0, textAlign: "left" }}>
+          {/* The Atlas dialog title styles any h2 at 22px; keep the 16px h5. */}
+          <Typography
+            variant="h5"
+            component="h2"
+            sx={(theme) => ({
+              "&.MuiTypography-root": { ...theme.typography.h5, fontWeight: tokens.semantic.fontWeight.emphasis.value },
+            })}
+          >
             {insight.title}
           </Typography>
           <Typography variant="textMd" sx={{ color: muted }}>
@@ -61,23 +70,32 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
               underline="hover"
               sx={{ alignSelf: "flex-start" }}
             >
-              <Typography variant="textMd" sx={{ color: "inherit" }}>
+              <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
                 {SOURCE_LINK_LABEL[insightType(insight)]}
               </Typography>
             </Link>
           ) : null}
         </Stack>
-        <IconButton aria-label="Close" onClick={onClose} size="small" sx={{ position: "absolute", top: 12, right: 12 }}>
+        <IconButton
+          aria-label="Close"
+          onClick={onClose}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: (theme) => theme.spacing(SPACE.group),
+            right: (theme) => theme.spacing(SPACE.group),
+          }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Stack gap={2.5}>
-          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={2}>
-            <Stack direction="row" alignItems="flex-start" gap={1} sx={{ color: muted, minWidth: 0 }}>
+        <Stack gap={SPACE.block}>
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={SPACE.block}>
+            <Stack direction="row" alignItems="flex-start" gap={SPACE.item} sx={{ color: muted, minWidth: 0 }}>
               <CalendarIcon aria-hidden style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
-              <Typography variant="textMd" sx={{ color: "inherit" }}>
+              <Typography variant="body1" sx={{ color: "inherit" }}>
                 {ISSUED_LABEL[type]} {formatDate(insight.issuedDate)}
                 {insight.history ? `. ${insight.history}.` : ""}
               </Typography>
@@ -93,74 +111,84 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
             sx={{
               bgcolor: tokens.semantic.color.surface.subtle.value,
               borderRadius: tokens.semantic.radius.lg.value,
-              p: 2,
+              p: SPACE.block,
             }}
           >
-            <Stack gap={0.5}>
+            <Stack gap={SPACE.pair}>
               <SectionLabel>Summary</SectionLabel>
-              <Typography variant="textMd">{insight.summary}</Typography>
+              <Typography variant="body1">{insight.summary}</Typography>
             </Stack>
           </Box>
 
-          <Stack gap={1}>
-            <SectionLabel>{RELEVANCE_LABEL[type]}</SectionLabel>
-            <Stack gap={0.75}>
-              {insight.reasonsRelevant.map((reason) => (
-                <Stack key={reason} direction="row" gap={1} alignItems="flex-start">
-                  <InfoIcon
-                    aria-hidden
-                    style={{
-                      width: 16,
-                      height: 16,
-                      marginTop: 2,
-                      color: muted,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Typography variant="textMd">{reason}</Typography>
-                </Stack>
-              ))}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "minmax(0, 3fr) minmax(0, 2fr)" },
+              gap: SPACE.section,
+            }}
+          >
+            <Stack gap={SPACE.item}>
+              <SectionLabel>{RELEVANCE_LABEL[type]}</SectionLabel>
+              <Stack gap={SPACE.item}>
+                {insight.reasonsRelevant.map((reason) => (
+                  <Stack key={reason} direction="row" gap={SPACE.item} alignItems="flex-start">
+                    <InfoIcon
+                      aria-hidden
+                      style={{
+                        width: 16,
+                        height: 16,
+                        marginTop: 2,
+                        color: muted,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography variant="body1">{reason}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
             </Stack>
-          </Stack>
 
-          <Stack gap={1}>
-            <SectionLabel>Key Deadlines</SectionLabel>
-            <Stack gap={1.25}>
-              {insight.deadlines.map((deadline) => (
-                <Stack key={deadline.label} gap={0.25}>
-                  <Typography variant="textMd" sx={{ fontWeight: emphasis }}>
-                    {deadline.label}
-                  </Typography>
-                  {deadline.description ? (
-                    <Typography variant="textMd" sx={{ color: muted }}>
-                      {deadline.description}
+            <Stack gap={SPACE.block}>
+              <Stack gap={SPACE.item}>
+                <SectionLabel>Key Deadlines</SectionLabel>
+                <Stack gap={SPACE.item}>
+                  {insight.deadlines.map((deadline) => (
+                    <Stack key={deadline.label} gap={SPACE.pair}>
+                      <Typography variant="body1" sx={{ fontWeight: emphasis }}>
+                        {deadline.label}
+                      </Typography>
+                      {deadline.description ? (
+                        <Typography variant="textMd" sx={{ color: muted }}>
+                          {deadline.description}
+                        </Typography>
+                      ) : null}
+                      <Typography variant="textMd" sx={{ color: muted }}>
+                        {formatDate(deadline.date)}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Stack>
+
+              <Stack gap={SPACE.item}>
+                <Stack direction="row" alignItems="center" gap={SPACE.item}>
+                  <OpenFileIcon aria-hidden style={{ width: 16, height: 16, color: muted }} />
+                  <SectionLabel>Linked Workstreams</SectionLabel>
+                </Stack>
+                {workstream ? (
+                  <Link component={RouterLink} to={`/workstreams/${workstream.id}`} onClick={onClose} underline="hover">
+                    <Typography variant="body1" sx={{ color: "inherit", fontWeight: emphasis }}>
+                      {workstream.name}
                     </Typography>
-                  ) : null}
-                  <Typography variant="textSm" sx={{ color: muted }}>
-                    {formatDate(deadline.date)}
+                  </Link>
+                ) : (
+                  <Typography variant="body1" sx={{ color: muted }}>
+                    No workstream yet.
                   </Typography>
-                </Stack>
-              ))}
+                )}
+              </Stack>
             </Stack>
-          </Stack>
-
-          <Stack gap={1}>
-            <Stack direction="row" alignItems="center" gap={1}>
-              <OpenFileIcon aria-hidden style={{ width: 16, height: 16, color: muted }} />
-              <SectionLabel>Linked Workstreams</SectionLabel>
-            </Stack>
-            {workstream ? (
-              <Link component={RouterLink} to={`/workstreams/${workstream.id}`} onClick={onClose} underline="hover">
-                <Typography variant="textMd" sx={{ color: "inherit", fontWeight: emphasis }}>
-                  {workstream.name}
-                </Typography>
-              </Link>
-            ) : (
-              <Typography variant="textMd" sx={{ color: muted }}>
-                No workstream yet.
-              </Typography>
-            )}
-          </Stack>
+          </Box>
         </Stack>
       </DialogContent>
 
@@ -191,15 +219,7 @@ export function InsightDialog({ insight, onClose }: { insight: Insight | null; o
 function SectionLabel({ children }: { children: ReactNode }) {
   const { tokens } = useTheme();
   return (
-    <Typography
-      variant="textSm"
-      sx={{
-        color: tokens.semantic.color.type.muted.value,
-        fontWeight: tokens.semantic.fontWeight.emphasis.value,
-        letterSpacing: "0.6px",
-        textTransform: "uppercase",
-      }}
-    >
+    <Typography variant="h6" component="h3" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
       {children}
     </Typography>
   );

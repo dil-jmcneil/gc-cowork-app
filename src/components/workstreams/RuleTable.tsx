@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 
 import type { PlanRule } from "@/workstreams/workstream";
+import { SPACE } from "@/lib/layout";
 
 /**
  * A plan's rules as rows: when the work looks like this, Cowork does these
@@ -23,7 +24,7 @@ export function RuleTable({ rules, ariaLabel }: { rules: PlanRule[]; ariaLabel: 
 
   return (
     <TableContainer>
-      <Table size="small" aria-label={ariaLabel}>
+      <Table size="small" aria-label={ariaLabel} sx={(theme) => ({ "& .MuiTableCell-body": theme.typography.body1 })}>
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: "34%" }}>When</TableCell>
@@ -35,14 +36,14 @@ export function RuleTable({ rules, ariaLabel }: { rules: PlanRule[]; ariaLabel: 
           {rules.map((rule) => (
             <TableRow key={rule.id}>
               <TableCell sx={{ verticalAlign: "top", whiteSpace: "normal" }}>
-                <Stack gap={0.75} alignItems="flex-start">
+                <Stack gap={SPACE.item} alignItems="flex-start">
                   {rule.kind === "exception" ? <StatusIndicator color="warning" label="Exception" /> : null}
-                  <Typography variant="textMd">{rule.when}</Typography>
+                  <Typography variant="body1">{rule.when}</Typography>
                 </Stack>
               </TableCell>
               <TableCell sx={{ verticalAlign: "top", whiteSpace: "normal" }}>
-                <Stack gap={0.5}>
-                  <Typography variant="textMd">{rule.actions}</Typography>
+                <Stack gap={SPACE.pair}>
+                  <Typography variant="body1">{rule.actions}</Typography>
                   {rule.circuitBreaker ? (
                     <Typography variant="textMd" sx={{ color: muted }}>
                       Stops: {rule.circuitBreaker}
@@ -51,7 +52,7 @@ export function RuleTable({ rules, ariaLabel }: { rules: PlanRule[]; ariaLabel: 
                 </Stack>
               </TableCell>
               <TableCell sx={{ verticalAlign: "top", whiteSpace: "normal" }}>
-                <Typography variant="textMd">{rule.until}</Typography>
+                <Typography variant="body1">{rule.until}</Typography>
               </TableCell>
             </TableRow>
           ))}

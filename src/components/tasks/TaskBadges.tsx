@@ -2,6 +2,7 @@ import { Stack, useTheme } from "@mui/material";
 
 import type { WorkstreamTask, TaskStatus } from "@/workstreams/workstream";
 import { taskAttention } from "@/workstreams/taskStatus";
+import { SPACE } from "@/lib/layout";
 
 const STATUS_COLOR: Record<TaskStatus, "subtle" | "information" | "success"> = {
   "Not started": "subtle",
@@ -15,7 +16,7 @@ export function TaskBadges({ task, now }: { task: WorkstreamTask; now: Date }) {
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const attention = taskAttention(task, now);
   return (
-    <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+    <Stack direction="row" gap={SPACE.item} alignItems="center" flexWrap="wrap">
       <StatusIndicator color={STATUS_COLOR[task.status]} label={task.status} />
       {attention === "overdue" ? <StatusIndicator color="error" label="Overdue" /> : null}
       {attention === "new-status" ? <StatusIndicator color="information" label="New status" /> : null}

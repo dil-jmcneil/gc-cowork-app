@@ -1,6 +1,7 @@
 import CaretLeftIcon from "@diligentcorp/atlas-react-bundle/icons/CaretLeft";
 import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import { Button, IconButton, Stack, Typography, useTheme } from "@mui/material";
+import { SPACE } from "@/lib/layout";
 
 /** Figma TimeSelector: outlined previous / next buttons around the range label, then Today. */
 export function TimeSelector({
@@ -22,15 +23,15 @@ export function TimeSelector({
   const outlined = {
     border: `1px solid ${tokens.semantic.color.action.secondary.outline.value}`,
     borderRadius: tokens.semantic.radius.md.value,
-    p: 0.5,
+    p: SPACE.pair,
   };
   return (
-    <Stack direction="row" alignItems="center" gap={1}>
+    <Stack direction="row" alignItems="center" gap={SPACE.item}>
       <IconButton size="small" aria-label={previousLabel} onClick={onPrevious} sx={outlined}>
         <CaretLeftIcon aria-hidden />
       </IconButton>
       <Typography
-        variant="textMd"
+        variant="body1"
         aria-live="polite"
         sx={{
           fontWeight: tokens.semantic.fontWeight.emphasis.value,

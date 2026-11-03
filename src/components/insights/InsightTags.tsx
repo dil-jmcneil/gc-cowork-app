@@ -1,6 +1,7 @@
 import { Chip, Stack } from "@mui/material";
 
 import type { InsightTag } from "@/insights/insight";
+import { SPACE } from "@/lib/layout";
 
 /** An insight's metadata tags. The type tag is filled so it reads first. */
 export function InsightTags({ tags }: { tags: InsightTag[] }) {
@@ -9,14 +10,14 @@ export function InsightTags({ tags }: { tags: InsightTag[] }) {
     <Stack
       component="ul"
       direction="row"
-      gap={0.75}
+      gap={SPACE.item}
       flexWrap="wrap"
       aria-label="Tags"
       sx={{ listStyle: "none", m: 0, p: 0 }}
     >
       {ordered.map((tag) => (
         <li key={`${tag.kind}-${tag.label}`}>
-          <Chip label={tag.label} size="xsmall" variant={tag.kind === "type" ? "filled" : "outlined"} />
+          <Chip label={tag.label} size="small" variant={tag.kind === "type" ? "filled" : "outlined"} />
         </li>
       ))}
     </Stack>

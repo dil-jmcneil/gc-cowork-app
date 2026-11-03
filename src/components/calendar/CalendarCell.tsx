@@ -5,6 +5,7 @@ import { dateTense } from "@/calendar/weeks";
 
 import { StatusDot } from "./StatusDot";
 import { EventHoverDetails } from "./TimelineItem";
+import { SPACE } from "@/lib/layout";
 
 const WEEKDAY = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "UTC" });
 const DAY = new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: "UTC" });
@@ -61,7 +62,7 @@ export function CalendarCell({
       aria-current={tense === "present" ? "date" : undefined}
       sx={{
         minHeight,
-        p: 1,
+        p: SPACE.item,
         borderRadius: tokens.semantic.radius.md.value,
         border: `1px solid ${look.border}`,
         bgcolor: look.bg,
@@ -69,15 +70,15 @@ export function CalendarCell({
         minWidth: 0,
       }}
     >
-      <Stack gap={1}>
-        <Stack direction="row" alignItems="baseline" gap={0.5} sx={{ color: look.text }}>
+      <Stack gap={SPACE.item}>
+        <Stack direction="row" alignItems="baseline" gap={SPACE.pair} sx={{ color: look.text }}>
           {showWeekday ? (
-            <Typography variant="textSm" sx={{ color: "inherit", textTransform: "uppercase" }}>
+            <Typography variant="textMd" sx={{ color: "inherit", textTransform: "uppercase" }}>
               {WEEKDAY.format(parsed)}
             </Typography>
           ) : null}
           <Typography
-            variant="textMd"
+            variant="body1"
             sx={{
               color: tense === "past" ? "inherit" : color.type.default.value,
               fontWeight: tokens.semantic.fontWeight.emphasis.value,
@@ -87,17 +88,17 @@ export function CalendarCell({
             {DAY.format(parsed)}
           </Typography>
           {showMonth ? (
-            <Typography variant="textSm" sx={{ color: "inherit", textTransform: "uppercase" }}>
+            <Typography variant="textMd" sx={{ color: "inherit", textTransform: "uppercase" }}>
               {MONTH.format(parsed)}
             </Typography>
           ) : null}
         </Stack>
-        <Stack gap={0.5}>
+        <Stack gap={SPACE.pair}>
           {shown.map((event) => (
             <CalendarEventChip key={event.id} event={event} past={tense === "past"} onOpen={onOpen} />
           ))}
           {hidden > 0 ? (
-            <Typography variant="textSm" sx={{ color: color.type.muted.value, px: 1 }}>
+            <Typography variant="textMd" sx={{ color: color.type.muted.value, px: SPACE.item }}>
               +{hidden} more
             </Typography>
           ) : null}
@@ -126,15 +127,15 @@ function CalendarEventChip({
         onClick={() => onOpen(event)}
         direction="row"
         alignItems="flex-start"
-        gap={0.75}
+        gap={SPACE.item}
         sx={{
           width: "100%",
           border: "none",
           font: "inherit",
           textAlign: "left",
           cursor: "pointer",
-          px: 1,
-          py: 0.75,
+          px: SPACE.item,
+          py: SPACE.item,
           borderRadius: tokens.semantic.radius.md.value,
           bgcolor: past ? color.surface.subtle.value : color.surface.default.value,
           color: past ? color.type.muted.value : color.type.default.value,
@@ -146,7 +147,7 @@ function CalendarEventChip({
           <StatusDot status={event.status} />
         </Box>
         <Typography
-          variant="textSm"
+          variant="textMd"
           sx={{
             color: "inherit",
             lineHeight: "18px",

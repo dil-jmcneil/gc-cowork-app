@@ -20,8 +20,11 @@ import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { summarizeTask, taskAttention } from "@/workstreams/taskStatus";
 import { CHANNEL_LABEL, isMessage } from "@/workstreams/thread";
 
+import { FieldLabel } from "@/components/workstreams/SectionCard";
+
 import { PersonLine } from "./PersonLine";
 import { TaskBadges } from "./TaskBadges";
+import { DETAIL_DIALOG_PAPER, SPACE } from "@/lib/layout";
 
 export type TaskRef = { workstreamId: string; taskId: string };
 
@@ -40,7 +43,9 @@ export function TaskQuickView({
 }) {
   const { tokens } = useTheme();
   const navigate = useNavigate();
-  const workstream = useWorkstreamStore((s) => (taskRef ? s.workstreams.find((p) => p.id === taskRef.workstreamId) : undefined));
+  const workstream = useWorkstreamStore((s) =>
+    taskRef ? s.workstreams.find((p) => p.id === taskRef.workstreamId) : undefined,
+  );
   const task = workstream?.plan.tasks.find((t) => t.id === taskRef?.taskId);
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
 
@@ -54,10 +59,18 @@ export function TaskQuickView({
   const overdue = taskAttention(task, now) === "overdue";
 
   return (
-    <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open onClose={onClose} maxWidth="md" fullWidth slotProps={{ paper: DETAIL_DIALOG_PAPER }}>
+      {/* 48px right padding leaves room for the close button. */}
       <DialogTitle component="div" sx={{ pr: 6 }}>
-        <Stack gap={0.5} sx={{ minWidth: 0 }}>
-          <Typography variant="h4" component="h2">
+        <Stack gap={SPACE.pair} alignItems="flex-start" sx={{ width: "100%", minWidth: 0, textAlign: "left" }}>
+          {/* The Atlas dialog title styles any h2 at 22px; keep the 16px h5. */}
+          <Typography
+            variant="h5"
+            component="h2"
+            sx={(theme) => ({
+              "&.MuiTypography-root": { ...theme.typography.h5, fontWeight: tokens.semantic.fontWeight.emphasis.value },
+            })}
+          >
             {task.description}
           </Typography>
           <Link
@@ -67,45 +80,62 @@ export function TaskQuickView({
             underline="hover"
             sx={{ alignSelf: "flex-start" }}
           >
-            <Typography variant="textMd" sx={{ color: "inherit" }}>
+            <Typography variant="body1" sx={{ color: "inherit" }}>
               {workstream.name}
             </Typography>
           </Link>
         </Stack>
-        <IconButton aria-label="Close" onClick={onClose} size="small" sx={{ position: "absolute", top: 12, right: 12 }}>
+        <IconButton
+          aria-label="Close"
+          onClick={onClose}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: (theme) => theme.spacing(SPACE.group),
+            right: (theme) => theme.spacing(SPACE.group),
+          }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Stack gap={2.5}>
+        <Stack gap={SPACE.block}>
           <TaskBadges task={task} now={now} />
 
           <Box
             sx={{
               bgcolor: tokens.semantic.color.surface.subtle.value,
               borderRadius: tokens.semantic.radius.lg.value,
-              p: 2,
+              p: SPACE.block,
             }}
           >
-            <Stack gap={0.5}>
-              <SectionLabel>Status Summary</SectionLabel>
-              <Typography variant="textMd">{summarizeTask(task, now)}</Typography>
+            <Stack gap={SPACE.pair}>
+              <Typography variant="h6" component="h3" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+                Status Summary
+              </Typography>
+              <Typography variant="body1">{summarizeTask(task, now)}</Typography>
             </Stack>
           </Box>
 
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "2fr 1fr 1fr 1fr" },
+              gap: SPACE.block,
+            }}
+          >
             <Field label="Owner">
-              <PersonLine name={task.delegate.label} detail={task.delegate.detail} />
+              <PersonLine name={task.delegate.label} detail={task.delegate.detail} wrap />
             </Field>
             <Field label="Due">
-              <Typography variant="textMd">{formatDate(task.deadline)}</Typography>
+              <Typography variant="body1">{formatDate(task.deadline)}</Typography>
             </Field>
             <Field label="Delegated by">
-              <Typography variant="textMd">{task.delegator}</Typography>
+              <Typography variant="body1">{task.delegator}</Typography>
             </Field>
             <Field label="CC">
-              <Typography variant="textMd">
+              <Typography variant="body1">
                 {task.ccs.length ? task.ccs.map((c) => c.label).join(", ") : "No one"}
               </Typography>
             </Field>
@@ -117,13 +147,13 @@ export function TaskQuickView({
                 {latest.authorName} · {CHANNEL_LABEL[latest.channel]} · {WHEN.format(new Date(latest.sentAt))}
               </Typography>
               <Typography
-                variant="textMd"
+                variant="body1"
                 sx={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
               >
                 {latest.body}
               </Typography>
               <Link component={RouterLink} to={`${taskHref}#history`} onClick={onClose} underline="hover">
-                <Typography variant="textMd" sx={{ color: "inherit" }}>
+                <Typography variant="body1" sx={{ color: "inherit" }}>
                   View history ({task.history.length})
                 </Typography>
               </Link>
@@ -160,26 +190,9 @@ export function TaskQuickView({
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Stack gap={0.5} sx={{ minWidth: 0 }}>
-      <SectionLabel>{label}</SectionLabel>
+    <Stack gap={SPACE.pair} sx={{ minWidth: 0 }}>
+      <FieldLabel>{label}</FieldLabel>
       {children}
     </Stack>
-  );
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  const { tokens } = useTheme();
-  return (
-    <Typography
-      variant="textSm"
-      sx={{
-        color: tokens.semantic.color.type.muted.value,
-        fontWeight: tokens.semantic.fontWeight.emphasis.value,
-        letterSpacing: "0.6px",
-        textTransform: "uppercase",
-      }}
-    >
-      {children}
-    </Typography>
   );
 }

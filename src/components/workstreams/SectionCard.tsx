@@ -1,7 +1,12 @@
 import { Card, CardContent, Stack, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 
-/** White card that segments one content area of a page, with a compact header. */
+import { SPACE } from "@/lib/layout";
+
+/**
+ * White card that segments one content area of a page: a 14px semibold
+ * header, then the content. 16px padding, 12px between content groups.
+ */
 export function SectionCard({
   title,
   icon,
@@ -18,22 +23,16 @@ export function SectionCard({
     <Card
       component="section"
       aria-label={title}
-      sx={{
-        bgcolor: tokens.semantic.color.surface.default.value,
-        height: "100%",
-      }}
+      sx={{ p: 0, bgcolor: tokens.semantic.color.surface.default.value, height: "100%" }}
     >
-      <CardContent sx={{ p: 0, pb: 2, "&:last-child": { pb: 2 } }}>
-        <Stack gap={1.5}>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ minHeight: 32 }}>
+      <CardContent sx={{ p: SPACE.block, "&:last-child": { pb: SPACE.block } }}>
+        <Stack gap={SPACE.group}>
+          <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ minHeight: 32 }}>
             {icon}
             <Typography
-              variant="textMd"
+              variant="h6"
               component="h2"
-              sx={{
-                flex: 1,
-                fontWeight: tokens.semantic.fontWeight.emphasis.value,
-              }}
+              sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value, flex: 1 }}
             >
               {title}
             </Typography>
@@ -46,12 +45,13 @@ export function SectionCard({
   );
 }
 
-/** Small emphasized label above a value inside a section card. */
-export function FieldLabel({ children }: { children: ReactNode }) {
+/** A 12px emphasized label above a value. Helper text an experienced user can skip. */
+export function FieldLabel({ id, children }: { id?: string; children: ReactNode }) {
   const { tokens } = useTheme();
   return (
     <Typography
-      variant="textSm"
+      id={id}
+      variant="textMd"
       sx={{
         color: tokens.semantic.color.type.muted.value,
         fontWeight: tokens.semantic.fontWeight.emphasis.value,

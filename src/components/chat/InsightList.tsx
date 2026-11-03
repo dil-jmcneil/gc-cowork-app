@@ -10,10 +10,11 @@ import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { InsightTags } from "@/components/insights/InsightTags";
 import { ISSUED_LABEL, RELEVANCE_LABEL, SOURCE_LINK_LABEL, insightType, type Insight } from "@/insights/insight";
 import { STATUS_COLOR } from "@/insights/insightStatus";
+import { SPACE } from "@/lib/layout";
 
 export function InsightList({ items }: { items: Insight[] }) {
   return (
-    <Stack component="ul" gap={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
+    <Stack component="ul" gap={SPACE.item} sx={{ listStyle: "none", m: 0, p: 0 }}>
       {items.map((insight) => (
         <Box component="li" key={insight.id}>
           <InsightCard insight={insight} />
@@ -31,11 +32,11 @@ function InsightCard({ insight }: { insight: Insight }) {
   const emphasis = tokens.semantic.fontWeight.emphasis.value;
 
   return (
-    <Card sx={{ px: 2, py: 1.5 }}>
-      <Stack gap={1}>
-        <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+    <Card sx={{ px: SPACE.block, py: SPACE.group }}>
+      <Stack gap={SPACE.item}>
+        <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap">
           <StatusIndicator color={STATUS_COLOR[insight.status]} label={insight.status} />
-          <Typography variant="textMd" component="h3" sx={{ fontWeight: emphasis, flex: 1, minWidth: 200 }}>
+          <Typography variant="body1" component="h3" sx={{ fontWeight: emphasis, flex: 1, minWidth: 200 }}>
             {insight.title}
           </Typography>
           <Typography variant="textMd" sx={{ color: muted, whiteSpace: "nowrap" }}>
@@ -44,7 +45,7 @@ function InsightCard({ insight }: { insight: Insight }) {
         </Stack>
 
         <InsightTags tags={insight.tags} />
-        <Typography variant="textMd">{insight.summary}</Typography>
+        <Typography variant="body1">{insight.summary}</Typography>
         {insight.sourceUrl ? (
           <Link
             href={insight.sourceUrl}
@@ -53,7 +54,7 @@ function InsightCard({ insight }: { insight: Insight }) {
             underline="hover"
             sx={{ alignSelf: "flex-start" }}
           >
-            <Typography variant="textMd" sx={{ color: "inherit" }}>
+            <Typography variant="body1" sx={{ color: "inherit" }}>
               {SOURCE_LINK_LABEL[insightType(insight)]}
             </Typography>
           </Link>
@@ -66,20 +67,20 @@ function InsightCard({ insight }: { insight: Insight }) {
               xs: "1fr",
               sm: "minmax(0, 1fr) minmax(0, 1fr)",
             },
-            columnGap: 2,
-            rowGap: 1,
+            columnGap: SPACE.block,
+            rowGap: SPACE.item,
           }}
         >
           <Detail label={insight.deadlines.length === 1 ? "Deadline" : "Deadlines"}>
             {insight.deadlines.map((deadline) => (
-              <Typography key={deadline.label} variant="textMd">
+              <Typography key={deadline.label} variant="body1">
                 {deadline.label} · {formatDate(deadline.date)}
               </Typography>
             ))}
           </Detail>
           <Detail label={RELEVANCE_LABEL[insightType(insight)]}>
             {insight.reasonsRelevant.map((reason) => (
-              <Typography key={reason} variant="textMd">
+              <Typography key={reason} variant="body1">
                 {reason}
               </Typography>
             ))}
@@ -97,11 +98,11 @@ function WorkstreamSummary({ workstream }: { workstream: Workstream }) {
   const { tokens } = useTheme();
   const muted = tokens.semantic.color.type.muted.value;
   return (
-    <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} gap={1.5}>
-      <Stack gap={0.25} sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" gap={0.75}>
+    <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} gap={SPACE.group}>
+      <Stack gap={SPACE.pair} sx={{ flex: 1, minWidth: 0 }}>
+        <Stack direction="row" alignItems="center" gap={SPACE.item}>
           <ProjectsIcon aria-hidden style={{ width: 16, height: 16 }} />
-          <Typography variant="textMd" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          <Typography variant="body1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
             {workstream.name}
           </Typography>
         </Stack>
@@ -126,7 +127,7 @@ function WorkstreamSummary({ workstream }: { workstream: Workstream }) {
 function NoWorkstream({ insightId }: { insightId: string }) {
   const { tokens } = useTheme();
   return (
-    <Stack direction="row" alignItems="center" gap={1.5}>
+    <Stack direction="row" alignItems="center" gap={SPACE.group}>
       <Typography variant="textMd" sx={{ flex: 1, color: tokens.semantic.color.type.muted.value }}>
         No workstream yet
       </Typography>
@@ -146,9 +147,9 @@ function NoWorkstream({ insightId }: { insightId: string }) {
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   const { tokens } = useTheme();
   return (
-    <Stack gap={0.25}>
+    <Stack gap={SPACE.pair}>
       <Typography
-        variant="textSm"
+        variant="textMd"
         sx={{
           color: tokens.semantic.color.type.muted.value,
           fontWeight: tokens.semantic.fontWeight.emphasis.value,

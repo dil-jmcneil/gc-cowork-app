@@ -5,16 +5,17 @@ import { dateTense } from "@/calendar/weeks";
 
 import { DateChip } from "./DateChip";
 import { StatusDot } from "./StatusDot";
+import { SPACE } from "@/lib/layout";
 
 /** Tooltip body: what the event opens and Cowork's suggested next step. */
 export function EventHoverDetails({ event }: { event: CalendarEvent }) {
   const { tokens } = useTheme();
   return (
-    <Stack gap={0.5} sx={{ py: 0.25 }}>
-      <Typography variant="textSm" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+    <Stack gap={SPACE.pair} sx={{ py: SPACE.pair }}>
+      <Typography variant="textMd" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
         {event.linkLabel}
       </Typography>
-      <Typography variant="textSm">Next step: {event.nextStep}</Typography>
+      <Typography variant="textMd">Next step: {event.nextStep}</Typography>
     </Stack>
   );
 }
@@ -43,10 +44,10 @@ export function TimelineItem({
     <Stack
       direction="row"
       alignItems="center"
-      gap={2}
+      gap={SPACE.block}
       sx={{
-        px: 2,
-        py: 1,
+        px: SPACE.block,
+        py: SPACE.item,
         transition: "background-color 120ms ease",
         "&:hover, &:focus-within": { bgcolor: tokens.semantic.color.status.neutral.backgroundVariant.value },
       }}
@@ -58,7 +59,7 @@ export function TimelineItem({
           onClick={() => onOpen(event)}
           direction="row"
           alignItems="center"
-          gap={2}
+          gap={SPACE.block}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -76,24 +77,19 @@ export function TimelineItem({
           <StatusDot status={event.status} />
           <Stack sx={{ flex: 1, minWidth: 0 }}>
             <Typography
-              variant="textMd"
+              variant="body1"
               sx={{ color: titleColor, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
             >
               {event.title}
             </Typography>
-            <Typography variant="textMd" sx={{ color: bodyColor }}>
+            <Typography variant="body1" sx={{ color: bodyColor }}>
               {event.description}
             </Typography>
           </Stack>
         </Stack>
       </Tooltip>
       <Box sx={{ width: 190, flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
-        <AttentionSlot
-          attention={event.attention}
-          nudged={nudged}
-          owner={event.owner}
-          onNudge={() => onNudge(event)}
-        />
+        <AttentionSlot attention={event.attention} nudged={nudged} owner={event.owner} onNudge={() => onNudge(event)} />
       </Box>
     </Stack>
   );
@@ -140,14 +136,14 @@ function AttentionSlot({
         display: "inline-flex",
         alignItems: "center",
         height: 24,
-        px: 1,
+        px: SPACE.item,
         borderRadius: tokens.semantic.radius.full.value,
         bgcolor: badge.bg,
         color: badge.fg,
         whiteSpace: "nowrap",
       }}
     >
-      <Typography variant="textSm" sx={{ color: "inherit", fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+      <Typography variant="textMd" sx={{ color: "inherit", fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
         {badge.label}
       </Typography>
     </Box>

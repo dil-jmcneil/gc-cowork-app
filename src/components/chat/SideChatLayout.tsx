@@ -2,6 +2,7 @@ import { Box, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 
 import { PrototypeChatThread } from "./PrototypeChatThread";
+import { SPACE } from "@/lib/layout";
 
 /** Page content that scrolls on the left, with a white Cowork chat panel (about a third) on the right. */
 export function SideChatLayout({
@@ -36,9 +37,9 @@ export function SideChatLayout({
           onUserMessage={onUserMessage}
           header={
             <Typography
-              variant="textMd"
+              variant="h6"
               component="h2"
-              sx={{ py: 1.5, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+              sx={{ py: SPACE.group, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
             >
               Chat with Cowork
             </Typography>

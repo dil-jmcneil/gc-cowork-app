@@ -12,6 +12,7 @@ import { TaskQuickView } from "@/components/tasks/TaskQuickView";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { INSIGHTS } from "@/insights/insights";
+import { SPACE } from "@/lib/layout";
 
 export default function WorkstreamPage() {
   const { workstreamId } = useParams<{ workstreamId: string }>();
@@ -25,8 +26,8 @@ export default function WorkstreamPage() {
 
   if (!workstream) {
     return (
-      <Stack gap={1} sx={{ p: 4 }} alignItems="flex-start">
-        <Typography variant="textMd">Workstream not found.</Typography>
+      <Stack gap={SPACE.item} sx={{ p: SPACE.section }} alignItems="flex-start">
+        <Typography variant="body1">Workstream not found.</Typography>
         <Link component={RouterLink} to="/">
           Go to home
         </Link>
@@ -42,11 +43,11 @@ export default function WorkstreamPage() {
     .sort((a, b) => b.entry.sentAt.localeCompare(a.entry.sentAt));
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Stack gap={3}>
-        <Stack gap={0.5}>
+    <Container maxWidth="xl" sx={{ py: SPACE.section }}>
+      <Stack gap={SPACE.section}>
+        <Stack gap={SPACE.pair}>
           <Typography
-            variant="textSm"
+            variant="textMd"
             sx={{
               color: muted,
               fontWeight: tokens.semantic.fontWeight.emphasis.value,
@@ -54,24 +55,24 @@ export default function WorkstreamPage() {
           >
             Workstream
           </Typography>
-          <Typography variant="h4" component="h1">
+          <Typography variant="h5" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
             {workstream.name}
           </Typography>
         </Stack>
 
         <Grid {...presets.GridPresets.page}>
           <Grid item sm={4} md={8} lg={5} xl={8}>
-            <Stack gap={2}>
+            <Stack gap={SPACE.block}>
               <SectionCard title="Status Summary">
-                <Typography variant="textMd">{workstream.statusSummary}</Typography>
+                <Typography variant="body1">{workstream.statusSummary}</Typography>
               </SectionCard>
               <SectionCard title="About This Insight">
-                <Typography variant="textMd">{workstream.description}</Typography>
-                <Stack gap={0.5}>
+                <Typography variant="body1">{workstream.description}</Typography>
+                <Stack gap={SPACE.pair}>
                   <FieldLabel>Why it's relevant</FieldLabel>
-                  <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                  <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
                     {workstream.reasonsRelevant.map((reason) => (
-                      <Typography component="li" variant="textMd" key={reason}>
+                      <Typography component="li" variant="body1" key={reason}>
                         {reason}
                       </Typography>
                     ))}
@@ -82,7 +83,7 @@ export default function WorkstreamPage() {
           </Grid>
 
           <Grid item sm={4} md={8} lg={3} xl={4}>
-            <Stack gap={2}>{insight ? <SourceInsightCard insight={insight} /> : null}</Stack>
+            <Stack gap={SPACE.block}>{insight ? <SourceInsightCard insight={insight} /> : null}</Stack>
           </Grid>
         </Grid>
 
@@ -92,12 +93,12 @@ export default function WorkstreamPage() {
             <StatusIndicator color={planAccepted ? "success" : "subtle"} label={planAccepted ? "Accepted" : "Draft"} />
           }
         >
-          <Stack gap={0.5}>
+          <Stack gap={SPACE.pair}>
             <FieldLabel>Proposed approach</FieldLabel>
-            <Typography variant="textMd">{workstream.plan.proposedApproach}</Typography>
+            <Typography variant="body1">{workstream.plan.proposedApproach}</Typography>
           </Stack>
           <PlanMilestones plan={workstream.plan} onOpenTask={setOpenTaskId} />
-          <Stack direction="row" gap={1.5} justifyContent="flex-end">
+          <Stack direction="row" gap={SPACE.group} justifyContent="flex-end">
             <Button
               variant="outlined"
               onClick={() => startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate)}

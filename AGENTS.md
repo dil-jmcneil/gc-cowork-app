@@ -47,11 +47,28 @@ You can use the MCP server to search for design tokens by path or value.
 
 ### Typography
 
-Do not use font sizes smaller than `textSm` (`Semantic/Font/Text/Sm`). Avoid `labelSm`, custom `fontSize` values below `textSm`, and Tailwind `text-xs`.
+Text stays between 12px and 16px. In this bundle the MUI variants render a step below their token names, so pick by rendered size:
 
-- **`textMd`** — default body copy, descriptions, meta lines, and secondary text without emphasis.
-- **`textSm` + emphasis** — only for secondary labels that need emphasis (section tags, table column headers, status badges, detail-row labels).
-- **`textSm` without emphasis** — do not use for body copy; use `textMd` instead.
+| Rendered | Variant | Use for |
+| --- | --- | --- |
+| 16px semibold | `h5` + emphasis weight | Important headers only: page titles, dialog titles, the one headline on a card |
+| 14px semibold | `h6` + emphasis weight | Card and section headings, milestone titles |
+| 14px (Type/Md) | `body1` | The default for content: values, table cells, messages, summaries. Add emphasis weight for names and subjects |
+| 12px | `textMd` | Sparingly, for helper text an experienced user can skip: field labels, timestamps, meta lines, table headers |
+
+- Never use `textSm` (10px), `labelXs` (11px), or `h4` and larger (18px+) on these screens. The home hero is the one exception.
+- `h5` and `h6` render at regular weight; add `fontWeight: tokens.semantic.fontWeight.emphasis.value` for headings.
+- The Atlas dialog title styles any `h2` inside it at 22px. Re-apply `theme.typography.h5` on the title.
+
+### Spacing
+
+Use the named scale in `src/lib/layout.ts` (`SPACE`), never raw numbers: `pair` 4px (label to value), `item` 8px (items in a row, lines in an item), `group` 12px (groups inside a card, list items), `block` 16px (card padding, stacked cards), `section` 24px (page sections, the maximum). Less space inside related content, more between blocks.
+
+Atlas `Card` adds its own padding; set `p: 0` on the card when `CardContent` sets padding. Atlas pins dialogs to 440px; detail dialogs use `DETAIL_DIALOG_PAPER` (880px) so content fits without long scrolls.
+
+### Cowork's avatar
+
+Wherever Cowork speaks or acts (history, chat), show the Diligent D (`CoworkAvatar`, `src/assets/cowork-avatar.svg`).
 
 ### No AI sparkle icons
 
