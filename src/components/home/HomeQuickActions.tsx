@@ -1,12 +1,10 @@
+import { ClickableCard } from "@diligentcorp/atlas-react-bundle";
 import { Box, Stack, Typography, useTheme } from "@mui/material";
 import { useNavigate } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
-import {
-  DUE_SOON_PROMPT,
-  RESEARCH_REGULATION_PROMPT,
-  SHOW_REGULATORY_CHANGES_PROMPT,
-} from "@/home/quickActionPrompts";
+import { DUE_SOON_PROMPT, RESEARCH_REGULATION_PROMPT, SHOW_SIGNALS_PROMPT } from "@/home/quickActionPrompts";
+import { SPACE } from "@/lib/layout";
 
 /** Three quick action cards under the home composer; each starts a prompted chat. */
 
@@ -19,10 +17,10 @@ type QuickAction = {
 
 const ACTIONS: QuickAction[] = [
   {
-    id: "regulatory-changes",
-    title: "Show recent regulatory changes",
-    description: "See what's changed in the rules that affect us, and why each one matters.",
-    prompt: SHOW_REGULATORY_CHANGES_PROMPT,
+    id: "signals",
+    title: "Show recent signals",
+    description: "See new rulings and rule changes that affect us, and why each one matters.",
+    prompt: SHOW_SIGNALS_PROMPT,
   },
   {
     id: "due-soon",
@@ -43,70 +41,45 @@ export function HomeQuickActions() {
   const navigate = useNavigate();
 
   return (
-    <Stack gap={1}>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        gap={1.25}
-        role="list"
-        aria-label="Quick actions"
-      >
+    <Stack gap={SPACE.item}>
+      <Stack direction={{ xs: "column", sm: "row" }} gap={SPACE.item} role="list" aria-label="Quick actions">
         {ACTIONS.map((action) => (
-          <Box
-            key={action.id}
-            role="listitem"
-            component="button"
-            type="button"
-            onClick={() => startChatFromPrompt(action.prompt, navigate)}
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              cursor: "pointer",
-              textAlign: "left",
-              font: "inherit",
-              display: "flex",
-              flexDirection: "column",
-              gap: 0.5,
-              px: 1.75,
-              py: 1.5,
-              borderRadius: tokens.semantic.radius.lg.value,
-              border: `1px solid ${tokens.semantic.color.outline.fixed.value}`,
-              bgcolor: tokens.semantic.color.surface.default.value,
-              transition:
-                "border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease",
-              "&:hover": {
-                borderColor: tokens.semantic.color.outline.default.value,
-                bgcolor: tokens.semantic.color.surface.subtle.value,
-              },
-              "&:focus-visible": {
-                outline: `${tokens.semantic.borderWidth.focusWidth.value} solid ${tokens.semantic.color.ui.focusRing.value}`,
-                outlineOffset: 2,
-              },
-            }}
-          >
-            <Typography
-              component="span"
-              variant="textMd"
+          <Box key={action.id} role="listitem" sx={{ flex: 1, minWidth: 0, display: "flex" }}>
+            <ClickableCard
+              onClick={() => startChatFromPrompt(action.prompt, navigate)}
               sx={{
-                fontWeight: tokens.semantic.fontWeight.emphasis.value,
-                color: tokens.semantic.color.type.default.value,
+                flex: 1,
+                textAlign: "left",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                justifyContent: "flex-start",
+                gap: SPACE.pair,
+                px: SPACE.group,
+                py: SPACE.group,
               }}
             >
-              {action.title}
-            </Typography>
-            <Typography
-              component="span"
-              variant="textSm"
-              sx={{ color: tokens.semantic.color.type.muted.value }}
-            >
-              {action.description}
-            </Typography>
+              <Typography
+                component="span"
+                variant="body1"
+                sx={{
+                  fontWeight: tokens.semantic.fontWeight.emphasis.value,
+                  color: tokens.semantic.color.type.default.value,
+                }}
+              >
+                {action.title}
+              </Typography>
+              <Typography component="span" variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+                {action.description}
+              </Typography>
+            </ClickableCard>
           </Box>
         ))}
       </Stack>
       <Typography
-        variant="textSm"
+        variant="textMd"
         align="center"
-        sx={{ color: tokens.semantic.color.type.muted.value, pt: 0.5 }}
+        sx={{ color: tokens.semantic.color.type.muted.value, pt: SPACE.pair }}
       >
         AI-generated content may have inaccuracies.
       </Typography>

@@ -1,6 +1,7 @@
 import { Box, Stack, Typography, useTheme } from "@mui/material";
 
 import type { CalendarEventStatus } from "@/calendar/complianceEvents";
+import { SPACE } from "@/lib/layout";
 
 /** Saturated status dot from the Figma Shared Calendar "Status" building block. */
 export function StatusDot({ status }: { status: CalendarEventStatus }) {
@@ -35,11 +36,11 @@ const LEGEND: CalendarEventStatus[] = ["Assigned", "Complete", "Blocked", "Exter
 export function CalendarLegend() {
   const { tokens } = useTheme();
   return (
-    <Stack direction="row" gap={2} alignItems="center" flexWrap="wrap" aria-label="Status legend">
+    <Stack direction="row" gap={SPACE.block} alignItems="center" flexWrap="wrap" aria-label="Status legend">
       {LEGEND.map((status) => (
-        <Stack key={status} direction="row" gap={1} alignItems="center">
+        <Stack key={status} direction="row" gap={SPACE.item} alignItems="center">
           <StatusDot status={status} />
-          <Typography variant="textSm" sx={{ color: tokens.semantic.color.type.default.value }}>
+          <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.default.value }}>
             {LEGEND_LABEL[status]}
           </Typography>
         </Stack>

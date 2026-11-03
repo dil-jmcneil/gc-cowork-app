@@ -8,10 +8,13 @@ export type ChatRecord = {
   createdAt: Date;
   lastActivity: Date;
   preview: string;
+  /** The workstream this chat is about, when it was opened from one (Revise via chat). */
+  workstreamId?: string;
 };
 
 type CreateChatInput = {
   initialUserText?: string;
+  workstreamId?: string;
 };
 
 type ChatStoreState = {
@@ -57,6 +60,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       createdAt: new Date(),
       lastActivity: new Date(),
       preview: initialUserText ?? DEFAULT_CHAT_PREVIEW,
+      ...(input.workstreamId ? { workstreamId: input.workstreamId } : {}),
     };
     set((state) => ({ chats: [chat, ...state.chats], activeChatId: chat.id }));
     return chat;
@@ -68,8 +72,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
   updateChat: (id, patch) =>
     set((state) => ({
-      chats: state.chats.map((c) =>
-        c.id === id ? { ...c, ...patch, lastActivity: new Date() } : c,
-      ),
+      chats: state.chats.map((c) => (c.id === id ? { ...c, ...patch, lastActivity: new Date() } : c)),
     })),
 }));

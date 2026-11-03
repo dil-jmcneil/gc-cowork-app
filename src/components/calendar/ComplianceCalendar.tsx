@@ -14,16 +14,17 @@ import {
   startOfWeek,
   workWeekDates,
 } from "@/calendar/weeks";
-import { RegulatoryChangeDialog } from "@/components/home/RegulatoryChangeDialog";
+import { SignalDialog } from "@/components/home/SignalDialog";
 import { TaskQuickView, type TaskRef } from "@/components/tasks/TaskQuickView";
-import { useProjectStore } from "@/projects/projectStore";
-import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import { useWorkstreamStore } from "@/workstreams/workstreamStore";
+import { SIGNALS } from "@/signals/signals";
 
 import { CalendarCell } from "./CalendarCell";
 import { CalendarViewToggle, type CalendarView } from "./CalendarViewToggle";
 import { CalendarLegend } from "./StatusDot";
 import { TimeSelector } from "./TimeSelector";
 import { TimelineItem } from "./TimelineItem";
+import { SPACE } from "@/lib/layout";
 
 /** "widget": the Figma home-page block (weeks, Mon–Fri). "page": a full month calendar with weekends. */
 export type ComplianceCalendarVariant = "widget" | "page";
@@ -71,9 +72,9 @@ export function ComplianceCalendar({
   headerAction?: ReactNode;
 }) {
   const { tokens } = useTheme();
-  const projects = useProjectStore((s) => s.projects);
+  const workstreams = useWorkstreamStore((s) => s.workstreams);
   const today = todayIso();
-  const events = useMemo(() => deriveCalendarEvents(projects, new Date()), [projects]);
+  const events = useMemo(() => deriveCalendarEvents(workstreams, new Date()), [workstreams]);
 
   const [searchParams] = useSearchParams();
   // "View on calendar" links pass ?date= so the page opens on that month.
@@ -83,32 +84,32 @@ export function ComplianceCalendar({
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<TaskRef | null>(null);
-  const [openChangeId, setOpenChangeId] = useState<string | null>(null);
-  const nudgeTask = useProjectStore((s) => s.nudgeTask);
+  const [openSignalId, setOpenSignalId] = useState<string | null>(null);
+  const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
 
   const range = rangeFor(variant, view, anchor);
   const inRange = events.filter((e) => e.date >= range.start && e.date <= range.end);
   const unit = variant === "page" ? "month" : view === "timeline" ? "five weeks" : "two weeks";
 
   const handleNudge = (event: CalendarEvent) => {
-    if (event.kind === "task") nudgeTask(event.projectId, event.taskId);
+    if (event.kind === "task") nudgeTask(event.workstreamId, event.taskId);
     setNudged((prev) => new Set(prev).add(event.id));
     setToast(event.owner ? `Nudge sent to ${event.owner}.` : "Nudge sent.");
   };
 
-  /** Tasks open the task quick view; external deadlines open their regulatory change. */
+  /** Tasks open the task quick view; external deadlines open their signal; past workstreams' tasks open nothing. */
   const handleOpen = (event: CalendarEvent) => {
-    if (event.kind === "task") setOpenTask({ projectId: event.projectId, taskId: event.taskId });
-    else setOpenChangeId(event.changeId);
+    if (event.kind === "task") setOpenTask({ workstreamId: event.workstreamId, taskId: event.taskId });
+    else if (event.kind === "external") setOpenSignalId(event.signalId);
   };
 
   return (
-    <Stack gap={2} component="section" aria-labelledby={`compliance-calendar-${variant}`}>
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={2}>
-        <Stack gap={0.5}>
+    <Stack gap={SPACE.block} component="section" aria-labelledby={`compliance-calendar-${variant}`}>
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={SPACE.block}>
+        <Stack gap={SPACE.pair}>
           <Typography
             id={`compliance-calendar-${variant}`}
-            variant={variant === "page" ? "h4" : "h5"}
+            variant={variant === "page" ? "h4" : "h6"}
             component={variant === "page" ? "h1" : "h2"}
             sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
           >
@@ -130,7 +131,7 @@ export function ComplianceCalendar({
           bgcolor: tokens.semantic.color.surface.default.value,
           border: `1px solid ${tokens.semantic.color.action.secondary.outlineDisabled.value}`,
           borderRadius: tokens.semantic.radius.lg.value,
-          py: 2,
+          py: SPACE.block,
           overflow: "hidden",
         }}
       >
@@ -139,8 +140,8 @@ export function ComplianceCalendar({
           alignItems="center"
           justifyContent="space-between"
           flexWrap="wrap"
-          gap={1.5}
-          sx={{ px: 2 }}
+          gap={SPACE.group}
+          sx={{ px: SPACE.block }}
         >
           <TimeSelector
             label={range.label}
@@ -153,7 +154,7 @@ export function ComplianceCalendar({
           <CalendarLegend />
         </Stack>
 
-        <Box sx={{ pt: 1.5 }}>
+        <Box sx={{ pt: SPACE.group }}>
           {view === "timeline" ? (
             <TimelineBody
               events={inRange}
@@ -176,9 +177,9 @@ export function ComplianceCalendar({
         onClose={() => setOpenTask(null)}
         onNudge={(owner) => setToast(`Nudge sent to ${owner}.`)}
       />
-      <RegulatoryChangeDialog
-        change={REGULATORY_CHANGES.find((c) => c.id === openChangeId) ?? null}
-        onClose={() => setOpenChangeId(null)}
+      <SignalDialog
+        signal={SIGNALS.find((c) => c.id === openSignalId) ?? null}
+        onClose={() => setOpenSignalId(null)}
       />
 
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
@@ -228,7 +229,10 @@ function TimelineBody({
 
   if (groups.length === 0) {
     return (
-      <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value, px: 2, py: 2 }}>
+      <Typography
+        variant="textMd"
+        sx={{ color: tokens.semantic.color.type.muted.value, px: SPACE.block, py: SPACE.block }}
+      >
         Nothing due in this range.
       </Typography>
     );
@@ -240,11 +244,11 @@ function TimelineBody({
         <Box key={heading} component="section" aria-label={heading}>
           <Typography
             component="h3"
-            variant="textSm"
+            variant="textMd"
             sx={{
-              px: 2,
-              pt: 1,
-              pb: 1,
+              px: SPACE.block,
+              pt: SPACE.item,
+              pb: SPACE.item,
               color: tokens.semantic.color.type.muted.value,
               fontWeight: tokens.semantic.fontWeight.emphasis.value,
               letterSpacing: "0.5px",
@@ -287,9 +291,9 @@ function WeekdayGrid({
 }) {
   const weeks = Array.from({ length: WIDGET_CALENDAR_WEEKS }, (_, i) => addDays(start, i * 7));
   return (
-    <Stack gap={1} sx={{ px: 2 }}>
+    <Stack gap={SPACE.item} sx={{ px: SPACE.block }}>
       {weeks.map((week, weekIndex) => (
-        <Box key={week} sx={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 1 }}>
+        <Box key={week} sx={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: SPACE.item }}>
           {workWeekDates(week).map((date, dayIndex) => (
             <CalendarCell
               key={date}
@@ -326,14 +330,14 @@ function MonthGrid({
   const columns = "repeat(5, minmax(0, 1.25fr)) repeat(2, minmax(0, 1fr))";
 
   return (
-    <Stack gap={1} sx={{ px: 2 }}>
-      <Box sx={{ display: "grid", gridTemplateColumns: columns, gap: 1 }} aria-hidden>
+    <Stack gap={SPACE.item} sx={{ px: SPACE.block }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: columns, gap: SPACE.item }} aria-hidden>
         {WEEKDAY_HEADINGS.map((day) => (
           <Typography
             key={day}
-            variant="textSm"
+            variant="textMd"
             sx={{
-              px: 1,
+              px: SPACE.item,
               color: tokens.semantic.color.type.muted.value,
               fontWeight: tokens.semantic.fontWeight.emphasis.value,
               textTransform: "uppercase",
@@ -344,7 +348,7 @@ function MonthGrid({
           </Typography>
         ))}
       </Box>
-      <Box sx={{ display: "grid", gridTemplateColumns: columns, gap: 1 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: columns, gap: SPACE.item }}>
         {dates.map((date) => (
           <CalendarCell
             key={date}
@@ -367,8 +371,13 @@ function MonthGrid({
 /** Header link from the home widget to the full calendar page. */
 export function FullCalendarLink() {
   return (
-    <Link component={RouterLink} to="/compliance-calendar" underline="hover" sx={{ whiteSpace: "nowrap", pt: 0.5 }}>
-      <Typography variant="textMd" sx={{ color: "inherit" }}>
+    <Link
+      component={RouterLink}
+      to="/compliance-calendar"
+      underline="hover"
+      sx={{ whiteSpace: "nowrap", pt: SPACE.pair }}
+    >
+      <Typography variant="body1" sx={{ color: "inherit" }}>
         Open full calendar
       </Typography>
     </Link>

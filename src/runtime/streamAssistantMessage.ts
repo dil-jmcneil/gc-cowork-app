@@ -99,8 +99,8 @@ export async function streamAssistantMessage(
           appendDelta("text", chunk.delta);
           flush();
           break;
-        case "regulatory-change-list":
-          parts.push({ type: "regulatory-change-list", items: chunk.items });
+        case "signal-list":
+          parts.push({ type: "signal-list", items: chunk.items });
           flush();
           break;
         case "source":

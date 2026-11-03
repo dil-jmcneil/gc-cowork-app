@@ -1,4 +1,5 @@
-import { CYBER_RULE_CHANGE } from "@/regulatory/regulatoryChanges";
+import { signalType } from "@/signals/signal";
+import { ATG_RULING } from "@/signals/signals";
 
 export type AttentionItem = {
   id: string;
@@ -10,16 +11,20 @@ export type AttentionItem = {
   title: string;
   summary: string;
   relatedPolicy: string;
+  /** Why Cowork surfaced it to this user, shown in the title's info tooltip. */
+  whySurfaced: string;
 };
 
 export const ATTENTION_ITEMS: AttentionItem[] = [
   {
-    id: CYBER_RULE_CHANGE.id,
-    source: "SEC rule change",
-    receivedAt: "Today 6:35 am",
+    id: ATG_RULING.id,
+    source: signalType(ATG_RULING),
+    receivedAt: "Today 6:40 am",
     badge: "New",
-    title: CYBER_RULE_CHANGE.title,
-    summary: CYBER_RULE_CHANGE.summary,
-    relatedPolicy: "Incident Response Plan §4.2: report a cyber-attack in four business days",
+    title: ATG_RULING.title,
+    summary: ATG_RULING.summary,
+    relatedPolicy: "Bylaws Article II, Section 8: advance notice of director nominations",
+    whySurfaced:
+      "Surfaced because Acme is a Delaware company, your advance notice bylaw predates the ruling, and you own the bylaws.",
   },
 ];

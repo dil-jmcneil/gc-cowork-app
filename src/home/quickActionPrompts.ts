@@ -1,5 +1,4 @@
-export const SHOW_REGULATORY_CHANGES_PROMPT =
-  "Show me recent regulatory changes that affect us.";
+export const SHOW_SIGNALS_PROMPT = "Show me recent signals that affect us.";
 
 export const DUE_SOON_PROMPT = "What's due in the next two weeks?";
 

@@ -47,11 +47,30 @@ You can use the MCP server to search for design tokens by path or value.
 
 ### Typography
 
-Do not use font sizes smaller than `textSm` (`Semantic/Font/Text/Sm`). Avoid `labelSm`, custom `fontSize` values below `textSm`, and Tailwind `text-xs`.
+Text stays between 12px and 18px. In this bundle the MUI variants render a step below their token names, so pick by rendered size:
 
-- **`textMd`** — default body copy, descriptions, meta lines, and secondary text without emphasis.
-- **`textSm` + emphasis** — only for secondary labels that need emphasis (section tags, table column headers, status badges, detail-row labels).
-- **`textSm` without emphasis** — do not use for body copy; use `textMd` instead.
+| Rendered | Variant | Use for |
+| --- | --- | --- |
+| 18px semibold | `h4` + emphasis weight | Page titles and dialog titles |
+| 16px semibold | `h5` + emphasis weight | The one headline on a card, e.g. an attention card's title |
+| 14px semibold | `h6` + emphasis weight | Card and section headings, milestone titles |
+| 14px (Type/Md) | `body1` | The default for content: values, table cells, messages, summaries. Add emphasis weight for names and subjects |
+| 12px | `textMd` | Sparingly, for helper text an experienced user can skip: field labels, timestamps, meta lines, table headers |
+
+- Never use `textSm` (10px), `labelXs` (11px), or `h3` and larger (22px+) on these screens. The home hero is the one exception.
+- The attention card follows its Figma (3274:11121): 16px semibold title over a 16px regular muted summary.
+- `h5` and `h6` render at regular weight; add `fontWeight: tokens.semantic.fontWeight.emphasis.value` for headings.
+- The Atlas dialog title styles any `h2` inside it at 22px. Re-apply `theme.typography.h4` on the title.
+
+### Spacing
+
+Use the named scale in `src/lib/layout.ts` (`SPACE`), never raw numbers: `pair` 4px (label to value), `item` 8px (items in a row, lines in an item), `group` 12px (groups inside a card, list items), `block` 16px (card padding, stacked cards), `section` 24px (page sections, the maximum). Less space inside related content, more between blocks.
+
+Atlas `Card` adds its own padding; set `p: 0` on the card when `CardContent` sets padding. Atlas pins dialogs to 440px; detail dialogs use `DETAIL_DIALOG_PAPER` (880px) so content fits without long scrolls.
+
+### Cowork's avatar
+
+Wherever Cowork speaks or acts (history, chat), show the Diligent D (`CoworkAvatar`, `src/assets/cowork-avatar.svg`).
 
 ### No AI sparkle icons
 
@@ -93,6 +112,26 @@ function MyLayout() {
 Assume that you're working on an enterprise B2B app unless otherwise specified.
 
 The org name and logo you can set on the `AppLayout` component in `App.tsx` should represent the customer.
+
+### Signals, not insights or regulatory changes
+
+Anything Cowork surfaces for the GC is a **signal** (`src/signals`). Its kind is a metadata tag, not a separate object: each signal has exactly one `type` tag ("Court ruling", "Regulatory change", "Enforcement action", "Peer filing") plus optional `jurisdiction` and `topic` tags. Don't call a signal an "insight", or a "regulatory change" unless its type tag says so. Chat still understands "insights" when the user types it.
+
+Every signal lists why it matters to Acme under one label, **Relevance** (`RELEVANCE_LABEL`), whatever its type. Don't add per-type names like "Points for Counsel" or "Reasons Relevant".
+
+The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`). Past signals (`PAST_SIGNALS`) stay out of the attention pane; two have past workstreams that exist only as data, with tasks on the calendar and no pages.
+
+### Workstreams and history
+
+The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the workstream page rolls every task's history into one list.
+
+### Plans are milestones plus rule rows
+
+Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into Boxes and Arrows"):
+
+- **Milestones** are a short, ordered spine. Each is a contract: what must be true to start, what must exist when it's done, and who approves the handover. Don't describe the route inside a milestone.
+- **Rules** are flat rows of *when* (precondition), *Cowork does* (bounded actions, with a circuit breaker where retries are involved) and *until* (postcondition). Rows never refer to other rows. Add failures and edge cases as new `exception` rows instead of new steps.
+- Rules that apply everywhere live on the plan; the rest live on their milestone. Always include a "no rule fits" row that stops and asks the GC.
 
 ## Writing style
 

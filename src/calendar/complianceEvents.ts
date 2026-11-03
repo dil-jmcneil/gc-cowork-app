@@ -1,8 +1,9 @@
-import type { Project, ProjectTask } from "@/projects/project";
-import { taskAttention } from "@/projects/taskStatus";
-import { REGULATORY_CHANGES } from "@/regulatory/regulatoryChanges";
+import type { Workstream, WorkstreamTask } from "@/workstreams/workstream";
+import { taskAttention } from "@/workstreams/taskStatus";
+import { signalType, type PastWorkstream, type PastWorkstreamTask } from "@/signals/signal";
+import { SIGNALS } from "@/signals/signals";
 
-/** Task statuses, plus "External" for regulator-set deadlines. */
+/** Task statuses, plus "External" for deadlines set outside the company. */
 export type CalendarEventStatus = "Assigned" | "Complete" | "Blocked" | "External";
 
 /** What the timeline's right-hand Attention slot shows for an event. */
@@ -17,12 +18,12 @@ type EventBase = {
   description: string;
   status: CalendarEventStatus;
   attention?: CalendarEventAttention;
-  /** The regulatory change or project this event belongs to. */
+  /** The signal or workstream this event belongs to. */
   source: string;
   /** Who owns it, when someone does. */
   owner?: string;
   /** Fallback link when the event isn't opened in an overlay. */
-  href: string;
+  href?: string;
   /** What opening the event shows, for the hover tooltip. */
   linkLabel: string;
   /** Suggested next step, for the hover tooltip. */
@@ -30,90 +31,120 @@ type EventBase = {
 };
 
 export type CalendarEvent =
-  | (EventBase & { kind: "task"; projectId: string; taskId: string })
-  | (EventBase & { kind: "external"; changeId: string });
+  | (EventBase & { kind: "task"; workstreamId: string; taskId: string })
+  | (EventBase & { kind: "external"; signalId: string })
+  /** A past workstream's task. Display only: no dialog or page. */
+  | (EventBase & { kind: "reference" });
 
-function taskEvent(project: Project, task: ProjectTask, now: Date): CalendarEvent {
-  const owner = task.delegate.label;
-  const base = {
-    kind: "task" as const,
-    id: task.id,
-    projectId: project.id,
-    taskId: task.id,
-    date: task.deadline,
-    title: task.description,
-    source: project.name,
-    owner,
-    href: `/projects/${project.id}/tasks/${task.id}`,
-    linkLabel: `Task in ${project.name}`,
-  };
+type TaskFacts = Pick<WorkstreamTask, "status" | "deadline">;
 
+/** Status, attention, and copy for any task-like event, from its status, deadline and owner. */
+function taskState(task: TaskFacts, owner: string, source: string, now: Date) {
   if (task.status === "Done") {
     return {
-      ...base,
-      status: "Complete",
-      description: `${project.name} — ${owner} marked this done`,
+      status: "Complete" as const,
+      description: `${source} — ${owner} marked this done`,
       nextStep: "Nothing to do — ready to close",
     };
   }
   const attention = taskAttention(task, now);
   if (attention === "overdue") {
     return {
-      ...base,
-      status: "Blocked",
-      attention: "nudge",
-      description: `${project.name} — ${owner} hasn't responded; past due, nudge recommended`,
+      status: "Blocked" as const,
+      attention: "nudge" as const,
+      description: `${source} — ${owner} hasn't responded; past due, nudge recommended`,
       nextStep: `Nudge ${owner}, or reassign the task`,
     };
   }
   if (attention === "new-status") {
     return {
-      ...base,
-      status: "Assigned",
-      attention: "new-status",
-      description: `${project.name} — ${owner} is working on it`,
+      status: "Assigned" as const,
+      attention: "new-status" as const,
+      description: `${source} — ${owner} is working on it`,
       nextStep: `Review ${owner}'s update`,
     };
   }
   return {
-    ...base,
-    status: "Assigned",
-    description: `${project.name} — assigned to ${owner}`,
+    status: "Assigned" as const,
+    description: `${source} — assigned to ${owner}`,
     nextStep: `Wait for ${owner}, or check in before the deadline`,
   };
 }
 
-/**
- * Compliance calendar events: every regulatory deadline as an external
- * deadline, plus the tasks of every project. A change has no tasks until
- * its project exists.
- */
-export function deriveCalendarEvents(projects: Project[], now: Date): CalendarEvent[] {
-  const projectChangeIds = new Set(projects.map((p) => p.sourceChangeId));
+function taskEvent(workstream: Workstream, task: WorkstreamTask, now: Date): CalendarEvent {
+  const owner = task.delegate.label;
+  return {
+    kind: "task",
+    id: task.id,
+    workstreamId: workstream.id,
+    taskId: task.id,
+    date: task.deadline,
+    title: task.description,
+    source: workstream.name,
+    owner,
+    href: `/workstreams/${workstream.id}/tasks/${task.id}`,
+    linkLabel: `Task in ${workstream.name}`,
+    ...taskState(task, owner, workstream.name, now),
+  };
+}
 
-  const externalEvents: CalendarEvent[] = REGULATORY_CHANGES.flatMap((change) =>
-    change.deadlines.map((deadline, index) => {
-      const hasProject = projectChangeIds.has(change.id);
+/** A task of a past workstream: shown on the calendar, but it opens nothing. */
+function referenceTaskEvent(workstream: PastWorkstream, task: PastWorkstreamTask, now: Date): CalendarEvent {
+  return {
+    kind: "reference",
+    id: task.id,
+    date: task.due,
+    title: task.description,
+    source: workstream.name,
+    owner: task.owner,
+    linkLabel: `Task in ${workstream.name}`,
+    ...taskState({ status: task.status, deadline: task.due }, task.owner, workstream.name, now),
+  };
+}
+
+/**
+ * Compliance calendar events: every signal deadline as an external
+ * deadline, the tasks of past workstreams (display only), plus the tasks of
+ * every workstream. A signal has no tasks until
+ * its workstream exists.
+ */
+export function deriveCalendarEvents(workstreams: Workstream[], now: Date): CalendarEvent[] {
+  const workstreamChangeIds = new Set(workstreams.map((p) => p.sourceSignalId));
+
+  const externalEvents: CalendarEvent[] = SIGNALS.flatMap((signal) =>
+    signal.deadlines.map((deadline, index) => {
+      const hasWorkstream = workstreamChangeIds.has(signal.id) || Boolean(signal.pastWorkstream);
+      const handled = hasWorkstream || Boolean(signal.outcome);
       return {
         kind: "external" as const,
-        id: `${change.id}-deadline-${index}`,
-        changeId: change.id,
+        id: `${signal.id}-deadline-${index}`,
+        signalId: signal.id,
         date: deadline.date,
         title: deadline.label,
-        description: `${change.title} · ${change.regulatoryBody}`,
+        description: `${signal.title} · ${signal.source}`,
         status: "External" as const,
-        ...(hasProject ? {} : { attention: "awaiting-response" as const }),
-        source: change.title,
-        href: hasProject ? "/" : `/projects/new?change=${encodeURIComponent(change.id)}`,
-        linkLabel: `Regulatory change: ${change.title}`,
-        nextStep: hasProject ? "Track it through the project's tasks" : "Create a project to assign owners",
+        ...(handled ? {} : { attention: "awaiting-response" as const }),
+        source: signal.title,
+        href: hasWorkstream ? "/" : `/workstreams/new?signal=${encodeURIComponent(signal.id)}`,
+        linkLabel: `${signalType(signal)}: ${signal.title}`,
+        nextStep: hasWorkstream
+          ? "Track it through the workstream's tasks"
+          : handled
+            ? "Nothing to do — already reviewed"
+            : "Create a workstream to assign owners",
       };
     }),
   );
 
-  const taskEvents = projects.flatMap((project) =>
-    project.plan.tasks.map((task) => taskEvent(project, task, now)),
+  const referenceEvents = SIGNALS.flatMap((signal) =>
+    signal.pastWorkstream
+      ? signal.pastWorkstream.tasks.map((task) => referenceTaskEvent(signal.pastWorkstream!, task, now))
+      : [],
   );
 
-  return [...externalEvents, ...taskEvents].sort((a, b) => a.date.localeCompare(b.date));
+  const taskEvents = workstreams.flatMap((workstream) =>
+    workstream.plan.tasks.map((task) => taskEvent(workstream, task, now)),
+  );
+
+  return [...externalEvents, ...referenceEvents, ...taskEvents].sort((a, b) => a.date.localeCompare(b.date));
 }

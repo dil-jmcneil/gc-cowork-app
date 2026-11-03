@@ -14,7 +14,7 @@ import SearchIcon from "@diligentcorp/atlas-react-bundle/icons/Search";
 
 import { expandPrototypeSideNav } from "./configureAtlasPrototypeNav.js";
 import { DEFAULT_CHAT_PREVIEW, useChatStore, type ChatRecord } from "./chat/chatStore.js";
-import { useProjectStore } from "./projects/projectStore.js";
+import { useWorkstreamStore } from "./workstreams/workstreamStore.js";
 import {
   commandCenterNavRowInnerSx,
   commandCenterNavSearchAlignedRowSx,
@@ -105,7 +105,7 @@ export default function CommandCenterNavigation() {
         }}
       >
         <RoutedAINavLink to="/" label="Home" end icon={<HomeIcon slot="icon" />} />
-        <ProjectsNavSection />
+        <WorkstreamsNavSection />
         <RoutedAINavLink
           to="/compliance-calendar"
           label="Compliance calendar"
@@ -143,7 +143,7 @@ export default function CommandCenterNavigation() {
           onClick={() => navigate("/")}
         />
         <CommandCenterCompactNavButton
-          label="Projects"
+          label="Workstreams"
           icon={<ProjectsIcon aria-hidden fontSize="small" />}
           onClick={() => expandPrototypeSideNav()}
         />
@@ -167,30 +167,28 @@ export default function CommandCenterNavigation() {
   );
 }
 
-/** Collapsible list of projects, one sub-item per project. */
-function ProjectsNavSection() {
-  const projects = useProjectStore((s) => s.projects);
+/** Collapsible list of workstreams, one sub-item per workstream. */
+function WorkstreamsNavSection() {
+  const workstreams = useWorkstreamStore((s) => s.workstreams);
   const [open, setOpen] = useState(true);
+  /** Collapsed until a workstream exists; the GC's open/close choice applies once it does. */
+  const isOpen = open && workstreams.length > 0;
   return (
     <AINavSection
-      label="Projects"
-      isOpen={open}
-      childCount={projects.length}
+      label="Workstreams"
+      isOpen={isOpen}
+      childCount={workstreams.length}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
     >
       <ProjectsIcon slot="icon" />
-      {projects.length === 0 ? (
-        <CommandCenterEmptyHint message="No projects yet" />
-      ) : (
-        projects.map((project) => (
-          <RoutedAINavLink
-            key={project.id}
-            to={`/projects/${project.id}`}
-            label={truncateLabel(project.name)}
-          />
-        ))
-      )}
+      {workstreams.map((workstream) => (
+        <RoutedAINavLink
+          key={workstream.id}
+          to={`/workstreams/${workstream.id}`}
+          label={truncateLabel(workstream.name)}
+        />
+      ))}
     </AINavSection>
   );
 }
