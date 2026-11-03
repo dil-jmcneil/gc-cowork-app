@@ -36,7 +36,7 @@ import { ToolCall, ToolGroup } from "@/components/chat/ToolCall";
 import { SignalList } from "@/components/chat/SignalList";
 import { chatBodyTypography } from "./chatTypography";
 import { BrandSpinner } from "@/components/chat/BrandSpinner";
-import { coworkAvatarUrl } from "@/components/tasks/CoworkAvatar";
+import { CoworkAvatar } from "@/components/tasks/CoworkAvatar";
 import { useThemeVariantStore } from "@/demo/themeVariantStore";
 import { LOGGED_IN_USER } from "@/user";
 import { downloadTextFile } from "@/utils/downloadFile";
@@ -466,7 +466,7 @@ export function AtlasChatMessage({
         <AIChatMessageHeader
           name="Cowork"
           time={time}
-          avatar={<AIChatMessageAvatar uniqueId="assistant" initials="C" imageUrl={coworkAvatarUrl} />}
+          avatar={<CoworkAvatar size="medium" />}
         />
       )}
       footer={
