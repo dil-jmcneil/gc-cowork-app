@@ -209,6 +209,13 @@ Phase 4 (Nov 4):
 8. The owner shown is the open task with the nearest deadline, plus a count ("Morgan Diaz +1").
 9. A row starts expanded when it needs you or a link points at it. "Show 10 more" adds 10 to the last two days; with nothing in the last two days it reads "Show the latest 10".
 
+Phase 5 (Nov 4):
+
+10. The milestone after one that needs you reads Blocked, "Waiting on you", while its owners haven't started (Alex, in Milestone 2). It's In progress once you confirm.
+11. Confirming the memo applies the "share the draft" rule: Cowork tells Alex the text is approved and resumes follow-ups, and that shows on Milestone 2's timeline. The text itself comes from Peter, so counsel's privileged files never pass through Cowork.
+12. Only a task waiting on your review can be confirmed, so a second click changes nothing.
+13. The ATG agenda task stays Done (Alex booked the Dec 15 slot on Oct 29), rather than In progress as first planned. Milestone 2 waiting on you carries the point instead.
+
 ## Open questions
 
 1. **A new signal: draft workstream page or signal dialog?** This plan creates a draft workstream and opens it on the one page, which matches the rule that every link goes to the workstream and keeps one mode. The other choice is to keep the signal dialog for new signals only.

@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import { SIGNALS } from "@/signals/signals";
 
-import { isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
+import { afterAtgTaskConfirmed, isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
 import { PAST_WORKSTREAMS } from "./pastWorkstreams";
 import type { TaskOwner } from "./people";
 import type { Workstream, WorkstreamDraft, WorkstreamTask, TaskStatus, WorkstreamPlan } from "./workstream";
@@ -124,12 +124,17 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
     },
 
     confirmTaskDone: (workstreamId, taskId) => {
+      // Only a task waiting on your review can be confirmed, so a second click changes nothing.
+      if (!get().getTask(workstreamId, taskId)?.awaitingReview) return;
+      const sentAt = nowIso();
       updateTask(workstreamId, taskId, (task) =>
-        append(
-          { ...task, status: "Done", awaitingReview: false, statusSummary: undefined },
-          confirmedDoneNote(nowIso()),
-        ),
+        append({ ...task, status: "Done", awaitingReview: false, statusSummary: undefined }, confirmedDoneNote(sentAt)),
       );
+      set((state) => ({
+        workstreams: state.workstreams.map((w) =>
+          w.id === workstreamId ? afterAtgTaskConfirmed(w, taskId, sentAt) : w,
+        ),
+      }));
     },
 
     nudgeTask: (workstreamId, taskId) =>

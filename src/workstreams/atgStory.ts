@@ -2,6 +2,7 @@ import { ATG_RULING } from "@/signals/signals";
 import { LOGGED_IN_USER } from "@/user";
 
 import { findPerson } from "./people";
+import { formatShortDate } from "./taskStatus";
 import type { Workstream, WorkstreamTask } from "./workstream";
 import {
   assignmentEmail,
@@ -79,7 +80,8 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
           "2026-11-02T21:40:00Z",
         ),
         coworkAction("Held the task open for your review", "2026-11-02T21:41:00Z", {
-          detail: "Dana is outside Acme, so her \"done\" doesn't close the task. You confirm it once you've reviewed the memo.",
+          detail:
+            "Dana is outside Acme, so her \"done\" doesn't close the task. You confirm it once you've reviewed the memo.",
           rule: "An owner outside Acme says a task is done.",
         }),
         coworkNote(
@@ -167,8 +169,7 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
           rule: "An owner hasn't replied for three business days.",
         }),
       ],
-      statusSummary:
-        "Cowork followed up on Oct 30 (1 of 3) and tries again on Nov 4. After the third, it asks you.",
+      statusSummary: "Cowork followed up on Oct 30 (1 of 3) and tries again on Nov 4. After the third, it asks you.",
     });
   }
 
@@ -199,6 +200,37 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
   return withTask(task, {
     history: [assignmentEmail(task, "2026-10-27T13:37:00Z")],
   });
+}
+
+const QUESTIONNAIRE_ID = `${ATG_RULING.id}-questionnaire`;
+
+/**
+ * After you confirm counsel's memo, Cowork applies the "share the draft" rule:
+ * it tells Alex the text is approved and resumes follow-ups. The text itself
+ * comes from you, so counsel's privileged files never pass through Cowork.
+ */
+export function afterAtgTaskConfirmed(workstream: Workstream, taskId: string, sentAt: string): Workstream {
+  if (!isAtgWorkstream(workstream) || taskId !== `${ATG_RULING.id}-memo`) return workstream;
+  const tasks = workstream.plan.tasks.map((task) => {
+    if (task.id !== QUESTIONNAIRE_ID || task.status === "Done") return task;
+    return withTask(task, {
+      history: [
+        ...task.history,
+        coworkEmail(
+          ALEX,
+          `Re: ${task.description}`,
+          `Hi Alex, ${GC} approved counsel's draft text for Article II, Section 8, and is forwarding it to you now. You can start on the new questions so they match it. It's due ${formatShortDate(task.deadline)}.`,
+          sentAt,
+        ),
+        coworkAction("Told Alex the draft text is approved", sentAt, {
+          detail: "Follow-ups for Alex resume, counting toward the due date.",
+          rule: "The draft text is approved, and the questionnaire and agenda owners don't have it yet.",
+        }),
+      ],
+      statusSummary: `${GC} approved the draft text on ${formatShortDate(sentAt)}, so Alex can start. Due ${formatShortDate(task.deadline)}; Cowork's follow-ups resume.`,
+    });
+  });
+  return { ...workstream, plan: { ...workstream.plan, tasks } };
 }
 
 export function isAtgWorkstream(workstream: Pick<Workstream, "sourceSignalId">): boolean {

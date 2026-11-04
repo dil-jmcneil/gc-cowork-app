@@ -117,7 +117,7 @@ function MilestoneRow({
   const showRules = usePlanRulesStore((s) => s.showRules);
   const muted = tokens.semantic.color.type.muted.value;
   const tasks = plan.tasks.filter((t) => t.milestoneId === milestone.id);
-  const progress = milestoneProgress(milestone, plan.tasks, now);
+  const progress = milestoneProgress(milestone, plan.tasks, now, plan.milestones);
   const awaiting = tasks.find((t) => t.awaitingReview);
   // A milestone that needs you, or that a link pointed at, opens on its details.
   const [expanded, setExpanded] = useState(focused || progress.needsYou);
@@ -158,7 +158,7 @@ function MilestoneRow({
                 <Box component="span" sx={{ color: tokens.semantic.color.type.default.value }}>
                   {progress.owner}
                 </Box>
-                {progress.blockedBy && progress.blockedBy !== "you" ? ` · Waiting on ${progress.blockedBy}` : null}
+                {progress.blockedBy && !progress.needsYou ? ` · Waiting on ${progress.blockedBy}` : null}
               </Typography>
             </Stack>
           </Stack>
@@ -180,7 +180,11 @@ function MilestoneRow({
               ) : null}
             </>
           ) : (
-            <StatusIndicator color={STATUS_COLOR[progress.status]} label={progress.status} />
+            <StatusIndicator
+              // Blocked on you reads as a warning, like "Needs you"; blocked on someone else as an error.
+              color={progress.blockedBy === "you" ? "warning" : STATUS_COLOR[progress.status]}
+              label={progress.status}
+            />
           )}
         </Stack>
       </Stack>

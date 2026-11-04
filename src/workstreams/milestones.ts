@@ -49,9 +49,16 @@ function ownerLabel(tasks: WorkstreamTask[]): string {
 /**
  * A milestone is done when every task is; blocked when a task waits on your
  * review (blocked by you) or is overdue (blocked by its owner); in progress
- * once any task has moved; otherwise not started.
+ * once any task has moved; otherwise not started. Pass the plan's milestones
+ * to also mark the milestone after one that needs you as waiting on you,
+ * while its owners can't start.
  */
-export function milestoneProgress(milestone: Milestone, tasks: WorkstreamTask[], now: Date): MilestoneProgress {
+export function milestoneProgress(
+  milestone: Milestone,
+  tasks: WorkstreamTask[],
+  now: Date,
+  milestones?: Milestone[],
+): MilestoneProgress {
   const own = tasks.filter((t) => t.milestoneId === milestone.id);
   const open = own.filter((t) => t.status !== "Done").sort((a, b) => a.deadline.localeCompare(b.deadline));
   if (own.length > 0 && open.length === 0) return { status: "Done", owner: ownerLabel(own), needsYou: false };
@@ -67,6 +74,11 @@ export function milestoneProgress(milestone: Milestone, tasks: WorkstreamTask[],
   }
   const late = open.find((t) => t.status !== "Done" && new Date(`${t.deadline}T00:00:00Z`) < now);
   if (late) return { status: "Blocked", owner, needsYou: false, blockedBy: late.delegate.label };
+  const previous = milestones?.[milestones.findIndex((m) => m.id === milestone.id) - 1];
+  const previousNeedsYou = previous && tasks.some((t) => t.milestoneId === previous.id && t.awaitingReview);
+  if (previousNeedsYou && open.some((t) => t.status === "Not started")) {
+    return { status: "Blocked", owner, needsYou: false, blockedBy: "you" };
+  }
   if (own.some((t) => t.status !== "Not started")) return { status: "In progress", owner, needsYou: false };
   return { status: "Not started", owner, needsYou: false };
 }

@@ -49,6 +49,7 @@ describe("milestoneProgress", () => {
       plan.milestones.find((m) => m.id === id)!,
       plan.tasks,
       NOW,
+      plan.milestones,
     );
 
   test("Milestone 1 is blocked by you: Dana's memo waits on your review", () => {
@@ -60,12 +61,18 @@ describe("milestoneProgress", () => {
     });
   });
 
-  test("Milestone 2 is in progress: the agenda is done, the questionnaire isn't", () => {
+  test("Milestone 2 waits on you: Alex can't start the questionnaire until you approve the text", () => {
     expect(progressOf(atgPlan(), "prepare")).toMatchObject({
-      status: "In progress",
+      status: "Blocked",
       needsYou: false,
+      blockedBy: "you",
       owner: "Alex Kim",
     });
+  });
+
+  test("without the milestone order, Milestone 2 reads in progress: the agenda is done", () => {
+    const plan = atgPlan();
+    expect(milestoneProgress(plan.milestones[1], plan.tasks, NOW)).toMatchObject({ status: "In progress" });
   });
 
   test("Milestone 3 hasn't started, and lists the soonest owner plus a count", () => {
