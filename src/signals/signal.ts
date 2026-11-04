@@ -1,4 +1,4 @@
-import type { Milestone, PlanRule, TaskStatus } from "@/workstreams/workstream";
+import type { PlanRule, TaskStatus } from "@/workstreams/workstream";
 
 export type SignalStatus = "New" | "In review" | "In progress" | "Closed";
 
@@ -22,16 +22,26 @@ export type TaskTemplate = {
   /** Stable within the signal, so stories can find the task again. */
   id: string;
   description: string;
+  /** What done looks like: the end state and who confirms it, not the steps. */
+  doneWhen: string;
   /** Email of the suggested owner, in the directory or a known outside contact. */
   ownerEmail: string;
+  /** People kept informed, by email. */
+  ccEmails: string[];
   /** ISO date, yyyy-mm-dd. */
   due: string;
+  /** The template id of a task that has to finish first. */
+  waitingOn?: string;
+  /** The words in the plan's approach that describe this task, removed with it. */
+  approachPhrase?: string;
 };
 
-/** The plan Cowork proposes for a signal: milestones with their tasks, plus rules for every milestone. */
+/** The plan Cowork proposes for a signal: big-picture tasks plus the rules Cowork follows to work them. */
 export type PlanTemplate = {
+  /** The Create workstream summary: what the signal is, why it matters to Acme, and what Cowork suggests. */
+  brief: { headline: string; support: string[] };
   approach: string;
-  milestones: (Milestone & { tasks: TaskTemplate[] })[];
+  tasks: TaskTemplate[];
   rules: PlanRule[];
 };
 
@@ -47,15 +57,14 @@ export type PastWorkstream = {
   startedOn: string;
   /** One or two sentences on where it stands, with the task count, as Cowork would write it. */
   statusSummary: string;
-  /** Milestone contracts, without rules: Cowork follows the plan-wide rules for these. */
-  milestones: Omit<Milestone, "rules">[];
   tasks: PastWorkstreamTask[];
 };
 
 export type PastWorkstreamTask = {
   id: string;
-  milestoneId: string;
   description: string;
+  doneWhen: string;
+  waitingOn?: string;
   /** Owner's display name. */
   owner: string;
   /** ISO date, yyyy-mm-dd. */

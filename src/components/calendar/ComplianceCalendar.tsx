@@ -105,7 +105,7 @@ export function ComplianceCalendar({
   };
 
   /**
-   * MVP: every event opens its workstream page, on the task's milestone, or the
+   * MVP: every event opens its workstream page on the task, or the
    * signal's draft when it has none. With post-MVP views on, tasks open the
    * task quick view and deadlines open their signal, as before.
    */

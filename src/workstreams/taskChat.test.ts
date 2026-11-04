@@ -7,7 +7,7 @@ import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/workstreams/t
 const NOW = new Date("2026-11-03T12:00:00Z");
 let WORKSTREAM_ID = "";
 const task = () =>
-  useWorkstreamStore.getState().getWorkstream(WORKSTREAM_ID)!.plan.tasks.find((t) => t.id === `${ATG_RULING.id}-website`)!;
+  useWorkstreamStore.getState().getWorkstream(WORKSTREAM_ID)!.plan.tasks.find((t) => t.id === `${ATG_RULING.id}-adopt`)!;
 
 beforeEach(() => {
   useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] });
@@ -18,14 +18,14 @@ beforeEach(() => {
 test("a status question gets the status summary and leaves the thread alone", () => {
   const before = task().history.length;
   const reply = handleTaskChatMessage(WORKSTREAM_ID, task().id, "Where does this stand?", NOW);
-  expect(reply).toMatch(/followed up on Oct 30 \(1 of 3\)/);
+  expect(reply).toMatch(/8-K shell ready/);
   expect(task().history).toHaveLength(before);
 });
 
 test("anything else is recorded in the thread and passed on to the owner", () => {
   const before = task().history.length;
   const reply = handleTaskChatMessage(WORKSTREAM_ID, task().id, "Please send the vendor list today.", NOW);
-  expect(reply).toContain("Morgan Diaz");
+  expect(reply).toContain("Pete Lin");
   expect(task().history).toHaveLength(before + 2);
   expect(task().history[before]).toMatchObject({
     channel: "chat",
@@ -39,5 +39,5 @@ test("the task chat opens with one welcome message that names the owner", () => 
   const messages = useChatMessagesStore.getState().messagesByChatId[taskChatId(task().id)];
   expect(messages).toHaveLength(1);
   const part = messages[0].parts[0];
-  expect(part.type === "text" && part.text).toContain("Morgan");
+  expect(part.type === "text" && part.text).toContain("Pete");
 });

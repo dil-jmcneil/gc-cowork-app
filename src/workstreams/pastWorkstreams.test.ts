@@ -15,7 +15,7 @@ test("the two past workstreams are real workstreams when the app loads", () => {
   }
 });
 
-test("every past task keeps its owner, date, status and summary, inside a milestone", () => {
+test("every past task keeps its owner, date, status, summary and what done looks like", () => {
   const climate = PAST_WORKSTREAMS[0];
   const source = PAST_SIGNALS.find((s) => s.id === climate.sourceSignalId)!.pastWorkstream!;
   expect(climate.plan.tasks).toHaveLength(source.tasks.length);
@@ -23,7 +23,8 @@ test("every past task keeps its owner, date, status and summary, inside a milest
   expect(vendor).toMatchObject({ deadline: "2026-11-02", status: "In progress" });
   expect(vendor.delegate.label).toBe("Maya Chen");
   expect(vendor.statusSummary).toMatch(/two vendor quotes/);
-  expect(climate.plan.milestones.map((m) => m.id)).toContain(vendor.milestoneId);
+  expect(vendor.doneWhen).toMatch(/assurance vendor is engaged/);
+  expect(climate.plan.tasks.find((t) => t.id === "climate-briefing")!.waitingOn).toBe("climate-assurance");
   expect(vendor.history.length).toBeGreaterThan(0);
 });
 
@@ -31,7 +32,7 @@ test("their calendar tasks link to their workstream pages, not their signal", ()
   const events = deriveCalendarEvents(PAST_WORKSTREAMS, NOW);
   const vendor = events.find((e) => e.id === "climate-assurance")!;
   expect(vendor.kind).toBe("task");
-  expect(vendor.href).toMatch(/^\/workstreams\/past-climate-disclosure-readiness\?milestone=/);
+  expect(vendor.href).toBe("/workstreams/past-climate-disclosure-readiness?task=climate-assurance");
   expect(vendor.attention).toBe("nudge");
   expect(events.filter((e) => e.kind === "reference")).toHaveLength(0);
 });

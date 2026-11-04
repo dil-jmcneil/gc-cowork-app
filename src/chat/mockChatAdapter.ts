@@ -24,7 +24,7 @@ export async function* streamMockReply(
       yield* streamText(replyText, signal);
     } else if (/\brevise the plan\b/i.test(promptText)) {
       yield* streamText(
-        "Sure. Tell me what to change. For example, ask me to remove a milestone and move its closing step to another one.",
+        "Sure. Tell me what to change. For example, ask me to remove a task and move its closing step to another one.",
         signal,
       );
     } else if (isSignalsPrompt(promptText)) {

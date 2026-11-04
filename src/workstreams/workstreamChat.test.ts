@@ -20,12 +20,12 @@ const memoOf = (id: string) =>
   useWorkstreamStore
     .getState()
     .getWorkstream(id)!
-    .plan.tasks.find((t) => t.id.endsWith("-memo"))!;
+    .plan.tasks.find((t) => t.id.endsWith("-counsel"))!;
 
 test("asking what's waiting on you names the memo, and how to close it", () => {
   const { id } = startAtgWorkstream();
   const reply = handleWorkstreamChatMessage(id, "What's waiting on me?", NOW);
-  expect(reply).toMatch(/Dana Whitfield/);
+  expect(reply).toMatch(/Dana sent the memo/);
   expect(reply).toMatch(/memo/i);
   expect(reply).toMatch(/Got it/);
 });
@@ -38,11 +38,11 @@ test('"Got it" closes the memo while it waits on your review', () => {
   expect(handleWorkstreamChatMessage(id, "What's waiting on me?", NOW)).toMatch(/Nothing/);
 });
 
-test("asking to remove a milestone edits the plan", () => {
+test("asking to remove a task edits the plan", () => {
   const { id } = startAtgWorkstream();
-  const reply = handleWorkstreamChatMessage(id, "Remove milestone 4 and add its closing action to 3", NOW);
-  expect(reply).toMatch(/Milestone 4/);
-  expect(useWorkstreamStore.getState().getWorkstream(id)!.plan.milestones).toHaveLength(3);
+  const reply = handleWorkstreamChatMessage(id, "Remove task 4 and add its closing action to 3", NOW);
+  expect(reply).toMatch(/Task 4/);
+  expect(useWorkstreamStore.getState().getWorkstream(id)!.plan.tasks).toHaveLength(3);
 });
 
 test("a status question gets the workstream's status summary", () => {

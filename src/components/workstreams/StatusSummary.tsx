@@ -12,6 +12,7 @@ import type { AttentionItem } from "@/workstreams/workstreamAttention";
  * then what's waiting on you and on others, each with the action that clears it.
  */
 export function StatusSummary({
+  label = "Status Summary",
   summary,
   waitingOnYou = [],
   waitingOnOthers = [],
@@ -19,6 +20,8 @@ export function StatusSummary({
   onConfirm,
   onNudge,
 }: {
+  /** The panel's heading: "Status Summary" for a started workstream, "Summary" for a draft. */
+  label?: string;
   summary: Summary;
   waitingOnYou?: AttentionItem[];
   waitingOnOthers?: AttentionItem[];
@@ -50,7 +53,7 @@ export function StatusSummary({
             component="h2"
             sx={{ color: info.color.value, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
           >
-            Status Summary
+            {label}
           </Typography>
           <Typography variant="h5" component="p" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
             {summary.headline}

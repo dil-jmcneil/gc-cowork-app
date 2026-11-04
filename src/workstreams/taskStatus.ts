@@ -30,6 +30,32 @@ export function taskAttention(
   return undefined;
 }
 
+/** The five statuses a task shows in the plan. */
+export type TaskDisplayLabel = "Not started" | "In progress" | "Needs your review" | "Blocked" | "Done";
+
+export type TaskDisplayStatus = {
+  label: TaskDisplayLabel;
+  /** For Blocked: "you", or the owner of the task it waits on. */
+  blockedBy?: string;
+};
+
+/**
+ * What a task shows: Needs your review when its owner says it's done, Blocked
+ * while the task it waits on is unfinished, otherwise its own status.
+ */
+export function taskDisplayStatus(
+  task: Pick<WorkstreamTask, "status" | "awaitingReview" | "waitingOn">,
+  tasks: Pick<WorkstreamTask, "id" | "status" | "awaitingReview" | "delegate">[],
+): TaskDisplayStatus {
+  if (task.status === "Done") return { label: "Done" };
+  if (task.awaitingReview) return { label: "Needs your review" };
+  const blocker = task.waitingOn ? tasks.find((t) => t.id === task.waitingOn) : undefined;
+  if (blocker && blocker.status !== "Done") {
+    return { label: "Blocked", blockedBy: blocker.awaitingReview ? "you" : blocker.delegate.label };
+  }
+  return { label: task.status };
+}
+
 function latestFromOwner(task: WorkstreamTask) {
   return task.history
     .filter(isMessage)

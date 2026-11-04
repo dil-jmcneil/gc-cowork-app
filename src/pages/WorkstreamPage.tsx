@@ -14,23 +14,25 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { scrollContentTo, SideChatLayout } from "@/components/chat/SideChatLayout";
+import { ArtifactsCard } from "@/components/workstreams/ArtifactsCard";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
-import { SourceDetails } from "@/components/workstreams/SourceSignalCard";
+import { SourceDetails, SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
-import { milestoneAnchorId, PlanMilestones } from "@/components/workstreams/PlanMilestones";
 import { RuleTable } from "@/components/workstreams/RuleTable";
-import { TimelineList, type TimelineListItem } from "@/components/workstreams/Timeline";
+import { TaskActivityDialog } from "@/components/workstreams/TaskActivityDialog";
+import { taskAnchorId, TaskTable } from "@/components/workstreams/TaskTable";
 import { useMvpScopeStore } from "@/demo/mvpScopeStore";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
-import { workstreamFocusFromSearch, workstreamHref, type WorkstreamFocus } from "@/workstreams/links";
+import { workstreamFocusFromSearch, workstreamHref } from "@/workstreams/links";
 import { planEditFromChat } from "@/workstreams/planChat";
-import type { WorkstreamDraft, WorkstreamPlan } from "@/workstreams/workstream";
+import { summarizeTask } from "@/workstreams/taskStatus";
+import type { PlanRule, WorkstreamDraft } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
 import { workstreamAttention } from "@/workstreams/workstreamAttention";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
@@ -39,25 +41,35 @@ import { hasPlan, RELEVANCE_LABEL, type PlannedSignal, type Signal } from "@/sig
 import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 
-/** The one workstream page, with Cowork's chat always open beside it. Links can open it on a milestone and task. */
+/**
+ * A started workstream (the View layout): the status summary beside its
+ * artifacts, then the tasks, each with its owner, status line and activity
+ * log, then the signal's relevance and sources, collapsed. Cowork's chat is
+ * always open on the right. A link can open it on a task.
+ */
 export default function WorkstreamPage() {
   const { workstreamId } = useParams<{ workstreamId: string }>();
   const { search } = useLocation();
   const navigate = useNavigate();
+  const { presets } = useTheme();
   const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
   const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.id === workstreamId));
   const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
+  const assignTask = useWorkstreamStore((s) => s.assignTask);
   const confirmTaskDone = useWorkstreamStore((s) => s.confirmTaskDone);
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const [activityTaskId, setActivityTaskId] = useState<string | null>(null);
   const now = new Date();
+  const focus = workstreamFocusFromSearch(search);
 
   useEffect(() => {
     if (workstream) seedWorkstreamChat(workstream, now);
     // Seed once per workstream; later edits shouldn't re-seed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workstream?.id]);
+  useScrollToTask(focus.taskId);
 
   if (!workstream) {
     return (
@@ -70,18 +82,13 @@ export default function WorkstreamPage() {
     );
   }
 
-  const planAccepted = workstream.plan.status === "accepted";
-  // The workstream-wide timeline labels each entry with its milestone.
-  const milestoneTitle = new Map(workstream.plan.milestones.map((m) => [m.id, m.title]));
-  const history = workstream.plan.tasks.flatMap((task) =>
-    task.history.map((entry) => ({ entry, context: milestoneTitle.get(task.milestoneId) })),
-  );
+  const { tasks } = workstream.plan;
+  const signal = SIGNALS.find((c) => c.id === workstream.sourceSignalId);
   const confirm = (taskId: string) => {
-    const task = workstream.plan.tasks.find((t) => t.id === taskId);
+    const task = tasks.find((t) => t.id === taskId);
     confirmTaskDone(workstream.id, taskId);
     if (task) setToast(`Closed "${task.description}".`);
   };
-  const attention = workstreamAttention(workstream, now);
 
   return (
     <SideChatLayout
@@ -90,55 +97,80 @@ export default function WorkstreamPage() {
       chatId={workstreamChatId(workstream.id)}
       onUserMessage={(text) => handleWorkstreamChatMessage(workstream.id, text, new Date())}
     >
-      <WorkstreamView
-        eyebrow="Workstream"
-        name={workstream.name}
-        description={workstream.description}
-        reasonsRelevant={workstream.reasonsRelevant}
-        plan={workstream.plan}
-        signal={SIGNALS.find((c) => c.id === workstream.sourceSignalId)}
-        statusSummary={
-          <StatusSummary
-            {...attention}
-            nudged={nudged}
-            onConfirm={({ task }) => confirm(task.id)}
-            onNudge={({ task }) => {
-              nudgeTask(workstream.id, task.id);
-              setNudged((prev) => new Set(prev).add(task.id));
-              setToast(`Nudge sent to ${task.delegate.label}.`);
-            }}
+      <Container maxWidth="xl" sx={{ py: SPACE.section }}>
+        <Stack gap={SPACE.section}>
+          <PageHeader eyebrow="Workstream" title={workstream.name} />
+
+          <Grid {...presets.GridPresets.page}>
+            <Grid item sm={4} md={8} lg={5} xl={8}>
+              <StatusSummary
+                {...workstreamAttention(workstream, now)}
+                nudged={nudged}
+                onConfirm={({ task }) => confirm(task.id)}
+                onNudge={({ task }) => {
+                  nudgeTask(workstream.id, task.id);
+                  setNudged((prev) => new Set(prev).add(task.id));
+                  setToast(`Nudge sent to ${task.delegate.label}.`);
+                }}
+              />
+            </Grid>
+            <Grid item sm={4} md={8} lg={3} xl={4}>
+              <ArtifactsCard tasks={tasks} />
+            </Grid>
+          </Grid>
+
+          <SectionCard
+            title="Tasks"
+            action={
+              // Post-MVP: the side chat replaces "Revise via chat".
+              showPostMvpViews ? (
+                <Stack direction="row" gap={SPACE.item}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() =>
+                      startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
+                        workstreamId: workstream.id,
+                      })
+                    }
+                  >
+                    Revise via chat
+                  </Button>
+                  {workstream.plan.status === "accepted" ? null : (
+                    <Button variant="contained" size="small" onClick={() => acceptPlan(workstream.id)}>
+                      Accept plan
+                    </Button>
+                  )}
+                </Stack>
+              ) : null
+            }
+          >
+            <TaskTable
+              tasks={tasks}
+              detail="status"
+              summarize={(task) => summarizeTask(task, now)}
+              highlightTaskId={focus.taskId}
+              onOpenActivity={setActivityTaskId}
+              onOwnerChange={(taskId, owner) => {
+                assignTask(workstream.id, taskId, owner);
+                setToast(`Reassigned to ${owner.label}. Cowork emailed them the task.`);
+              }}
+            />
+          </SectionCard>
+
+          <RelevanceAndSources
+            description={workstream.description}
+            reasonsRelevant={workstream.reasonsRelevant}
+            signal={signal}
           />
-        }
-        history={history}
+          <RulesCard rules={workstream.plan.rules} />
+        </Stack>
+      </Container>
+
+      <TaskActivityDialog
+        task={tasks.find((t) => t.id === activityTaskId)}
         now={now}
-        onConfirmTask={confirm}
-        focus={workstreamFocusFromSearch(search)}
-        // Post-MVP: task titles open the task page. In the MVP they stay on this page.
-        onOpenTask={
-          showPostMvpViews ? (taskId) => navigate(`/workstreams/${workstream.id}/tasks/${taskId}`) : undefined
-        }
-        planActions={
-          <>
-            {/* Post-MVP: the side chat replaces "Revise via chat". */}
-            {showPostMvpViews ? (
-              <Button
-                variant="outlined"
-                onClick={() =>
-                  startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
-                    workstreamId: workstream.id,
-                  })
-                }
-              >
-                Revise via chat
-              </Button>
-            ) : null}
-            {planAccepted ? null : (
-              <Button variant="contained" onClick={() => acceptPlan(workstream.id)}>
-                Accept plan
-              </Button>
-            )}
-          </>
-        }
+        onClose={() => setActivityTaskId(null)}
       />
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
         <Alert severity="success" aria-live="polite" onClose={() => setToast(null)}>
@@ -150,9 +182,9 @@ export default function WorkstreamPage() {
 }
 
 /**
- * MVP: a signal with no workstream opens Cowork's draft on the same page,
- * with the chat beside it for changes. "Start workstream" creates it. The
- * separate create page comes back with post-MVP views on.
+ * MVP: a signal with no workstream opens Cowork's draft (the Create layout),
+ * with the chat beside it for changes. "Accept and start" creates it. The
+ * older create page comes back with post-MVP views on.
  */
 export function DraftWorkstreamPage() {
   const [params] = useSearchParams();
@@ -175,8 +207,14 @@ export function DraftWorkstreamPage() {
   return <DraftWorkstream key={signal.id} signal={signal} />;
 }
 
+/**
+ * The Create layout: what the signal is, why it matters and what Cowork
+ * suggests; relevance and source side by side; then the plan's tasks, each
+ * with an owner you can change and what done looks like.
+ */
 function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   const navigate = useNavigate();
+  const { presets } = useTheme();
   const createWorkstream = useWorkstreamStore((s) => s.createWorkstream);
   const [draft, setDraft] = useState<WorkstreamDraft>(() => draftWorkstreamFromSignal(signal));
 
@@ -197,215 +235,163 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
         return edit.reply;
       }}
     >
-      <WorkstreamView
-        eyebrow="Draft workstream"
-        name={draft.name}
-        description={draft.description}
-        reasonsRelevant={draft.reasonsRelevant}
-        plan={draft.plan}
-        signal={signal}
-        statusSummary={
-          <StatusSummary
-            summary={{
-              headline: "Review Cowork's draft plan, then start the workstream.",
-              support: ["Ask for changes in the chat. Nothing goes to owners until you start it."],
-            }}
-          />
-        }
-        focus={{}}
-        headerAction={
-          <Button variant="contained" onClick={start}>
-            Start workstream
-          </Button>
-        }
-      />
+      <Container maxWidth="xl" sx={{ py: SPACE.section }}>
+        <Stack gap={SPACE.section}>
+          <PageHeader eyebrow={signal.title} title="Create workstream" />
+
+          <StatusSummary label="Summary" summary={signal.plan.brief} />
+
+          <Grid {...presets.GridPresets.page}>
+            <Grid item sm={4} md={8} lg={4} xl={6}>
+              <RelevanceCard reasonsRelevant={draft.reasonsRelevant} />
+            </Grid>
+            <Grid item sm={4} md={8} lg={4} xl={6}>
+              <SourceSignalCard signal={signal} />
+            </Grid>
+          </Grid>
+
+          <SectionCard title="Plan">
+            <Typography variant="body1">{draft.plan.proposedApproach}</Typography>
+            <TaskTable
+              tasks={draft.plan.tasks}
+              detail="done-when"
+              onOwnerChange={(taskId, owner) =>
+                setDraft((d) => ({
+                  ...d,
+                  plan: {
+                    ...d.plan,
+                    tasks: d.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
+                  },
+                }))
+              }
+            />
+          </SectionCard>
+
+          <RulesCard rules={draft.plan.rules} />
+
+          <Stack direction="row" justifyContent="flex-end">
+            <Button variant="contained" onClick={start}>
+              Accept and start
+            </Button>
+          </Stack>
+        </Stack>
+      </Container>
     </SideChatLayout>
   );
 }
 
-/**
- * The workstream page's content, shared by a draft and a started workstream:
- * the status summary first, then the milestones and the timeline, then the signal's
- * details, collapsed once the workstream has started.
- */
-function WorkstreamView({
-  eyebrow,
-  name,
-  description,
-  reasonsRelevant,
-  plan,
-  signal,
-  statusSummary,
-  history,
-  now = new Date(),
-  onConfirmTask,
-  focus,
-  headerAction,
-  planActions,
-  onOpenTask,
-}: {
-  eyebrow: string;
-  name: string;
-  description: string;
-  reasonsRelevant: string[];
-  plan: WorkstreamPlan;
-  signal?: Signal;
-  statusSummary: ReactNode;
-  /** Omitted for a draft, which has no activity yet. */
-  history?: TimelineListItem[];
-  now?: Date;
-  onConfirmTask?: (taskId: string) => void;
-  focus: WorkstreamFocus;
-  headerAction?: ReactNode;
-  planActions?: ReactNode;
-  onOpenTask?: (taskId: string) => void;
-}) {
-  const { tokens, presets } = useTheme();
-  const showRules = usePlanRulesStore((s) => s.showRules);
-  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  const muted = tokens.semantic.color.type.muted.value;
-  const planAccepted = plan.status === "accepted";
-
-  // A link to a milestone scrolls to it once the page has laid out.
+/** A link to `?task=` scrolls the page to that task once it has laid out. */
+function useScrollToTask(taskId: string | undefined) {
   useEffect(() => {
-    if (!focus.milestoneId) return;
+    if (!taskId) return;
     const frame = requestAnimationFrame(() => {
-      const milestone = document.getElementById(milestoneAnchorId(focus.milestoneId!));
-      if (milestone) scrollContentTo(milestone);
+      const row = document.getElementById(taskAnchorId(taskId));
+      if (row) scrollContentTo(row, 96);
     });
     return () => cancelAnimationFrame(frame);
-  }, [focus.milestoneId, focus.taskId]);
+  }, [taskId]);
+}
 
+function PageHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
+  const { tokens } = useTheme();
   return (
-    <Container maxWidth="xl" sx={{ py: SPACE.section }}>
-      <Stack gap={SPACE.section}>
-        <Stack direction="row" alignItems="flex-end" justifyContent="space-between" gap={SPACE.block}>
-          <Stack gap={SPACE.pair}>
-            <Typography variant="textMd" sx={{ color: muted, fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-              {eyebrow}
-            </Typography>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-              {name}
-            </Typography>
-          </Stack>
-          {headerAction}
-        </Stack>
+    <Stack gap={SPACE.pair}>
+      <Typography
+        variant="textMd"
+        sx={{ color: tokens.semantic.color.type.muted.value, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+      >
+        {eyebrow}
+      </Typography>
+      <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+        {title}
+      </Typography>
+    </Stack>
+  );
+}
 
-        {statusSummary}
-
-        <SectionCard
-          title="Milestones"
-          action={
-            <StatusIndicator color={planAccepted ? "success" : "subtle"} label={planAccepted ? "Accepted" : "Draft"} />
-          }
-        >
-          <Typography variant="body1">{plan.proposedApproach}</Typography>
-          <PlanMilestones
-            plan={plan}
-            now={now}
-            onOpenTask={onOpenTask}
-            onConfirmTask={onConfirmTask}
-            highlightTaskId={focus.taskId}
-            focusMilestoneId={focus.milestoneId}
-            showTimeline={Boolean(history)}
-          />
-          {planActions ? (
-            <Stack direction="row" gap={SPACE.group} justifyContent="flex-end">
-              {planActions}
-            </Stack>
-          ) : null}
-        </SectionCard>
-
-        {history ? (
-          <SectionCard title="Timeline">
-            <TimelineList items={history} ariaLabel="Workstream timeline" now={now} />
-          </SectionCard>
-        ) : null}
-
-        <AboutSignal
-          key={planAccepted ? "started" : "draft"}
-          description={description}
-          reasonsRelevant={reasonsRelevant}
-          signal={signal}
-          defaultExpanded={!planAccepted}
-        />
-
-        {showRules ? (
-          <SectionCard title="Rules for Every Milestone">
-            <Typography variant="textMd" sx={{ color: muted }}>
-              Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits,
-              it stops and asks you.
-            </Typography>
-            <RuleTable rules={plan.rules} ariaLabel="Rules for every milestone" />
-          </SectionCard>
-        ) : null}
-      </Stack>
-    </Container>
+/** Hidden unless the Demo settings toggle is on. */
+function RulesCard({ rules }: { rules: PlanRule[] }) {
+  const { tokens } = useTheme();
+  const showRules = usePlanRulesStore((s) => s.showRules);
+  if (!showRules) return null;
+  return (
+    <SectionCard title="Rules Cowork Follows">
+      <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+        Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits, it
+        stops and asks you.
+      </Typography>
+      <RuleTable rules={rules} ariaLabel="Rules Cowork follows" />
+    </SectionCard>
   );
 }
 
 /** How many relevance points show before "Show more". */
 const RELEVANCE_SHOWN = 2;
 
-/**
- * The signal and its source in one section near the bottom. Open while you
- * review a draft; collapsed once the workstream has started, since you know it.
- */
-function AboutSignal({
+function RelevanceList({ reasonsRelevant }: { reasonsRelevant: string[] }) {
+  const [showAll, setShowAll] = useState(false);
+  const reasons = showAll ? reasonsRelevant : reasonsRelevant.slice(0, RELEVANCE_SHOWN);
+  return (
+    <Stack gap={SPACE.pair}>
+      <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
+        {reasons.map((reason) => (
+          <Typography component="li" variant="body1" key={reason}>
+            {reason}
+          </Typography>
+        ))}
+      </Box>
+      {reasonsRelevant.length > RELEVANCE_SHOWN && !showAll ? (
+        <Button variant="text" size="small" onClick={() => setShowAll(true)} sx={{ alignSelf: "flex-start" }}>
+          Show {reasonsRelevant.length - RELEVANCE_SHOWN} more
+        </Button>
+      ) : null}
+    </Stack>
+  );
+}
+
+function RelevanceCard({ reasonsRelevant }: { reasonsRelevant: string[] }) {
+  return (
+    <SectionCard title={RELEVANCE_LABEL}>
+      <RelevanceList reasonsRelevant={reasonsRelevant} />
+    </SectionCard>
+  );
+}
+
+/** The signal, why it matters and its source, collapsed: once the workstream has started, you know them. */
+function RelevanceAndSources({
   description,
   reasonsRelevant,
   signal,
-  defaultExpanded,
 }: {
   description: string;
   reasonsRelevant: string[];
   signal?: Signal;
-  defaultExpanded: boolean;
 }) {
-  const { tokens, presets } = useTheme();
+  const { presets } = useTheme();
   const AccordionHeader = presets.AccordionPresets.components.Header;
-  const [showAll, setShowAll] = useState(false);
-  const reasons = showAll ? reasonsRelevant : reasonsRelevant.slice(0, RELEVANCE_SHOWN);
-
   return (
-    <Card component="section" aria-label="About This Signal" sx={{ p: 0 }}>
-      <Accordion disableGutters defaultExpanded={defaultExpanded} data-atlas-alignment="start">
-        <AccordionSummary aria-controls="about-signal-details" id="about-signal-header">
+    <Card component="section" aria-label="Relevance and Sources" sx={{ p: 0 }}>
+      <Accordion disableGutters data-atlas-alignment="start">
+        <AccordionSummary aria-controls="relevance-sources-details" id="relevance-sources-header">
           <AccordionHeader
-            titleTextProps={{ text: "About This Signal", variant: "body1", component: "h2" }}
+            titleTextProps={{ text: "Relevance and Sources", variant: "body1", component: "h2" }}
             subtitleText={signal ? `${signal.title} · ${signal.source}` : undefined}
           />
         </AccordionSummary>
-        <AccordionDetails id="about-signal-details">
+        <AccordionDetails id="relevance-sources-details">
           <Grid {...presets.GridPresets.page}>
             <Grid item sm={4} md={8} lg={5} xl={8}>
               <Stack gap={SPACE.group}>
                 <Typography variant="body1">{description}</Typography>
                 <Stack gap={SPACE.pair}>
                   <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
-                  <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
-                    {reasons.map((reason) => (
-                      <Typography component="li" variant="body1" key={reason}>
-                        {reason}
-                      </Typography>
-                    ))}
-                  </Box>
-                  {reasonsRelevant.length > RELEVANCE_SHOWN && !showAll ? (
-                    <Button
-                      variant="text"
-                      size="small"
-                      onClick={() => setShowAll(true)}
-                      sx={{ alignSelf: "flex-start" }}
-                    >
-                      Show {reasonsRelevant.length - RELEVANCE_SHOWN} more
-                    </Button>
-                  ) : null}
+                  <RelevanceList reasonsRelevant={reasonsRelevant} />
                 </Stack>
               </Stack>
             </Grid>
             <Grid item sm={4} md={8} lg={3} xl={4}>
               {signal ? (
-                <Stack gap={SPACE.item} sx={{ color: tokens.semantic.color.type.default.value }}>
+                <Stack gap={SPACE.item}>
                   <FieldLabel>Source</FieldLabel>
                   <SourceDetails signal={signal} />
                 </Stack>

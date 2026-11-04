@@ -5,18 +5,13 @@ import { draftWorkstreamHref, workstreamFocusFromSearch, workstreamHref } from "
 import { draftWorkstreamFromSignal } from "./workstreamDraft";
 import type { Workstream } from "./workstream";
 
-test("a workstream link can open on a milestone and a task", () => {
+test("a workstream link can open on a task", () => {
   expect(workstreamHref("ws-1")).toBe("/workstreams/ws-1");
-  expect(workstreamHref("ws-1", { milestoneId: "assess", taskId: "atg-v-lane-memo" })).toBe(
-    "/workstreams/ws-1?milestone=assess&task=atg-v-lane-memo",
-  );
+  expect(workstreamHref("ws-1", { taskId: "atg-v-lane-counsel" })).toBe("/workstreams/ws-1?task=atg-v-lane-counsel");
 });
 
 test("the focus reads back from the query string", () => {
-  expect(workstreamFocusFromSearch("?milestone=assess&task=atg-v-lane-memo")).toEqual({
-    milestoneId: "assess",
-    taskId: "atg-v-lane-memo",
-  });
+  expect(workstreamFocusFromSearch("?task=atg-v-lane-counsel")).toEqual({ taskId: "atg-v-lane-counsel" });
   expect(workstreamFocusFromSearch("")).toEqual({});
 });
 
@@ -24,15 +19,15 @@ test("a signal with no workstream links to its draft", () => {
   expect(draftWorkstreamHref("atg-v-lane")).toBe("/workstreams/new?signal=atg-v-lane");
 });
 
-test("calendar tasks link to their workstream, opened on the task's milestone", () => {
+test("calendar tasks link to their workstream, opened on the task", () => {
   const workstream: Workstream = {
     ...draftWorkstreamFromSignal(ATG_RULING),
     id: "ws-1",
     createdAt: "2026-10-27T00:00:00Z",
   };
   const events = deriveCalendarEvents([workstream], new Date("2026-11-03T12:00:00Z"));
-  const memo = events.find((e) => e.kind === "task" && e.taskId.endsWith("memo"));
-  expect(memo?.href).toBe(`/workstreams/ws-1?milestone=assess&task=${memo?.kind === "task" ? memo.taskId : ""}`);
+  const counsel = events.find((e) => e.kind === "task" && e.taskId.endsWith("counsel"));
+  expect(counsel?.href).toBe("/workstreams/ws-1?task=atg-v-lane-counsel");
   const windowOpens = events.find((e) => e.kind === "external" && e.signalId === ATG_RULING.id);
   expect(windowOpens?.href).toBe("/workstreams/ws-1");
 });

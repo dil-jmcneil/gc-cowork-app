@@ -1,13 +1,12 @@
-/** Where on the workstream page a link opens: a milestone, and optionally a task inside it. */
-export type WorkstreamFocus = { milestoneId?: string; taskId?: string };
+/** Where on the workstream page a link opens: a task, scrolled to and highlighted. */
+export type WorkstreamFocus = { taskId?: string };
 
 /**
  * The one page every link goes to in the MVP. A focus opens the page on that
- * milestone and highlights the task, instead of a task page or dialog.
+ * task, highlighted, instead of a task page or dialog.
  */
 export function workstreamHref(workstreamId: string, focus: WorkstreamFocus = {}): string {
   const params = new URLSearchParams();
-  if (focus.milestoneId) params.set("milestone", focus.milestoneId);
   if (focus.taskId) params.set("task", focus.taskId);
   const query = params.toString();
   return `/workstreams/${workstreamId}${query ? `?${query}` : ""}`;
@@ -16,9 +15,7 @@ export function workstreamHref(workstreamId: string, focus: WorkstreamFocus = {}
 export function workstreamFocusFromSearch(search: string): WorkstreamFocus {
   const params = new URLSearchParams(search);
   const focus: WorkstreamFocus = {};
-  const milestoneId = params.get("milestone");
   const taskId = params.get("task");
-  if (milestoneId) focus.milestoneId = milestoneId;
   if (taskId) focus.taskId = taskId;
   return focus;
 }

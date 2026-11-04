@@ -10,47 +10,53 @@ test("draft defaults to the signal's title, description, and reasons", () => {
   expect(draft.reasonsRelevant).toEqual(ATG_RULING.reasonsRelevant);
 });
 
-test("each milestone's task templates become draft tasks with their owner and due date", () => {
+test("each task template becomes a draft task with its owner, CC, due date and what done looks like", () => {
   const { plan } = draftWorkstreamFromSignal(ATG_RULING);
   expect(plan.status).toBe("draft");
-  const templates = ATG_RULING.plan.milestones.flatMap((m) => m.tasks.map((t) => ({ ...t, milestoneId: m.id })));
-  expect(plan.tasks).toHaveLength(templates.length);
-  templates.forEach((template, i) => {
+  expect(plan.tasks).toHaveLength(ATG_RULING.plan.tasks.length);
+  ATG_RULING.plan.tasks.forEach((template, i) => {
     const task = plan.tasks[i];
-    expect(task.milestoneId).toBe(template.milestoneId);
+    expect(task.id).toBe(`${ATG_RULING.id}-${template.id}`);
     expect(task.description).toBe(template.description);
+    expect(task.doneWhen).toBe(template.doneWhen);
     expect(task.deadline).toBe(template.due);
     expect(task.delegate.id.replace(/^email:/, "")).toBe(template.ownerEmail);
+    expect(task.ccs.map((c) => c.id)).toEqual(template.ccEmails);
     expect(task.delegator).toBe("Peter");
     expect(task.status).toBe("Not started");
     expect(task.history).toEqual([]);
   });
 });
 
-test("the draft keeps the milestone contracts and rules, without the task templates", () => {
+test("the plan is four big-picture tasks, and preparing the change waits on counsel's view", () => {
   const { plan } = draftWorkstreamFromSignal(ATG_RULING);
-  expect(plan.milestones.map((m) => m.id)).toEqual(["assess", "prepare", "adopt", "watch"]);
-  for (const milestone of plan.milestones) {
-    expect(milestone).not.toHaveProperty("tasks");
-    expect(milestone.startsWhen.length).toBeGreaterThan(0);
-    expect(milestone.doneWhen.length).toBeGreaterThan(0);
-    expect(milestone.rules.length).toBeGreaterThan(0);
-  }
-  expect(plan.rules.some((r) => r.circuitBreaker)).toBe(true);
+  expect(plan.tasks.map((t) => t.description)).toEqual([
+    "Get counsel's view",
+    "Prepare the change",
+    "Adopt and disclose the amendment",
+    "Watch the nomination window",
+  ]);
+  expect(plan.tasks[1].waitingOn).toBe(`${ATG_RULING.id}-counsel`);
+  expect(plan.tasks[0].doneWhen).toMatch(/^Peter confirms whether the ruling affects Acme's bylaws/);
 });
 
-test("rule ids are unique within their table, so rows can be edited one at a time", () => {
-  const { plan } = draftWorkstreamFromSignal(ATG_RULING);
-  for (const rules of [plan.rules, ...plan.milestones.map((m) => m.rules)]) {
-    const ids = rules.map((r) => r.id);
-    expect(new Set(ids).size).toBe(ids.length);
+test("done-when lines are end states, each naming who confirms", () => {
+  for (const task of draftWorkstreamFromSignal(ATG_RULING).plan.tasks) {
+    expect(task.doneWhen, task.description).toMatch(/Peter (confirms|closes)/);
   }
 });
 
-test("every task is due before the nomination window opens", () => {
-  const windowOpens = ATG_RULING.deadlines[0].date;
-  const { plan } = draftWorkstreamFromSignal(ATG_RULING);
-  for (const task of plan.tasks) expect(task.deadline < windowOpens, task.description).toBe(true);
+test("rule ids are unique, so rows can be edited one at a time", () => {
+  const ids = draftWorkstreamFromSignal(ATG_RULING).plan.rules.map((r) => r.id);
+  expect(new Set(ids).size).toBe(ids.length);
+  expect(draftWorkstreamFromSignal(ATG_RULING).plan.rules.some((r) => r.circuitBreaker)).toBe(true);
+});
+
+test("the change is done before the nomination window opens, and watching ends when it closes", () => {
+  const [opens, closes] = ATG_RULING.deadlines.map((d) => d.date);
+  const tasks = draftWorkstreamFromSignal(ATG_RULING).plan.tasks;
+  for (const task of tasks.slice(0, 3)) expect(task.deadline < opens, task.description).toBe(true);
+  expect(tasks[3].deadline).toBe(closes);
 });
 
 test("draft tasks aren't copies of the change's external deadlines", () => {

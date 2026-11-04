@@ -134,7 +134,7 @@ function taskEvent(workstream: Workstream, task: WorkstreamTask, now: Date): Cal
     title: task.description,
     source: workstream.name,
     owner,
-    href: workstreamHref(workstream.id, { milestoneId: task.milestoneId, taskId: task.id }),
+    href: workstreamHref(workstream.id, { taskId: task.id }),
     linkLabel: `Task in ${workstream.name}`,
     summary: taskActivity(task, now),
     workstream: { name: workstream.name, href: workstreamHref(workstream.id) },

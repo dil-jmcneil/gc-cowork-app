@@ -21,8 +21,9 @@ function fromPastSignal(signal: Signal, past: PastWorkstream): Workstream {
   const tasks: WorkstreamTask[] = past.tasks.map((t) => {
     const task: WorkstreamTask = {
       id: t.id,
-      milestoneId: t.milestoneId,
       description: t.description,
+      doneWhen: t.doneWhen,
+      ...(t.waitingOn ? { waitingOn: t.waitingOn } : {}),
       delegator: LOGGED_IN_USER.firstName,
       delegate: ownerNamed(t.owner),
       ccs: [],
@@ -44,7 +45,6 @@ function fromPastSignal(signal: Signal, past: PastWorkstream): Workstream {
       proposedApproach:
         "Cowork tracks each task with its owner, follows up when one slips, and tells you when a milestone is ready to hand over.",
       status: "accepted",
-      milestones: past.milestones.map((m) => ({ ...m, rules: [] })),
       rules: ATG_RULING.plan!.rules.filter((r) => SHARED_RULE_IDS.includes(r.id)),
       tasks,
     },

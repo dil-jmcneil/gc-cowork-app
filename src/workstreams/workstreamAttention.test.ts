@@ -18,7 +18,7 @@ function startAtgWorkstream() {
 test("the headline is your next action: review Dana's memo", () => {
   const { summary, waitingOnYou } = workstreamAttention(startAtgWorkstream(), NOW);
   expect(summary.headline).toMatch(/^Review Dana's memo/);
-  expect(waitingOnYou.map((i) => i.task.id)).toEqual(["atg-v-lane-memo"]);
+  expect(waitingOnYou.map((i) => i.task.id)).toEqual(["atg-v-lane-counsel"]);
   expect(waitingOnYou[0].action).toBe("confirm");
 });
 
@@ -29,18 +29,25 @@ test("the support says what happened and who's held up, in two sentences at most
   expect(summary.support.join(" ")).toMatch(/Alex Kim/);
 });
 
+test("nobody else in the ATG story needs a nudge", () => {
+  expect(workstreamAttention(startAtgWorkstream(), NOW).waitingOnOthers).toHaveLength(0);
+});
+
 test("an owner who hasn't answered a follow-up is waiting on a nudge", () => {
-  const { waitingOnOthers } = workstreamAttention(startAtgWorkstream(), NOW);
-  expect(waitingOnOthers.map((i) => i.task.delegate.label)).toEqual(["Morgan Diaz"]);
+  const workstream = startAtgWorkstream();
+  useWorkstreamStore.getState().nudgeTask(workstream.id, "atg-v-lane-adopt");
+  const { waitingOnOthers } = workstreamAttention(useWorkstreamStore.getState().getWorkstream(workstream.id)!, NOW);
+  expect(waitingOnOthers.map((i) => i.task.delegate.label)).toEqual(["Pete Lin"]);
   expect(waitingOnOthers[0].action).toBe("nudge");
 });
 
-test("once you confirm the memo, the headline moves to Morgan", () => {
+test("once you confirm counsel's view, the headline turns to progress", () => {
   const workstream = startAtgWorkstream();
-  useWorkstreamStore.getState().confirmTaskDone(workstream.id, "atg-v-lane-memo");
+  useWorkstreamStore.getState().confirmTaskDone(workstream.id, "atg-v-lane-counsel");
   const after = workstreamAttention(useWorkstreamStore.getState().getWorkstream(workstream.id)!, NOW);
   expect(after.waitingOnYou).toHaveLength(0);
-  expect(after.summary.headline).toMatch(/^Nudge Morgan Diaz/);
+  expect(after.summary.headline).toBe("On track: 1 of 4 tasks done.");
+  expect(after.summary.support[0]).toMatch(/^Next up: prepare the change \(Alex Kim, due Nov 13\)/);
 });
 
 test("an overdue task is the headline when nothing waits on you", () => {

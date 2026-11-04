@@ -222,3 +222,15 @@ Phase 5 (Nov 4):
 2. **Past workstreams (California, Cyber 8-K).** Today they have no pages, and calendar clicks open their signal. The plan seeds them as real workstreams in the store, so their calendar tasks follow the same rule. The closed signals (FTC, exculpation, clawback) keep their chat cards with no drill-in.
 3. **The "chat toggle button".** The plan reads this as "Revise via chat" on the workstream page, the button Joe called sloppy on the call. If there's another toggle in Cyprian's screenshot, it gets the same treatment.
 4. **What to call "Plan".** Joe suggested it might not be called Plan. The working label is "Milestones".
+
+---
+
+## Follow-up (Nov 4): tasks replace milestones, two layouts
+
+Joe's sketches and answers after Phase 5:
+
+- **Milestones become the tasks.** A plan is a short list of big-picture tasks in deadline order. Each has an owner, CCs, a deadline, a status and **what done looks like** (a postcondition naming who confirms it). How each gets done is left to Cowork, the people involved and the plan's rules. Milestone rules merged into one rule list.
+- **Five statuses:** Not started, In progress, Needs your review, Blocked (waiting on another unfinished task, `waitingOn`) and Done. Drafts show only the base status.
+- **Two layouts, one page component.** Create: summary (what the signal is, why it matters, what Cowork suggests), Relevance and Source cards, the Plan card with "Done when" lines, Accept and start. View: status summary beside Artifacts, Tasks with status lines and "Open activity log" (a dialog), Relevance and Sources collapsed. Owners are editable in both; in View a change reassigns the task and Cowork emails the new owner.
+- **Smart Brevity** is a Claude skill for writing this prototype's copy (`.claude/skills/smart-brevity/SKILL.md`), applied in spirit with no framework labels on screen.
+- The ATG story is four tasks. Morgan's website follow-ups folded into Pete's "Adopt and disclose", so the ATG story no longer has an owner to nudge; Maya's overdue vendor pick in Climate disclosure readiness still shows Nudge.

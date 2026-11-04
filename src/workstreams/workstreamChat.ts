@@ -3,6 +3,7 @@ import { appendAssistantMessage, useChatMessagesStore } from "@/chat/chatMessage
 import { planEditFromChat } from "./planChat";
 import { summaryText } from "./summary";
 import { CONFIRMS_DONE, STATUS_QUESTION } from "./taskChat";
+import { summarizeTask } from "./taskStatus";
 import type { Workstream } from "./workstream";
 import { workstreamAttention } from "./workstreamAttention";
 import { useWorkstreamStore } from "./workstreamStore";
@@ -56,7 +57,7 @@ export function handleWorkstreamChatMessage(workstreamId: string, text: string, 
     return awaiting
       .map(
         (t) =>
-          `${t.delegate.label} says "${t.description}" is done, and it's waiting on your review. Reply "Got it" when you've checked it, and I'll close it.`,
+          `"${t.description}" is waiting on your review. ${summarizeTask(t, now)} Reply "Got it" once you've reviewed it, and I'll close it.`,
       )
       .join("\n\n");
   }

@@ -4,43 +4,30 @@ import { LOGGED_IN_USER } from "@/user";
 import { findPerson } from "./people";
 import type { WorkstreamDraft, WorkstreamTask } from "./workstream";
 
-const ASSOCIATE_GC = "pete.lin@acme.com";
-const CORPORATE_SECRETARY = "alex.kim@acme.com";
-
-/** The associate GC stays informed on every task, unless they own it. */
-function defaultCcs(ownerEmail: string) {
-  return [findPerson(ownerEmail === ASSOCIATE_GC ? CORPORATE_SECRETARY : ASSOCIATE_GC)];
-}
-
 /** Mocked "AI" draft: name, description, and the signal's plan, with one task per template. */
 export function draftWorkstreamFromSignal(signal: PlannedSignal): WorkstreamDraft {
-  const { approach, milestones, rules } = signal.plan;
+  const { approach, tasks: templates, rules } = signal.plan;
+  const taskId = (templateId: string) => `${signal.id}-${templateId}`;
 
-  const tasks: WorkstreamTask[] = milestones.flatMap((milestone) =>
-    milestone.tasks.map((template) => ({
-      id: `${signal.id}-${template.id}`,
-      milestoneId: milestone.id,
-      description: template.description,
-      delegator: LOGGED_IN_USER.firstName,
-      delegate: findPerson(template.ownerEmail),
-      ccs: defaultCcs(template.ownerEmail),
-      deadline: template.due,
-      status: "Not started",
-      history: [],
-    })),
-  );
+  const tasks: WorkstreamTask[] = templates.map((template) => ({
+    id: taskId(template.id),
+    description: template.description,
+    doneWhen: template.doneWhen,
+    ...(template.waitingOn ? { waitingOn: taskId(template.waitingOn) } : {}),
+    ...(template.approachPhrase ? { approachPhrase: template.approachPhrase } : {}),
+    delegator: LOGGED_IN_USER.firstName,
+    delegate: findPerson(template.ownerEmail),
+    ccs: template.ccEmails.map(findPerson),
+    deadline: template.due,
+    status: "Not started",
+    history: [],
+  }));
 
   return {
     name: signal.title,
     sourceSignalId: signal.id,
     description: signal.summary,
     reasonsRelevant: [...signal.reasonsRelevant],
-    plan: {
-      proposedApproach: approach,
-      status: "draft",
-      milestones: milestones.map(({ tasks: _tasks, ...milestone }) => milestone),
-      rules,
-      tasks,
-    },
+    plan: { proposedApproach: approach, status: "draft", rules, tasks },
   };
 }

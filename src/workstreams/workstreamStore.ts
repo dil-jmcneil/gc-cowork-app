@@ -4,7 +4,8 @@ import { SIGNALS } from "@/signals/signals";
 
 import { afterAtgTaskConfirmed, isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
 import { PAST_WORKSTREAMS } from "./pastWorkstreams";
-import type { TaskOwner } from "./people";
+import { ownerShortName, type TaskOwner } from "./people";
+import { formatShortDate } from "./taskStatus";
 import type { Workstream, WorkstreamDraft, WorkstreamTask, TaskStatus, WorkstreamPlan } from "./workstream";
 import type { HistoryEntry } from "./thread";
 import {
@@ -108,10 +109,20 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
         }),
       })),
 
-    assignTask: (workstreamId, taskId, owner) =>
+    assignTask: (workstreamId, taskId, owner) => {
+      const sentAt = nowIso();
       updateTask(workstreamId, taskId, (task) =>
-        append({ ...task, delegate: owner, statusSummary: undefined }, reassignmentEmail(task, owner, nowIso())),
-      ),
+        append(
+          {
+            ...task,
+            delegate: owner,
+            // About the new owner: the old one's last reply no longer says where it stands.
+            statusSummary: `Reassigned to ${owner.label} on ${formatShortDate(sentAt)}. Waiting on ${ownerShortName(owner)}'s reply.`,
+          },
+          reassignmentEmail(task, owner, sentAt),
+        ),
+      );
+    },
 
     setTaskStatus: (workstreamId, taskId, status) => {
       updateTask(workstreamId, taskId, (task) =>
@@ -128,7 +139,15 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
       if (!get().getTask(workstreamId, taskId)?.awaitingReview) return;
       const sentAt = nowIso();
       updateTask(workstreamId, taskId, (task) =>
-        append({ ...task, status: "Done", awaitingReview: false, statusSummary: undefined }, confirmedDoneNote(sentAt)),
+        append(
+          {
+            ...task,
+            status: "Done",
+            awaitingReview: false,
+            statusSummary: `You confirmed ${ownerShortName(task.delegate)}'s work on ${formatShortDate(sentAt)}.`,
+          },
+          confirmedDoneNote(sentAt),
+        ),
       );
       set((state) => ({
         workstreams: state.workstreams.map((w) =>

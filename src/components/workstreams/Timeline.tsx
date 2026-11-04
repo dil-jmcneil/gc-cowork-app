@@ -32,11 +32,22 @@ const FILTERS: { kind: HistoryKind | "all"; label: string }[] = [
  * two days, then steps up to 10 more, then everything, so the latest activity
  * is all you see until you ask for more. A quiet Filter menu narrows by kind.
  */
-export function TimelineList({ items, ariaLabel, now }: { items: TimelineListItem[]; ariaLabel: string; now: Date }) {
+export function TimelineList({
+  items,
+  ariaLabel,
+  now,
+  initialStep = "recent",
+}: {
+  items: TimelineListItem[];
+  ariaLabel: string;
+  now: Date;
+  /** Where the list starts; a task's own activity log starts on its latest 10. */
+  initialStep?: TimelineStep;
+}) {
   const { tokens } = useTheme();
   const muted = tokens.semantic.color.type.muted.value;
   const [filter, setFilter] = useState<HistoryKind | "all">("all");
-  const [step, setStep] = useState<TimelineStep>("recent");
+  const [step, setStep] = useState<TimelineStep>(initialStep);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const newest = useMemo(() => newestFirst(items, (i) => i.entry.sentAt), [items]);
   const matching = filter === "all" ? newest : newest.filter((i) => i.entry.kind === filter);

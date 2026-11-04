@@ -1,5 +1,4 @@
 import { capSupport, type Summary } from "./summary";
-import { currentMilestone } from "./milestones";
 import { formatShortDate, isTaskOverdue, summarizeTask, taskActivity } from "./taskStatus";
 import { isMessage } from "./thread";
 import type { Workstream, WorkstreamTask } from "./workstream";
@@ -48,14 +47,13 @@ function nudgeHeadline(task: WorkstreamTask, now: Date): string {
   return `Nudge ${owner}: no reply on "${task.description}" after ${n} follow-up${n === 1 ? "" : "s"}.`;
 }
 
-/** Owners of open tasks in the milestone after this task's, who can't move until it's done. */
+/** Owners of open tasks that wait on this one, who can't move until it's done. */
 function heldUpBy(workstream: Workstream, task: WorkstreamTask): string | undefined {
-  const { milestones, tasks } = workstream.plan;
-  const next = milestones[milestones.findIndex((m) => m.id === task.milestoneId) + 1];
-  if (!next) return undefined;
   const owners = [
     ...new Set(
-      tasks.filter((t) => t.milestoneId === next.id && t.status === "Not started").map((t) => t.delegate.label),
+      workstream.plan.tasks
+        .filter((t) => t.waitingOn === task.id && t.status !== "Done")
+        .map((t) => t.delegate.label),
     ),
   ];
   if (!owners.length) return undefined;
@@ -67,12 +65,10 @@ function progressSummary(workstream: Workstream): Summary {
   const done = tasks.filter((t) => t.status === "Done").length;
   if (done === tasks.length) return { headline: "Everything on the plan is done.", support: [] };
   const next = tasks.filter((t) => t.status !== "Done").sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
-  const milestone = currentMilestone(workstream.plan.milestones, tasks);
   return {
     headline: `On track: ${done} of ${tasks.length} tasks done.`,
     support: capSupport([
       `Next up: ${lowerFirst(next.description)} (${next.delegate.label}, due ${formatShortDate(next.deadline)}).`,
-      milestone ? `The current milestone is "${milestone.title}".` : undefined,
     ]),
   };
 }

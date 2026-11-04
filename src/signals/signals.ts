@@ -41,192 +41,150 @@ export const ATG_RULING: Signal = {
     "The nomination section asks about agreements with the nominee only. Agreements with any other person are asked about for other business, not nominations (slip op. 22)",
   ],
   plan: {
+    brief: {
+      headline: "Delaware's ATG ruling exposes gaps in Acme's nomination bylaw.",
+      support: [
+        "Article II, Section 8 hasn't changed since 2008, and the 2027 nomination window opens Jan 8.",
+        "Cowork suggests getting counsel's view, then amending the bylaw before the window opens.",
+      ],
+    },
     approach:
-      "Close the gaps in Article II, Section 8 before the nomination window opens on Jan 8. Counsel drafts the text, the board adopts it in December, and Cowork confirms the 8-K and the website, then watches the window.",
-    milestones: [
+      "Get counsel's view on Article II, Section 8, then put the change to the board in December so it's in force before the nomination window opens on Jan 8. Cowork tracks each task with its owner and watches the window.",
+    tasks: [
       {
-        id: "assess",
-        title: "Get counsel's view",
-        startsWhen: "Cowork has compared Article II, Section 8 with the ruling and listed the points for counsel.",
-        doneWhen: "Counsel's memo and draft text are with you, or you've recorded that no change is needed.",
-        approver: "Peter approves the draft text",
-        rules: [
-          {
-            id: "memo",
-            when: "Counsel has the points for counsel, but the memo hasn't arrived.",
-            actions:
-              "Send counsel the points with their slip opinion pages. Ask for the memo to go to you directly, so privileged files never pass through Cowork.",
-            until: "You confirm that the memo and draft text arrived.",
-            kind: "progress",
-          },
-          {
-            id: "already-reviewed",
-            when: "You reply that counsel already reviewed the bylaw.",
-            actions: "Close the signal. Record the date and who reviewed it.",
-            until: "The signal is closed, with the reason on record.",
-            kind: "exception",
-          },
-          {
-            id: "no-gap",
-            when: "Counsel finds no gap that needs a change.",
-            actions: "Quote counsel's reason to you, and close the signal when you confirm.",
-            until: "The signal is closed, with counsel's reason on record.",
-            kind: "exception",
-          },
-        ],
-        tasks: [
-          {
-            id: "memo",
-            description: "Send a memo on Article II, Section 8, with draft text",
-            ownerEmail: "dana.whitfield@whitfieldcrane.com",
-            due: "2026-11-06",
-          },
-        ],
+        id: "counsel",
+        description: "Get counsel's view",
+        doneWhen:
+          "Peter confirms whether the ruling affects Acme's bylaws, with counsel's memo and draft text in hand.",
+        ownerEmail: "dana.whitfield@whitfieldcrane.com",
+        ccEmails: ["pete.lin@acme.com"],
+        due: "2026-11-06",
       },
       {
         id: "prepare",
-        title: "Prepare the change",
-        startsWhen: "You've approved counsel's draft text.",
-        doneWhen: "The amendment and the updated nominee questionnaire are on the Governance Committee's agenda.",
-        approver: "Peter confirms the agenda",
-        rules: [
-          {
-            id: "share-draft",
-            when: "The draft text is approved, and the questionnaire and agenda owners don't have it yet.",
-            actions: "Send each owner the approved text in their own thread, and confirm their due dates.",
-            until: "Each owner has the text and has confirmed the date.",
-            kind: "progress",
-          },
-          {
-            id: "waiting",
-            when: "An owner is waiting on another task before they can start.",
-            actions: "Hold follow-ups for that owner. Tell them as soon as the other task is done.",
-            until: "The owner has what they need, and follow-ups resume.",
-            kind: "exception",
-          },
-          {
-            id: "date-moves",
-            when: "The committee or board meeting date moves.",
-            actions: "Count every due date back from Jan 8 again, and ask you to approve the new dates.",
-            until: "Every due date still lands before the window opens, or you accept the risk.",
-            kind: "exception",
-          },
-        ],
-        tasks: [
-          {
-            id: "agenda",
-            description: "Put the bylaw amendment on the Governance Committee's Dec 15 agenda",
-            ownerEmail: "alex.kim@acme.com",
-            due: "2026-11-10",
-          },
-          {
-            id: "questionnaire",
-            description:
-              "Add questions on agreements, concert parties, Section 13(d) groups and hedges to the nominee questionnaire",
-            ownerEmail: "alex.kim@acme.com",
-            due: "2026-11-13",
-          },
-        ],
+        description: "Prepare the change",
+        doneWhen:
+          "The amendment and the updated nominee questionnaire are on the Governance Committee's Dec 15 agenda, and Peter confirms the agenda.",
+        ownerEmail: "alex.kim@acme.com",
+        ccEmails: ["pete.lin@acme.com"],
+        due: "2026-11-13",
+        waitingOn: "counsel",
       },
       {
         id: "adopt",
-        title: "Adopt and disclose",
-        startsWhen: "The Governance Committee recommends the amendment.",
-        doneWhen: "The board adopted it, the 8-K under Item 5.03 is on EDGAR, and the website shows the new bylaws.",
-        approver: "Peter confirms the filing",
-        rules: [
-          {
-            id: "adopted",
-            when: "The board adopts the amendment.",
-            actions: "Work out the 8-K deadline, four business days later, and tell the filing owner.",
-            until: "The filing owner has the deadline.",
-            kind: "progress",
-          },
-          {
-            id: "filed",
-            when: "An 8-K under Item 5.03 with the new bylaws appears on EDGAR.",
-            actions: "Mark the filing task done, and tell you with a link to the filing.",
-            until: "You've seen the filing.",
-            kind: "progress",
-          },
-          {
-            id: "not-filed",
-            when: "The 8-K deadline passed, and there's no 8-K on EDGAR.",
-            actions: "Ask you whether the board adopted the change.",
-            until: "You answer, or the 8-K appears.",
-            kind: "exception",
-          },
-          {
-            id: "office-closed",
-            when: "Federal offices close on the deadline day.",
-            actions: "Move the deadline to the next business day, and tell the filing owner.",
-            until: "The filing owner has the new date.",
-            kind: "exception",
-          },
-        ],
-        tasks: [
-          {
-            id: "8k",
-            description: "File the 8-K under Item 5.03 with the new bylaws",
-            ownerEmail: "pete.lin@acme.com",
-            due: "2026-12-24",
-          },
-          {
-            id: "website",
-            description: "Post the new bylaws on the governance documents page",
-            ownerEmail: "morgan.diaz@acme.com",
-            due: "2026-12-23",
-          },
-        ],
+        description: "Adopt and disclose the amendment",
+        doneWhen:
+          "The board has adopted it, the 8-K under Item 5.03 is on EDGAR, and the website shows the new bylaws. Peter confirms the filing.",
+        ownerEmail: "pete.lin@acme.com",
+        ccEmails: ["morgan.diaz@acme.com"],
+        due: "2026-12-24",
+        waitingOn: "prepare",
       },
       {
         id: "watch",
-        title: "Watch the nomination window",
-        startsWhen: "The new bylaws are in force.",
-        doneWhen: "The window closed on Feb 6, and every notice that came in was reviewed under the new process.",
-        approver: "Peter closes the signal",
-        approachPhrase: ", then watches the window",
-        rules: [
-          {
-            id: "edgar",
-            when: "The nomination window is open.",
-            actions: "Check EDGAR each day for a Schedule 13D or a contest filing, and tell you the same day.",
-            until: "The window has closed.",
-            kind: "progress",
-          },
-          {
-            id: "notice",
-            when: "You tell Cowork a nomination notice arrived.",
-            actions:
-              "Log it with the date received, start the review process, and track the deficiency letter date. The first letter must state every ground (slip op. 33).",
-            until: "The notice is reviewed, and any deficiency letter has gone out.",
-            kind: "progress",
-          },
-          {
-            id: "saturday",
-            when: "A notice arrives on Saturday, Feb 6.",
-            actions: "Follow the office's decision on Saturday notices, and tell you.",
-            until: "The notice is logged with the date the office took it.",
-            kind: "exception",
-          },
-        ],
-        tasks: [
-          {
-            id: "process",
-            description: "Write the process for reviewing nomination notices",
-            ownerEmail: "pete.lin@acme.com",
-            due: "2027-01-06",
-          },
-          {
-            id: "saturday",
-            description: "Decide how the office takes a notice on Saturday, Feb 6",
-            ownerEmail: "alex.kim@acme.com",
-            due: "2027-01-06",
-          },
-        ],
+        description: "Watch the nomination window",
+        doneWhen:
+          "The window closed on Feb 6, every notice that came in was reviewed under the new process, and Peter closes the signal.",
+        ownerEmail: "pete.lin@acme.com",
+        ccEmails: ["alex.kim@acme.com"],
+        due: "2027-02-06",
+        approachPhrase: " and watches the window",
       },
     ],
     rules: [
+      {
+        id: "memo",
+        when: "Counsel has the points for counsel, but the memo hasn't arrived.",
+        actions:
+          "Send counsel the points with their slip opinion pages. Ask for the memo to go to you directly, so privileged files never pass through Cowork.",
+        until: "You confirm that the memo and draft text arrived.",
+        kind: "progress",
+      },
+      {
+        id: "already-reviewed",
+        when: "You reply that counsel already reviewed the bylaw.",
+        actions: "Close the signal. Record the date and who reviewed it.",
+        until: "The signal is closed, with the reason on record.",
+        kind: "exception",
+      },
+      {
+        id: "no-gap",
+        when: "Counsel finds no gap that needs a change.",
+        actions: "Quote counsel's reason to you, and close the signal when you confirm.",
+        until: "The signal is closed, with counsel's reason on record.",
+        kind: "exception",
+      },
+      {
+        id: "share-draft",
+        when: "The draft text is approved, and the questionnaire and agenda owners don't have it yet.",
+        actions: "Send each owner the approved text in their own thread, and confirm their due dates.",
+        until: "Each owner has the text and has confirmed the date.",
+        kind: "progress",
+      },
+      {
+        id: "waiting",
+        when: "An owner is waiting on another task before they can start.",
+        actions: "Hold follow-ups for that owner. Tell them as soon as the other task is done.",
+        until: "The owner has what they need, and follow-ups resume.",
+        kind: "exception",
+      },
+      {
+        id: "date-moves",
+        when: "The committee or board meeting date moves.",
+        actions: "Count every due date back from Jan 8 again, and ask you to approve the new dates.",
+        until: "Every due date still lands before the window opens, or you accept the risk.",
+        kind: "exception",
+      },
+      {
+        id: "adopted",
+        when: "The board adopts the amendment.",
+        actions: "Work out the 8-K deadline, four business days later, and tell the filing owner.",
+        until: "The filing owner has the deadline.",
+        kind: "progress",
+      },
+      {
+        id: "filed",
+        when: "An 8-K under Item 5.03 with the new bylaws appears on EDGAR.",
+        actions: "Mark the filing task done, and tell you with a link to the filing.",
+        until: "You've seen the filing.",
+        kind: "progress",
+      },
+      {
+        id: "not-filed",
+        when: "The 8-K deadline passed, and there's no 8-K on EDGAR.",
+        actions: "Ask you whether the board adopted the change.",
+        until: "You answer, or the 8-K appears.",
+        kind: "exception",
+      },
+      {
+        id: "office-closed",
+        when: "Federal offices close on the deadline day.",
+        actions: "Move the deadline to the next business day, and tell the filing owner.",
+        until: "The filing owner has the new date.",
+        kind: "exception",
+      },
+      {
+        id: "edgar",
+        when: "The nomination window is open.",
+        actions: "Check EDGAR each day for a Schedule 13D or a contest filing, and tell you the same day.",
+        until: "The window has closed.",
+        kind: "progress",
+      },
+      {
+        id: "notice",
+        when: "You tell Cowork a nomination notice arrived.",
+        actions:
+          "Log it with the date received, start the review process, and track the deficiency letter date. The first letter must state every ground (slip op. 33).",
+        until: "The notice is reviewed, and any deficiency letter has gone out.",
+        kind: "progress",
+      },
+      {
+        id: "saturday",
+        when: "A notice arrives on Saturday, Feb 6.",
+        actions: "Follow the office's decision on Saturday notices, and tell you.",
+        until: "The notice is logged with the date the office took it.",
+        kind: "exception",
+      },
       {
         id: "follow-up",
         when: "An owner hasn't replied for three business days.",
@@ -320,26 +278,10 @@ export const PAST_SIGNALS: Signal[] = [
       startedOn: "2026-10-16",
       statusSummary:
         "2 of 4 tasks done. Acme is confirmed in scope and the facilities data is in; Maya's pick of an assurance vendor slipped past Nov 2, which holds up the Dec 4 Audit Committee briefing.",
-      milestones: [
-        {
-          id: "climate-scope-data",
-          title: "Confirm scope and collect the data",
-          startsWhen: "The reporting dates under SB 253 are set.",
-          doneWhen: "Acme is confirmed in scope, and fiscal 2026 Scope 1 and 2 data is in from every facility.",
-          approver: "Peter confirms the scope",
-        },
-        {
-          id: "climate-assure-brief",
-          title: "Get assurance and brief the Audit Committee",
-          startsWhen: "The fiscal 2026 data is in.",
-          doneWhen: "An assurance vendor is engaged, and the Audit Committee has the reporting timeline.",
-          approver: "Peter confirms the briefing",
-        },
-      ],
       tasks: [
         {
           id: "climate-scope",
-          milestoneId: "climate-scope-data",
+          doneWhen: "Acme is confirmed in or out of scope for SB 253, with the reason on record.",
           description: "Confirm Acme is in scope for SB 253",
           owner: "Sam Ortiz",
           due: "2026-10-23",
@@ -348,7 +290,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "climate-data",
-          milestoneId: "climate-scope-data",
+          doneWhen: "Fiscal 2026 Scope 1 and 2 data is in from every facility.",
           description: "Collect fiscal 2026 Scope 1 and 2 data from facilities",
           owner: "Raj Patel",
           due: "2026-11-03",
@@ -357,7 +299,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "climate-assurance",
-          milestoneId: "climate-assure-brief",
+          doneWhen: "An assurance vendor is engaged for the first report.",
           description: "Choose a third-party assurance vendor",
           owner: "Maya Chen",
           due: "2026-11-02",
@@ -366,7 +308,8 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "climate-briefing",
-          milestoneId: "climate-assure-brief",
+          doneWhen: "The Audit Committee has the reporting timeline, and Peter confirms the briefing.",
+          waitingOn: "climate-assurance",
           description: "Brief the Audit Committee on the reporting timeline",
           owner: "Alex Kim",
           due: "2026-12-04",
@@ -417,26 +360,10 @@ export const PAST_SIGNALS: Signal[] = [
       startedOn: "2026-09-24",
       statusSummary:
         "3 of 4 tasks done. The plan now says four business days, Raj signs 8-K cyber filings, and the tabletop ran Nov 2; Alex adds the plan to the Nov 12 Audit Committee pre-read.",
-      milestones: [
-        {
-          id: "cyber-fix-plan",
-          title: "Fix the incident response plan",
-          startsWhen: "SEC staff guidance on Item 1.05 is out.",
-          doneWhen: "The plan says four business days, and someone is named to sign an 8-K cyber filing.",
-          approver: "Peter approves the redline",
-        },
-        {
-          id: "cyber-test-report",
-          title: "Test the plan and report it",
-          startsWhen: "The updated plan is signed.",
-          doneWhen: "A tabletop has tested the materiality call, and the Audit Committee has the updated plan.",
-          approver: "Peter confirms the pre-read",
-        },
-      ],
       tasks: [
         {
           id: "cyber-irp",
-          milestoneId: "cyber-fix-plan",
+          doneWhen: "Incident Response Plan §4.2 says four business days, and Peter approves the redline.",
           description: "Update Incident Response Plan §4.2 to four business days",
           owner: "Pete Lin",
           due: "2026-10-16",
@@ -445,7 +372,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "cyber-signoff",
-          milestoneId: "cyber-fix-plan",
+          doneWhen: "Someone is named to sign an 8-K cyber filing, with a backup.",
           description: "Confirm who signs an 8-K cyber filing",
           owner: "Raj Patel",
           due: "2026-10-23",
@@ -454,7 +381,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "cyber-tabletop",
-          milestoneId: "cyber-test-report",
+          doneWhen: "A tabletop has tested the materiality call end to end.",
           description: "Run a tabletop exercise on the materiality decision",
           owner: "Maya Chen",
           due: "2026-11-02",
@@ -463,7 +390,8 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "cyber-preread",
-          milestoneId: "cyber-test-report",
+          doneWhen: "The updated plan is in the Audit Committee pre-read, and Peter confirms it.",
+          waitingOn: "cyber-irp",
           description: "Add the updated plan to the Audit Committee pre-read",
           owner: "Alex Kim",
           due: "2026-11-12",

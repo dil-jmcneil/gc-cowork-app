@@ -4,11 +4,20 @@ import type { HistoryEntry } from "./thread";
 /** Workstream, Plan and Task follow the GC Cowork OOUX object model. */
 export type TaskStatus = "Not started" | "In progress" | "Done";
 
+/**
+ * A big-picture task in the plan, judged only by its contract: who owns it and
+ * what done looks like. How it gets done isn't prescribed; Cowork and the
+ * people involved work through that, governed by the plan's rules.
+ */
 export type WorkstreamTask = {
   id: string;
-  /** The milestone this task belongs to. */
-  milestoneId: string;
   description: string;
+  /** The postcondition: the end state that closes the task, and who confirms it. */
+  doneWhen: string;
+  /** Another task that has to finish before this one can move; it's Blocked until then. */
+  waitingOn?: string;
+  /** The words in the plan's approach that describe this task, removed with it. */
+  approachPhrase?: string;
   delegator: string;
   /** Owner of the task. */
   delegate: TaskOwner;
@@ -49,33 +58,12 @@ export type PlanRule = {
   kind: "progress" | "exception";
 };
 
-/**
- * A big step in the plan: judged only by its contract, what must be true to
- * start and what must exist to hand over, with a person approving the move on.
- * What happens inside is governed by the milestone's rules, not a fixed route.
- */
-export type Milestone = {
-  id: string;
-  title: string;
-  /** Input context: what must be true to begin. */
-  startsWhen: string;
-  /** Output context: what must exist before the next milestone starts. */
-  doneWhen: string;
-  /** Who approves the handover to the next milestone. */
-  approver: string;
-  /** The words in the plan's approach that describe this milestone, removed with it. */
-  approachPhrase?: string;
-  rules: PlanRule[];
-};
-
 export type PlanStatus = "draft" | "accepted";
 
 export type WorkstreamPlan = {
   proposedApproach: string;
   status: PlanStatus;
-  /** The plan's spine, in order. */
-  milestones: Milestone[];
-  /** Rules that apply in every milestone. */
+  /** How Cowork works the tasks: precondition, actions, postcondition rows. */
   rules: PlanRule[];
   tasks: WorkstreamTask[];
 };
