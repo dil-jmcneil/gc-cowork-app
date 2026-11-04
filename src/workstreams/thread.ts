@@ -44,6 +44,8 @@ export type HistoryFile = {
   /** Where it came from, e.g. "Attached to Dana's email". */
   note?: string;
   sentAt: string;
+  /** The document's text, for the file viewer: paragraphs, "## " headings, "- " bullets. */
+  body?: string;
 };
 
 export type HistoryEntry = TaskMessage | HistoryAction | HistoryFile;

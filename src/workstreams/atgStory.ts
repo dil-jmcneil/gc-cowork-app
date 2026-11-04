@@ -1,6 +1,16 @@
 import { ATG_RULING } from "@/signals/signals";
 import { LOGGED_IN_USER } from "@/user";
 
+import {
+  AGENDA_BODY,
+  AGENDA_FILE,
+  COMPARISON_BODY,
+  COMPARISON_FILE,
+  MEMO_BODY,
+  MEMO_FILE,
+  OUTLINE_BODY,
+  OUTLINE_FILE,
+} from "./atgFiles";
 import { findPerson } from "./people";
 import { formatShortDate } from "./taskStatus";
 import type { Workstream, WorkstreamTask } from "./workstream";
@@ -49,12 +59,7 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         coworkAction("Compared Article II, Section 8 with the ruling", "2026-10-27T13:29:00Z", {
           detail: "Found four points for counsel and five items the bylaw already covers.",
         }),
-        fileAdded(
-          "Bylaw comparison, Article II, Section 8 v. ATG v. Lane.docx",
-          "Cowork",
-          "2026-10-27T13:29:30Z",
-          "Shared with Dana",
-        ),
+        fileAdded(COMPARISON_FILE, "Cowork", "2026-10-27T13:29:30Z", "Shared with Dana", COMPARISON_BODY),
         coworkAction("Held the first email to Dana for your review", "2026-10-27T13:30:30Z", {
           rule: "Cowork is about to email someone outside Acme for the first time.",
         }),
@@ -77,7 +82,9 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
           DANA,
           `Done. I emailed ${GC} the memo and a draft Section 8 this afternoon, ahead of the Nov 6 date.`,
           "2026-11-02T21:40:00Z",
+          [MEMO_FILE],
         ),
+        fileAdded(MEMO_FILE, "Dana Whitfield", "2026-11-02T21:40:00Z", "Attached to Dana's email to you", MEMO_BODY),
         coworkAction("Held the task open for your review", "2026-11-02T21:41:00Z", {
           detail:
             "Dana is outside Acme, so Dana's \"done\" doesn't close the task. You confirm it once you've reviewed the memo.",
@@ -90,6 +97,7 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
       ],
       awaitingReview: true,
       reviewPrompt: "Review Dana's memo and draft Section 8, then confirm.",
+      reviewFile: MEMO_FILE,
       statusSummary: "Dana sent the memo and draft Section 8 to you on Nov 2.",
     });
   }
@@ -112,14 +120,9 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
           ALEX,
           "The amendment is item 3 on the Governance Committee's Dec 15 agenda, and I've held Dec 18 for a special board meeting.",
           "2026-10-29T15:10:00Z",
-          ["Governance Committee agenda, Dec 15.pdf"],
+          [AGENDA_FILE],
         ),
-        fileAdded(
-          "Governance Committee agenda, Dec 15.pdf",
-          "Alex Kim",
-          "2026-10-29T15:10:00Z",
-          "Attached to Alex's email",
-        ),
+        fileAdded(AGENDA_FILE, "Alex Kim", "2026-10-29T15:10:00Z", "Attached to Alex's email", AGENDA_BODY),
       ],
       statusSummary:
         "The Dec 15 committee slot is booked. Alex starts the questionnaire once you approve counsel's text.",
@@ -155,14 +158,9 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
           PETE,
           "Drafting the notice review process now. The first deficiency letter will list every ground, so we never have to send a second one. Outline attached.",
           "2026-10-30T17:25:00Z",
-          ["Nomination notice review process (outline).docx"],
+          [OUTLINE_FILE],
         ),
-        fileAdded(
-          "Nomination notice review process (outline).docx",
-          "Pete Lin",
-          "2026-10-30T17:25:00Z",
-          "Attached to Pete's email",
-        ),
+        fileAdded(OUTLINE_FILE, "Pete Lin", "2026-10-30T17:25:00Z", "Attached to Pete's email", OUTLINE_BODY),
         gcChatMessage(note, "2026-11-02T14:10:00Z"),
         relayEmail(task, note, "2026-11-02T14:11:00Z"),
       ],

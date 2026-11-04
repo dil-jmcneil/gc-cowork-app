@@ -141,7 +141,7 @@ Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into
 
 ### Workstream layouts
 
-One page, two layouts. **Create** (a draft, `/workstreams/new?signal=`): what the signal is, why it matters and what Cowork suggests; Relevance and Source cards; the Plan card (task, owner, CC, deadline, status, then "Done when"); Accept and start. **View** (`/workstreams/:id`): the status summary beside Artifacts (every file Cowork or a person added); the Tasks card (each task's second line is its status summary, with "Open activity log" in a dialog); Relevance and Sources, collapsed. Owners are editable in both; in View, changing one reassigns the task and Cowork emails the new owner.
+One page, two layouts. **Create** (a draft, `/workstreams/new?signal=`): what the signal is, why it matters and what Cowork suggests; Relevance and Source cards; the Plan card (task, owner, CC, deadline, status, then "Done when"); Accept and start. **View** (`/workstreams/:id`): the status summary beside Artifacts (every file Cowork or a person added); the Tasks card (each task's second line is its status summary, with "Open activity log" in a dialog); Relevance and Sources, collapsed. Owners are editable in both; in View, changing one reassigns the task and Cowork emails the new owner, and the status badge is a menu (Not started, In progress, Done; Done from the list counts as confirming). Artifact titles, and "Open the draft" on a task waiting on your review, open the file in the main panel (`?file=`) with a Back button; the chat stays open. Story files carry mock text (`src/workstreams/atgFiles.ts`).
 
 ## Writing style
 

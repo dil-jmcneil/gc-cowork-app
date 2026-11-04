@@ -1,6 +1,10 @@
+import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
 import {
   Box,
+  ButtonBase,
   Link,
+  Menu,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -11,12 +15,12 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 
 import { formatDate } from "@/lib/dates";
 import { SPACE } from "@/lib/layout";
 import { taskDisplayStatus, type TaskDisplayLabel } from "@/workstreams/taskStatus";
-import type { WorkstreamTask } from "@/workstreams/workstream";
+import type { TaskStatus, WorkstreamTask } from "@/workstreams/workstream";
 import type { TaskOwner } from "@/workstreams/people";
 
 import { OwnerTypeahead } from "./OwnerTypeahead";
@@ -40,6 +44,8 @@ export function TaskTable({
   detail,
   onOwnerChange,
   onOpenActivity,
+  onOpenFile,
+  onStatusChange,
   summarize,
   highlightTaskId,
   ariaLabel = "Tasks",
@@ -51,6 +57,10 @@ export function TaskTable({
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   /** Opens the task's activity log. */
   onOpenActivity?: (taskId: string) => void;
+  /** Makes each status a menu: Not started, In progress, Done. */
+  onStatusChange?: (taskId: string, status: TaskStatus) => void;
+  /** Opens a file; a task waiting on your review links its file from the status line. */
+  onOpenFile?: (fileId: string) => void;
   /** The status line for a task, for the "status" detail. */
   summarize?: (task: WorkstreamTask) => string;
   /** The task a link opened the page on; its rows are tinted. */
@@ -114,7 +124,11 @@ export function TaskTable({
                   <TableCell sx={{ whiteSpace: "normal" }}>{task.ccs.map((cc) => cc.label).join(", ")}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDate(task.deadline)}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    <StatusIndicator color={STATUS_COLOR[status.label]} label={status.label} />
+                    {onStatusChange ? (
+                      <StatusMenu task={task} label={status.label} onChange={(next) => onStatusChange(task.id, next)} />
+                    ) : (
+                      <StatusIndicator color={STATUS_COLOR[status.label]} label={status.label} />
+                    )}
                   </TableCell>
                 </TableRow>
                 <TableRow className="task-detail" sx={rowSx}>
@@ -129,7 +143,10 @@ export function TaskTable({
                             {task.doneWhen}
                           </>
                         ) : (
-                          (summarize?.(task) ?? "")
+                          <>
+                            {summarize?.(task) ?? ""}
+                            <ReviewFileLink task={task} onOpenFile={onOpenFile} />
+                          </>
                         )}
                       </Typography>
                       {detail === "status" && onOpenActivity ? (
@@ -153,6 +170,77 @@ export function TaskTable({
         </TableBody>
       </Table>
     </TableContainer>
+  );
+}
+
+const STATUS_OPTIONS: TaskStatus[] = ["Not started", "In progress", "Done"];
+
+/**
+ * The task's status badge as a menu button. You set the base status; Needs
+ * your review and Blocked come from the work itself, so they aren't options.
+ */
+function StatusMenu({
+  task,
+  label,
+  onChange,
+}: {
+  task: WorkstreamTask;
+  label: TaskDisplayLabel;
+  onChange: (status: TaskStatus) => void;
+}) {
+  const { tokens, presets } = useTheme();
+  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  return (
+    <>
+      <ButtonBase
+        aria-haspopup="menu"
+        aria-expanded={anchor ? "true" : undefined}
+        aria-label={`Status of ${task.description}: ${label}. Change status`}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        sx={{ gap: SPACE.pair, borderRadius: tokens.semantic.radius.sm.value, px: SPACE.pair, ml: -SPACE.pair }}
+      >
+        <StatusIndicator color={STATUS_COLOR[label]} label={label} />
+        <CaretDownIcon aria-hidden style={{ width: 16, height: 16, color: tokens.semantic.color.type.muted.value }} />
+      </ButtonBase>
+      <Menu anchorEl={anchor} open={anchor !== null} onClose={() => setAnchor(null)}>
+        {STATUS_OPTIONS.map((option) => (
+          <MenuItem
+            key={option}
+            selected={option === task.status}
+            onClick={() => {
+              setAnchor(null);
+              onChange(option);
+            }}
+          >
+            {option}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+}
+
+/** For a task waiting on your review: a link to the file to review, after its status line. */
+function ReviewFileLink({ task, onOpenFile }: { task: WorkstreamTask; onOpenFile?: (fileId: string) => void }) {
+  const file =
+    task.awaitingReview && task.reviewFile
+      ? task.history.find((e) => e.kind === "file" && e.name === task.reviewFile)
+      : undefined;
+  if (!file || !onOpenFile) return null;
+  return (
+    <>
+      {" "}
+      <Link
+        component="button"
+        type="button"
+        underline="hover"
+        onClick={() => onOpenFile(file.id)}
+        sx={{ font: "inherit", verticalAlign: "baseline" }}
+      >
+        Open the draft
+      </Link>
+    </>
   );
 }
 

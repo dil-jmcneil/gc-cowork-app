@@ -95,8 +95,16 @@ export function coworkAction(
 }
 
 /** A file added to the task. */
-export function fileAdded(name: string, addedBy: string, sentAt: string, note?: string): HistoryFile {
-  return { kind: "file", id: makeMessageId(), name, addedBy, sentAt, ...(note ? { note } : {}) };
+export function fileAdded(name: string, addedBy: string, sentAt: string, note?: string, body?: string): HistoryFile {
+  return {
+    kind: "file",
+    id: makeMessageId(),
+    name,
+    addedBy,
+    sentAt,
+    ...(note ? { note } : {}),
+    ...(body ? { body } : {}),
+  };
 }
 
 /** Cowork tells the GC something in chat, such as which rule it applied. */

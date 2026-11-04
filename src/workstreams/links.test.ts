@@ -10,6 +10,11 @@ test("a workstream link can open on a task", () => {
   expect(workstreamHref("ws-1", { taskId: "atg-v-lane-counsel" })).toBe("/workstreams/ws-1?task=atg-v-lane-counsel");
 });
 
+test("a workstream link can open a file", () => {
+  expect(workstreamHref("ws-1", { fileId: "f-1" })).toBe("/workstreams/ws-1?file=f-1");
+  expect(workstreamFocusFromSearch("?file=f-1")).toEqual({ fileId: "f-1" });
+});
+
 test("the focus reads back from the query string", () => {
   expect(workstreamFocusFromSearch("?task=atg-v-lane-counsel")).toEqual({ taskId: "atg-v-lane-counsel" });
   expect(workstreamFocusFromSearch("")).toEqual({});

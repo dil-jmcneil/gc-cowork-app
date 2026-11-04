@@ -18,8 +18,9 @@ import { useEffect, useState } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
-import { scrollContentTo, SideChatLayout } from "@/components/chat/SideChatLayout";
+import { scrollContentTo, scrollContentToTop, SideChatLayout } from "@/components/chat/SideChatLayout";
 import { ArtifactsCard } from "@/components/workstreams/ArtifactsCard";
+import { FileView } from "@/components/workstreams/FileView";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
 import { SourceDetails, SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
@@ -32,6 +33,7 @@ import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
 import { workstreamFocusFromSearch, workstreamHref } from "@/workstreams/links";
 import { planEditFromChat } from "@/workstreams/planChat";
 import { summarizeTask } from "@/workstreams/taskStatus";
+import type { HistoryFile } from "@/workstreams/thread";
 import type { PlanRule, WorkstreamDraft } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
 import { workstreamAttention } from "@/workstreams/workstreamAttention";
@@ -56,6 +58,7 @@ export default function WorkstreamPage() {
   const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.id === workstreamId));
   const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
   const assignTask = useWorkstreamStore((s) => s.assignTask);
+  const setTaskStatus = useWorkstreamStore((s) => s.setTaskStatus);
   const confirmTaskDone = useWorkstreamStore((s) => s.confirmTaskDone);
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
@@ -70,6 +73,8 @@ export default function WorkstreamPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workstream?.id]);
   useScrollToTask(focus.taskId);
+  // Opening or closing a file swaps the page content, so start it at the top.
+  useEffect(() => scrollContentToTop(), [focus.fileId]);
 
   if (!workstream) {
     return (
@@ -84,6 +89,15 @@ export default function WorkstreamPage() {
 
   const { tasks } = workstream.plan;
   const signal = SIGNALS.find((c) => c.id === workstream.sourceSignalId);
+  const openFile = (fileId: string) => navigate(workstreamHref(workstream.id, { fileId }));
+  // A file opened from the workstream replaces the page content; the chat stays.
+  const opened = focus.fileId
+    ? tasks.flatMap((task) =>
+        task.history
+          .filter((e): e is HistoryFile => e.kind === "file" && e.id === focus.fileId)
+          .map((file) => ({ file, task })),
+      )[0]
+    : undefined;
   const confirm = (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     confirmTaskDone(workstream.id, taskId);
@@ -97,75 +111,90 @@ export default function WorkstreamPage() {
       chatId={workstreamChatId(workstream.id)}
       onUserMessage={(text) => handleWorkstreamChatMessage(workstream.id, text, new Date())}
     >
-      <Container maxWidth="xl" sx={{ py: SPACE.section }}>
-        <Stack gap={SPACE.section}>
-          <PageHeader eyebrow="Workstream" title={workstream.name} />
+      {opened ? (
+        <FileView
+          file={opened.file}
+          taskName={opened.task.description}
+          backLabel={`Back to ${workstream.name}`}
+          onBack={() => navigate(workstreamHref(workstream.id))}
+        />
+      ) : (
+        <Container maxWidth="xl" sx={{ py: SPACE.section }}>
+          <Stack gap={SPACE.section}>
+            <PageHeader eyebrow="Workstream" title={workstream.name} />
 
-          <Grid {...presets.GridPresets.page}>
-            <Grid item sm={4} md={8} lg={5} xl={8}>
-              <StatusSummary
-                {...workstreamAttention(workstream, now)}
-                nudged={nudged}
-                onConfirm={({ task }) => confirm(task.id)}
-                onNudge={({ task }) => {
-                  nudgeTask(workstream.id, task.id);
-                  setNudged((prev) => new Set(prev).add(task.id));
-                  setToast(`Nudge sent to ${task.delegate.label}.`);
+            <Grid {...presets.GridPresets.page}>
+              <Grid item sm={4} md={8} lg={5} xl={8}>
+                <StatusSummary
+                  {...workstreamAttention(workstream, now)}
+                  nudged={nudged}
+                  onConfirm={({ task }) => confirm(task.id)}
+                  onNudge={({ task }) => {
+                    nudgeTask(workstream.id, task.id);
+                    setNudged((prev) => new Set(prev).add(task.id));
+                    setToast(`Nudge sent to ${task.delegate.label}.`);
+                  }}
+                />
+              </Grid>
+              <Grid item sm={4} md={8} lg={3} xl={4}>
+                <ArtifactsCard tasks={tasks} hrefFor={(fileId) => workstreamHref(workstream.id, { fileId })} />
+              </Grid>
+            </Grid>
+
+            <SectionCard
+              title="Tasks"
+              action={
+                // Post-MVP: the side chat replaces "Revise via chat".
+                showPostMvpViews ? (
+                  <Stack direction="row" gap={SPACE.item}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() =>
+                        startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
+                          workstreamId: workstream.id,
+                        })
+                      }
+                    >
+                      Revise via chat
+                    </Button>
+                    {workstream.plan.status === "accepted" ? null : (
+                      <Button variant="contained" size="small" onClick={() => acceptPlan(workstream.id)}>
+                        Accept plan
+                      </Button>
+                    )}
+                  </Stack>
+                ) : null
+              }
+            >
+              <TaskTable
+                tasks={tasks}
+                detail="status"
+                summarize={(task) => summarizeTask(task, now)}
+                highlightTaskId={focus.taskId}
+                onOpenActivity={setActivityTaskId}
+                onOpenFile={openFile}
+                onStatusChange={(taskId, status) => {
+                  const task = tasks.find((t) => t.id === taskId);
+                  setTaskStatus(workstream.id, taskId, status);
+                  if (task) setToast(`"${task.description}" is now ${status.toLowerCase()}.`);
+                }}
+                onOwnerChange={(taskId, owner) => {
+                  assignTask(workstream.id, taskId, owner);
+                  setToast(`Reassigned to ${owner.label}. Cowork emailed them the task.`);
                 }}
               />
-            </Grid>
-            <Grid item sm={4} md={8} lg={3} xl={4}>
-              <ArtifactsCard tasks={tasks} />
-            </Grid>
-          </Grid>
+            </SectionCard>
 
-          <SectionCard
-            title="Tasks"
-            action={
-              // Post-MVP: the side chat replaces "Revise via chat".
-              showPostMvpViews ? (
-                <Stack direction="row" gap={SPACE.item}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() =>
-                      startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
-                        workstreamId: workstream.id,
-                      })
-                    }
-                  >
-                    Revise via chat
-                  </Button>
-                  {workstream.plan.status === "accepted" ? null : (
-                    <Button variant="contained" size="small" onClick={() => acceptPlan(workstream.id)}>
-                      Accept plan
-                    </Button>
-                  )}
-                </Stack>
-              ) : null
-            }
-          >
-            <TaskTable
-              tasks={tasks}
-              detail="status"
-              summarize={(task) => summarizeTask(task, now)}
-              highlightTaskId={focus.taskId}
-              onOpenActivity={setActivityTaskId}
-              onOwnerChange={(taskId, owner) => {
-                assignTask(workstream.id, taskId, owner);
-                setToast(`Reassigned to ${owner.label}. Cowork emailed them the task.`);
-              }}
+            <RelevanceAndSources
+              description={workstream.description}
+              reasonsRelevant={workstream.reasonsRelevant}
+              signal={signal}
             />
-          </SectionCard>
-
-          <RelevanceAndSources
-            description={workstream.description}
-            reasonsRelevant={workstream.reasonsRelevant}
-            signal={signal}
-          />
-          <RulesCard rules={workstream.plan.rules} />
-        </Stack>
-      </Container>
+            <RulesCard rules={workstream.plan.rules} />
+          </Stack>
+        </Container>
+      )}
 
       <TaskActivityDialog
         task={tasks.find((t) => t.id === activityTaskId)}

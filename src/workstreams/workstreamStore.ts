@@ -125,13 +125,30 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
     },
 
     setTaskStatus: (workstreamId, taskId, status) => {
+      const before = get().getTask(workstreamId, taskId);
+      if (!before || before.status === status) return;
+      const sentAt = nowIso();
       updateTask(workstreamId, taskId, (task) =>
         append(
-          // Marking it done yourself also settles any review you were asked for.
-          { ...task, status, statusSummary: undefined, ...(status === "Done" ? { awaitingReview: false } : {}) },
-          statusChangeNote(status, nowIso()),
+          {
+            ...task,
+            status,
+            // Marking it done yourself also settles any review you were asked for.
+            ...(status === "Done"
+              ? { awaitingReview: false, statusSummary: `You marked it done on ${formatShortDate(sentAt)}.` }
+              : { statusSummary: undefined }),
+          },
+          statusChangeNote(status, sentAt),
         ),
       );
+      // Done from the list counts as a confirmation, so the story moves on the same way.
+      if (status === "Done") {
+        set((state) => ({
+          workstreams: state.workstreams.map((w) =>
+            w.id === workstreamId ? afterAtgTaskConfirmed(w, taskId, sentAt) : w,
+          ),
+        }));
+      }
     },
 
     confirmTaskDone: (workstreamId, taskId) => {

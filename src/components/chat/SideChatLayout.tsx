@@ -12,6 +12,11 @@ export function scrollContentTo(element: HTMLElement, offset = 24): void {
   content.scrollTo({ top });
 }
 
+/** Scrolls the page content (not the chat) back to the top, e.g. when a file opens in its place. */
+export function scrollContentToTop(): void {
+  document.querySelector<HTMLElement>("[data-side-chat-content]")?.scrollTo({ top: 0 });
+}
+
 /** Page content that scrolls on the left, with a white Cowork chat panel (about a third) on the right. */
 export function SideChatLayout({
   chatId,

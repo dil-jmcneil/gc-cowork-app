@@ -74,10 +74,11 @@ describe("Dana finished counsel's view, and it waits on Peter's review", () => {
     const counsel = byKey("counsel");
     expect(counsel.status).toBe("In progress");
     expect(counsel.awaitingReview).toBe(true);
-    const last = counsel.history.slice(-3);
+    const last = counsel.history.slice(-4);
     expect(last[0]).toMatchObject({ kind: "message", authorRole: "delegate", authorName: "Dana Whitfield" });
-    expect(last[1]).toMatchObject({ kind: "action", summary: "Held the task open for your review" });
-    expect(last[2]).toMatchObject({ kind: "message", authorRole: "cowork", to: ["Peter"] });
+    expect(last[1]).toMatchObject({ kind: "file", name: counsel.reviewFile });
+    expect(last[2]).toMatchObject({ kind: "action", summary: "Held the task open for your review" });
+    expect(last[3]).toMatchObject({ kind: "message", authorRole: "cowork", to: ["Peter"] });
   });
 
   test("confirming closes it and records who closed it", () => {
@@ -140,6 +141,26 @@ describe("the demo: counsel's view needs your review, and clearing it moves the 
     expect(action).toMatchObject({ kind: "action", actor: "Cowork", summary: "Told Alex the draft text is approved" });
     expect(action.kind === "action" && action.rule).toMatch(/draft text is approved/);
     expect(prepare.statusSummary).toMatch(/so Alex can start the questionnaire/);
+  });
+
+  test("marking counsel's view Done from the task list does the same as confirming it", () => {
+    const { id } = startAtgWorkstream();
+    useWorkstreamStore.getState().setTaskStatus(id, COUNSEL, "Done");
+    const counsel = useWorkstreamStore.getState().getTask(id, COUNSEL)!;
+    expect(counsel).toMatchObject({ status: "Done", awaitingReview: false });
+    expect(counsel.statusSummary).toMatch(/^You marked it done on \w+ \d+\.$/);
+    expect(statuses(id).prepare).toEqual({ label: "In progress" });
+    const prepare = useWorkstreamStore.getState().getTask(id, PREPARE)!;
+    expect(
+      prepare.history.some((e) => e.kind === "action" && e.summary === "Told Alex the draft text is approved"),
+    ).toBe(true);
+  });
+
+  test("the task waiting on your review links the draft to review", () => {
+    const counsel = byKey("counsel");
+    const file = counsel.history.find((e) => e.kind === "file" && e.name === counsel.reviewFile);
+    expect(file).toMatchObject({ kind: "file", addedBy: "Dana Whitfield" });
+    expect(file?.kind === "file" && file.body).toMatch(/Bottom line/);
   });
 
   test("confirming twice doesn't tell Alex twice", () => {

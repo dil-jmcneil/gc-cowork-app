@@ -36,6 +36,8 @@ export type WorkstreamTask = {
   awaitingReview?: boolean;
   /** While awaiting review: the GC's next step, as the status summary's headline. */
   reviewPrompt?: string;
+  /** While awaiting review: the name of the file to review, linked from the task's status line. */
+  reviewFile?: string;
 };
 
 /**
