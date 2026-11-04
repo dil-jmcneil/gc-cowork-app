@@ -285,8 +285,9 @@ export const ATG_RULING: Signal = {
 /**
  * Signals from before the ATG ruling. They don't appear in the attention
  * pane, which is for new items, but chat lists them under recent signals.
- * Two led to workstreams that predate the prototype's story: their tasks show
- * on the calendar, but the workstreams have no pages. Illustrative mock data.
+ * Two led to workstreams that predate the prototype's story; those load as
+ * real workstreams, with pages and their tasks on the calendar. Illustrative
+ * mock data.
  */
 export const PAST_SIGNALS: Signal[] = [
   {
@@ -319,9 +320,26 @@ export const PAST_SIGNALS: Signal[] = [
       startedOn: "2026-10-16",
       statusSummary:
         "2 of 4 tasks done. Acme is confirmed in scope and the facilities data is in; Maya's pick of an assurance vendor slipped past Nov 2, which holds up the Dec 4 Audit Committee briefing.",
+      milestones: [
+        {
+          id: "climate-scope-data",
+          title: "Confirm scope and collect the data",
+          startsWhen: "The reporting dates under SB 253 are set.",
+          doneWhen: "Acme is confirmed in scope, and fiscal 2026 Scope 1 and 2 data is in from every facility.",
+          approver: "Peter confirms the scope",
+        },
+        {
+          id: "climate-assure-brief",
+          title: "Get assurance and brief the Audit Committee",
+          startsWhen: "The fiscal 2026 data is in.",
+          doneWhen: "An assurance vendor is engaged, and the Audit Committee has the reporting timeline.",
+          approver: "Peter confirms the briefing",
+        },
+      ],
       tasks: [
         {
           id: "climate-scope",
+          milestoneId: "climate-scope-data",
           description: "Confirm Acme is in scope for SB 253",
           owner: "Sam Ortiz",
           due: "2026-10-23",
@@ -330,6 +348,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "climate-data",
+          milestoneId: "climate-scope-data",
           description: "Collect fiscal 2026 Scope 1 and 2 data from facilities",
           owner: "Raj Patel",
           due: "2026-11-03",
@@ -338,6 +357,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "climate-assurance",
+          milestoneId: "climate-assure-brief",
           description: "Choose a third-party assurance vendor",
           owner: "Maya Chen",
           due: "2026-11-02",
@@ -346,6 +366,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "climate-briefing",
+          milestoneId: "climate-assure-brief",
           description: "Brief the Audit Committee on the reporting timeline",
           owner: "Alex Kim",
           due: "2026-12-04",
@@ -396,9 +417,26 @@ export const PAST_SIGNALS: Signal[] = [
       startedOn: "2026-09-24",
       statusSummary:
         "3 of 4 tasks done. The plan now says four business days, Raj signs 8-K cyber filings, and the tabletop ran Nov 2; Alex adds the plan to the Nov 12 Audit Committee pre-read.",
+      milestones: [
+        {
+          id: "cyber-fix-plan",
+          title: "Fix the incident response plan",
+          startsWhen: "SEC staff guidance on Item 1.05 is out.",
+          doneWhen: "The plan says four business days, and someone is named to sign an 8-K cyber filing.",
+          approver: "Peter approves the redline",
+        },
+        {
+          id: "cyber-test-report",
+          title: "Test the plan and report it",
+          startsWhen: "The updated plan is signed.",
+          doneWhen: "A tabletop has tested the materiality call, and the Audit Committee has the updated plan.",
+          approver: "Peter confirms the pre-read",
+        },
+      ],
       tasks: [
         {
           id: "cyber-irp",
+          milestoneId: "cyber-fix-plan",
           description: "Update Incident Response Plan §4.2 to four business days",
           owner: "Pete Lin",
           due: "2026-10-16",
@@ -407,6 +445,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "cyber-signoff",
+          milestoneId: "cyber-fix-plan",
           description: "Confirm who signs an 8-K cyber filing",
           owner: "Raj Patel",
           due: "2026-10-23",
@@ -415,6 +454,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "cyber-tabletop",
+          milestoneId: "cyber-test-report",
           description: "Run a tabletop exercise on the materiality decision",
           owner: "Maya Chen",
           due: "2026-11-02",
@@ -423,6 +463,7 @@ export const PAST_SIGNALS: Signal[] = [
         },
         {
           id: "cyber-preread",
+          milestoneId: "cyber-test-report",
           description: "Add the updated plan to the Audit Committee pre-read",
           owner: "Alex Kim",
           due: "2026-11-12",

@@ -18,8 +18,9 @@ import ComplianceCalendarPage from "./pages/ComplianceCalendarPage.js";
 import CreateWorkstreamPage from "./pages/CreateWorkstreamPage.js";
 import IndexPage from "./pages/IndexPage.js";
 import NewChatPage from "./pages/NewChatPage.js";
-import WorkstreamPage from "./pages/WorkstreamPage.js";
-import TaskPage from "./pages/TaskPage.js";
+import WorkstreamPage, { DraftWorkstreamPage } from "./pages/WorkstreamPage.js";
+import { useMvpScopeStore } from "./demo/mvpScopeStore.js";
+import TaskRoute from "./pages/TaskRoute.js";
 import { LOGGED_IN_USER } from "./user.js";
 
 /** Body class the "Refreshed" CSS token overrides in styles.css key off. */
@@ -47,9 +48,9 @@ export default function App() {
         <Route index element={<IndexPage />} />
         <Route path="chats/new" element={<NewChatPage />} />
         <Route path="chats/:chatId" element={<ChatPage />} />
-        <Route path="workstreams/new" element={<CreateWorkstreamPage />} />
+        <Route path="workstreams/new" element={<NewWorkstreamRoute />} />
         <Route path="workstreams/:workstreamId" element={<WorkstreamPage />} />
-        <Route path="workstreams/:workstreamId/tasks/:taskId" element={<TaskPage />} />
+        <Route path="workstreams/:workstreamId/tasks/:taskId" element={<TaskRoute />} />
         <Route path="compliance-calendar" element={<ComplianceCalendarPage />} />
       </Route>
       </Routes>
@@ -57,10 +58,17 @@ export default function App() {
   );
 }
 
+/** MVP: a new signal opens Cowork's draft on the workstream page. The create page comes back with post-MVP views on. */
+function NewWorkstreamRoute() {
+  const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
+  return showPostMvpViews ? <CreateWorkstreamPage /> : <DraftWorkstreamPage />;
+}
+
 function Shell() {
   useSideNavAppKey("launchpad");
   const { pathname } = useLocation();
-  const hasSideChat = pathname === "/workstreams/new" || /^\/workstreams\/[^/]+\/tasks\//.test(pathname);
+  // Every workstream page, draft or started, has Cowork's chat on the right.
+  const hasSideChat = pathname.startsWith("/workstreams/");
 
   return (
     <AppLayout

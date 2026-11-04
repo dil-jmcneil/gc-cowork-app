@@ -28,16 +28,20 @@ export function TaskTable({
   tasks,
   onOwnerChange,
   onOpenTask,
+  highlightTaskId,
   ariaLabel = "Tasks",
 }: {
   tasks: WorkstreamTask[];
   ariaLabel?: string;
+  /** The task a link opened the page on; its row is tinted. */
+  highlightTaskId?: string;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   /** Makes each task's description open it, e.g. in the quick view. */
   onOpenTask?: (taskId: string) => void;
 }) {
-  const { presets } = useTheme();
+  const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const highlight = tokens.component.statusIndicator.colors.information.backgroundColor.value;
 
   return (
     <TableContainer>
@@ -61,7 +65,11 @@ export function TaskTable({
         </TableHead>
         <TableBody>
           {tasks.map((task) => (
-            <TableRow key={task.id}>
+            <TableRow
+              key={task.id}
+              aria-current={task.id === highlightTaskId ? "true" : undefined}
+              sx={task.id === highlightTaskId ? { bgcolor: highlight } : undefined}
+            >
               <TableCell sx={{ whiteSpace: "normal" }}>
                 {onOpenTask ? (
                   <Link

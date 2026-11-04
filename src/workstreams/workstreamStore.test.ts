@@ -4,9 +4,12 @@ import { ATG_RULING, SIGNALS } from "@/signals/signals";
 
 beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
-test("no signal has a workstream until the GC starts one", () => {
+test("only the past workstreams exist until the GC starts one", () => {
   const { getWorkstreamForSignal } = useWorkstreamStore.getState();
-  for (const signal of SIGNALS) expect(getWorkstreamForSignal(signal.id)).toBeUndefined();
+  for (const signal of SIGNALS) {
+    if (signal.pastWorkstream) expect(getWorkstreamForSignal(signal.id)?.name).toBe(signal.pastWorkstream.name);
+    else expect(getWorkstreamForSignal(signal.id)).toBeUndefined();
+  }
 });
 
 test("createWorkstream stores the workstream and links it to its change", () => {

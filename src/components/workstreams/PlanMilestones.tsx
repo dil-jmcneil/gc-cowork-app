@@ -27,6 +27,11 @@ const STATUS_COLOR: Record<MilestoneStatus, "success" | "information" | "subtle"
   Upcoming: "subtle",
 };
 
+/** Element id a workstream link scrolls to, for `?milestone=`. */
+export function milestoneAnchorId(milestoneId: string): string {
+  return `milestone-card-${milestoneId}`;
+}
+
 /**
  * The plan's spine: milestones in order, each judged by its contract (what
  * starts it, what finishes it, who approves the handover), with its tasks and
@@ -36,10 +41,13 @@ export function PlanMilestones({
   plan,
   onOwnerChange,
   onOpenTask,
+  highlightTaskId,
 }: {
   plan: WorkstreamPlan;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   onOpenTask?: (taskId: string) => void;
+  /** The task a link opened the page on. */
+  highlightTaskId?: string;
 }) {
   const statuses = milestoneStatuses(plan.milestones, plan.tasks);
   return (
@@ -53,6 +61,7 @@ export function PlanMilestones({
             plan={plan}
             onOwnerChange={onOwnerChange}
             onOpenTask={onOpenTask}
+            highlightTaskId={highlightTaskId}
           />
         </Box>
       ))}
@@ -67,6 +76,7 @@ function MilestoneCard({
   plan,
   onOwnerChange,
   onOpenTask,
+  highlightTaskId,
 }: {
   milestone: Milestone;
   number: number;
@@ -74,6 +84,7 @@ function MilestoneCard({
   plan: WorkstreamPlan;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   onOpenTask?: (taskId: string) => void;
+  highlightTaskId?: string;
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
@@ -84,7 +95,13 @@ function MilestoneCard({
   const headingId = `milestone-${milestone.id}`;
 
   return (
-    <Card component="section" variant="outlined" aria-labelledby={headingId} sx={{ p: 0 }}>
+    <Card
+      component="section"
+      id={milestoneAnchorId(milestone.id)}
+      variant="outlined"
+      aria-labelledby={headingId}
+      sx={{ p: 0 }}
+    >
       <CardContent sx={{ p: SPACE.block, "&:last-child": { pb: SPACE.block } }}>
         <Stack gap={SPACE.group}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.group} flexWrap="wrap">
@@ -120,6 +137,7 @@ function MilestoneCard({
             tasks={tasks}
             onOwnerChange={onOwnerChange}
             onOpenTask={onOpenTask}
+            highlightTaskId={highlightTaskId}
             ariaLabel={`Tasks in ${milestone.title}`}
           />
 

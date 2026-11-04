@@ -36,8 +36,9 @@ export type PlanTemplate = {
 };
 
 /**
- * A workstream from before this prototype's story begins. The prototype only
- * shows its name, progress and tasks (on the calendar); it has no pages.
+ * A workstream from before this prototype's story begins. It loads as a real
+ * workstream (`src/workstreams/pastWorkstreams.ts`), with a page and its tasks
+ * on the calendar.
  */
 export type PastWorkstream = {
   name: string;
@@ -46,11 +47,14 @@ export type PastWorkstream = {
   startedOn: string;
   /** One or two sentences on where it stands, with the task count, as Cowork would write it. */
   statusSummary: string;
+  /** Milestone contracts, without rules: Cowork follows the plan-wide rules for these. */
+  milestones: Omit<Milestone, "rules">[];
   tasks: PastWorkstreamTask[];
 };
 
 export type PastWorkstreamTask = {
   id: string;
+  milestoneId: string;
   description: string;
   /** Owner's display name. */
   owner: string;

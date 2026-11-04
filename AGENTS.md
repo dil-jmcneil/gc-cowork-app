@@ -119,11 +119,15 @@ Anything Cowork surfaces for the GC is a **signal** (`src/signals`). Its kind is
 
 Every signal lists why it matters to Acme under one label, **Relevance** (`RELEVANCE_LABEL`), whatever its type. Don't add per-type names like "Points for Counsel" or "Reasons Relevant".
 
-The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`). Past signals (`PAST_SIGNALS`) stay out of the attention pane; two have past workstreams that exist only as data, with tasks on the calendar and no pages.
+The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`). Past signals (`PAST_SIGNALS`) stay out of the attention pane; two have past workstreams, which load as real workstreams (`src/workstreams/pastWorkstreams.ts`) with pages and tasks on the calendar.
 
 ### Workstreams and history
 
 The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the workstream page rolls every task's history into one list.
+
+### MVP scope: one workstream page
+
+Every link goes to the workstream page (`workstreamHref`, with `?milestone=&task=` to open it on a task), and the page always has Cowork's chat on the right. A new signal opens Cowork's draft on the same page. The task page, task and signal dialogs, the separate create page and "Revise via chat" are hidden, not deleted: `useMvpScopeStore().showPostMvpViews` (a Demo settings switch) brings them back. See `docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md`.
 
 ### Plans are milestones plus rule rows
 

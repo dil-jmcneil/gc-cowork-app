@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { SIGNALS } from "@/signals/signals";
 
 import { isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
+import { PAST_WORKSTREAMS } from "./pastWorkstreams";
 import type { TaskOwner } from "./people";
 import type { Workstream, WorkstreamDraft, WorkstreamTask, TaskStatus, WorkstreamPlan } from "./workstream";
 import { summarizeWorkstream } from "./workstreamDraft";
@@ -22,8 +23,8 @@ function makeId() {
   return `workstream-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** Workstreams that already exist when the app loads. The demo starts with none. */
-export const SEED_WORKSTREAMS: Workstream[] = [];
+/** Workstreams that already exist when the app loads: the two from before the ATG story. */
+export const SEED_WORKSTREAMS: Workstream[] = PAST_WORKSTREAMS;
 
 type WorkstreamStoreState = {
   workstreams: Workstream[];
