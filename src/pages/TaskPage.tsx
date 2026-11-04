@@ -20,7 +20,7 @@ import { SideChatLayout } from "@/components/chat/SideChatLayout";
 import { SectionCard } from "@/components/workstreams/SectionCard";
 import { TaskBadges } from "@/components/tasks/TaskBadges";
 import { TaskDetailsCard } from "@/components/tasks/TaskDetailsCard";
-import { HistoryList } from "@/components/tasks/History";
+import { TimelineList } from "@/components/workstreams/Timeline";
 import type { WorkstreamTask } from "@/workstreams/workstream";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/workstreams/taskChat";
@@ -149,7 +149,7 @@ function TaskDetail({
 
           <Box id="history" sx={{ scrollMarginTop: (theme) => theme.spacing(SPACE.block) }}>
             <SectionCard
-              title={`History (${task.history.length})`}
+              title={`Timeline (${task.history.length})`}
               action={
                 <Stack direction="row" gap={SPACE.item}>
                   <Button variant="outlined" size="small" onClick={() => setComposing((v) => !v)}>
@@ -197,7 +197,7 @@ function TaskDetail({
                 </Stack>
               ) : null}
 
-              <HistoryList items={task.history.map((entry) => ({ entry }))} ariaLabel="Task history" />
+              <TimelineList items={task.history.map((entry) => ({ entry }))} ariaLabel="Task timeline" now={now} />
             </SectionCard>
           </Box>
         </Stack>

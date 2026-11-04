@@ -123,7 +123,7 @@ The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-
 
 ### Workstreams and history
 
-The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the workstream page rolls every task's history into one list.
+The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the UI calls this the **timeline** (`TimelineList`). It opens on the last two days, then steps to 10 more, then all. Each milestone row expands to its own timeline, and the workstream page's Timeline card rolls every task's history into one list, labeled by milestone.
 
 ### MVP scope: one workstream page
 

@@ -155,7 +155,7 @@ export function TaskQuickView({
               </Typography>
               <Link component={RouterLink} to={`${taskHref}#history`} onClick={onClose} underline="hover">
                 <Typography variant="body1" sx={{ color: "inherit" }}>
-                  View history ({task.history.length})
+                  View timeline ({task.history.length})
                 </Typography>
               </Link>
             </Field>

@@ -203,6 +203,12 @@ Phase 3 (Nov 4):
 5. "Waiting on others" means an overdue task or an owner who hasn't answered a follow-up. In ATG that's Morgan, whose website task isn't overdue yet; the headline moves to Morgan once you confirm the memo.
 6. "Waiting on you" names who is held up: the owners of not-started tasks in the next milestone (Alex Kim, for the memo).
 
+Phase 4 (Nov 4):
+
+7. A milestone is Blocked when a task waits on your review (shown as "Needs you", with Confirm and close on the row) or a task is overdue (shown as Blocked, "Waiting on" its owner). It's In progress once any task has moved, so ATG's Milestone 4 reads In progress: Pete is already drafting the review process.
+8. The owner shown is the open task with the nearest deadline, plus a count ("Morgan Diaz +1").
+9. A row starts expanded when it needs you or a link points at it. "Show 10 more" adds 10 to the last two days; with nothing in the last two days it reads "Show the latest 10".
+
 ## Open questions
 
 1. **A new signal: draft workstream page or signal dialog?** This plan creates a draft workstream and opens it on the one page, which matches the rule that every link goes to the workstream and keeps one mode. The other choice is to keep the signal dialog for new signals only.

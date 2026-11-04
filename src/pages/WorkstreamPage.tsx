@@ -24,7 +24,7 @@ import { SourceDetails } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
 import { milestoneAnchorId, PlanMilestones } from "@/components/workstreams/PlanMilestones";
 import { RuleTable } from "@/components/workstreams/RuleTable";
-import { HistoryList, type HistoryItem } from "@/components/tasks/History";
+import { TimelineList, type TimelineListItem } from "@/components/workstreams/Timeline";
 import { useMvpScopeStore } from "@/demo/mvpScopeStore";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
@@ -71,9 +71,16 @@ export default function WorkstreamPage() {
   }
 
   const planAccepted = workstream.plan.status === "accepted";
+  // The workstream-wide timeline labels each entry with its milestone.
+  const milestoneTitle = new Map(workstream.plan.milestones.map((m) => [m.id, m.title]));
   const history = workstream.plan.tasks.flatMap((task) =>
-    task.history.map((entry) => ({ entry, context: task.description })),
+    task.history.map((entry) => ({ entry, context: milestoneTitle.get(task.milestoneId) })),
   );
+  const confirm = (taskId: string) => {
+    const task = workstream.plan.tasks.find((t) => t.id === taskId);
+    confirmTaskDone(workstream.id, taskId);
+    if (task) setToast(`Closed "${task.description}".`);
+  };
   const attention = workstreamAttention(workstream, now);
 
   return (
@@ -94,10 +101,7 @@ export default function WorkstreamPage() {
           <StatusSummary
             {...attention}
             nudged={nudged}
-            onConfirm={({ task }) => {
-              confirmTaskDone(workstream.id, task.id);
-              setToast(`Closed "${task.description}".`);
-            }}
+            onConfirm={({ task }) => confirm(task.id)}
             onNudge={({ task }) => {
               nudgeTask(workstream.id, task.id);
               setNudged((prev) => new Set(prev).add(task.id));
@@ -106,6 +110,8 @@ export default function WorkstreamPage() {
           />
         }
         history={history}
+        now={now}
+        onConfirmTask={confirm}
         focus={workstreamFocusFromSearch(search)}
         // Post-MVP: task titles open the task page. In the MVP they stay on this page.
         onOpenTask={
@@ -219,7 +225,7 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
 
 /**
  * The workstream page's content, shared by a draft and a started workstream:
- * the status summary first, then the plan and its history, then the signal's
+ * the status summary first, then the milestones and the timeline, then the signal's
  * details, collapsed once the workstream has started.
  */
 function WorkstreamView({
@@ -231,6 +237,8 @@ function WorkstreamView({
   signal,
   statusSummary,
   history,
+  now = new Date(),
+  onConfirmTask,
   focus,
   headerAction,
   planActions,
@@ -244,7 +252,9 @@ function WorkstreamView({
   signal?: Signal;
   statusSummary: ReactNode;
   /** Omitted for a draft, which has no activity yet. */
-  history?: HistoryItem[];
+  history?: TimelineListItem[];
+  now?: Date;
+  onConfirmTask?: (taskId: string) => void;
   focus: WorkstreamFocus;
   headerAction?: ReactNode;
   planActions?: ReactNode;
@@ -284,13 +294,21 @@ function WorkstreamView({
         {statusSummary}
 
         <SectionCard
-          title="Plan"
+          title="Milestones"
           action={
             <StatusIndicator color={planAccepted ? "success" : "subtle"} label={planAccepted ? "Accepted" : "Draft"} />
           }
         >
           <Typography variant="body1">{plan.proposedApproach}</Typography>
-          <PlanMilestones plan={plan} onOpenTask={onOpenTask} highlightTaskId={focus.taskId} />
+          <PlanMilestones
+            plan={plan}
+            now={now}
+            onOpenTask={onOpenTask}
+            onConfirmTask={onConfirmTask}
+            highlightTaskId={focus.taskId}
+            focusMilestoneId={focus.milestoneId}
+            showTimeline={Boolean(history)}
+          />
           {planActions ? (
             <Stack direction="row" gap={SPACE.group} justifyContent="flex-end">
               {planActions}
@@ -299,8 +317,8 @@ function WorkstreamView({
         </SectionCard>
 
         {history ? (
-          <SectionCard title="History">
-            <HistoryList items={history} ariaLabel="Workstream history" limit={8} />
+          <SectionCard title="Timeline">
+            <TimelineList items={history} ariaLabel="Workstream timeline" now={now} />
           </SectionCard>
         ) : null}
 

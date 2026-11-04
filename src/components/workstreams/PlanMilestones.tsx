@@ -1,30 +1,36 @@
+import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
+import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
+  Button,
+  ButtonBase,
   Card,
-  CardContent,
+  Collapse,
   Stack,
   Typography,
   useTheme,
 } from "@mui/material";
+import { useState } from "react";
 
 import { usePlanRulesStore } from "@/demo/planRulesStore";
-
-import { milestoneStatuses, type MilestoneStatus } from "@/workstreams/milestones";
+import { SPACE } from "@/lib/layout";
+import { milestoneProgress, type MilestoneProgress } from "@/workstreams/milestones";
 import type { TaskOwner } from "@/workstreams/people";
 import type { Milestone, WorkstreamPlan } from "@/workstreams/workstream";
 
 import { RuleTable } from "./RuleTable";
 import { FieldLabel } from "./SectionCard";
 import { TaskTable } from "./TaskTable";
-import { SPACE } from "@/lib/layout";
+import { TimelineList } from "./Timeline";
 
-const STATUS_COLOR: Record<MilestoneStatus, "success" | "information" | "subtle"> = {
+const STATUS_COLOR: Record<MilestoneProgress["status"], "success" | "information" | "error" | "subtle"> = {
   Done: "success",
-  Current: "information",
-  Upcoming: "subtle",
+  "In progress": "information",
+  Blocked: "error",
+  "Not started": "subtle",
 };
 
 /** Element id a workstream link scrolls to, for `?milestone=`. */
@@ -33,35 +39,48 @@ export function milestoneAnchorId(milestoneId: string): string {
 }
 
 /**
- * The plan's spine: milestones in order, each judged by its contract (what
- * starts it, what finishes it, who approves the handover), with its tasks and
- * the rules Cowork follows inside it.
+ * The plan's spine, simplified: one row per milestone with its status, who
+ * owns the open work, and whether it needs you, with the action that clears
+ * it. A row expands to its contract, its tasks and its own timeline.
  */
 export function PlanMilestones({
   plan,
+  now = new Date(),
   onOwnerChange,
   onOpenTask,
+  onConfirmTask,
   highlightTaskId,
+  focusMilestoneId,
+  showTimeline = false,
 }: {
   plan: WorkstreamPlan;
+  now?: Date;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   onOpenTask?: (taskId: string) => void;
+  /** Confirms a task that waits on your review, from its milestone's row. */
+  onConfirmTask?: (taskId: string) => void;
   /** The task a link opened the page on. */
   highlightTaskId?: string;
+  /** The milestone a link opened the page on; it starts expanded. */
+  focusMilestoneId?: string;
+  /** Show each milestone's activity; off for a draft, which has none. */
+  showTimeline?: boolean;
 }) {
-  const statuses = milestoneStatuses(plan.milestones, plan.tasks);
   return (
-    <Stack component="ol" gap={SPACE.block} aria-label="Milestones" sx={{ listStyle: "none", m: 0, p: 0 }}>
+    <Stack component="ol" gap={SPACE.item} aria-label="Milestones" sx={{ listStyle: "none", m: 0, p: 0 }}>
       {plan.milestones.map((milestone, index) => (
         <Box component="li" key={milestone.id}>
-          <MilestoneCard
+          <MilestoneRow
             milestone={milestone}
             number={index + 1}
-            status={statuses[milestone.id]}
             plan={plan}
+            now={now}
             onOwnerChange={onOwnerChange}
             onOpenTask={onOpenTask}
+            onConfirmTask={onConfirmTask}
             highlightTaskId={highlightTaskId}
+            focused={milestone.id === focusMilestoneId}
+            showTimeline={showTimeline}
           />
         </Box>
       ))}
@@ -69,22 +88,28 @@ export function PlanMilestones({
   );
 }
 
-function MilestoneCard({
+function MilestoneRow({
   milestone,
   number,
-  status,
   plan,
+  now,
   onOwnerChange,
   onOpenTask,
+  onConfirmTask,
   highlightTaskId,
+  focused,
+  showTimeline,
 }: {
   milestone: Milestone;
   number: number;
-  status: MilestoneStatus;
   plan: WorkstreamPlan;
+  now: Date;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
   onOpenTask?: (taskId: string) => void;
+  onConfirmTask?: (taskId: string) => void;
   highlightTaskId?: string;
+  focused: boolean;
+  showTimeline: boolean;
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
@@ -92,7 +117,13 @@ function MilestoneCard({
   const showRules = usePlanRulesStore((s) => s.showRules);
   const muted = tokens.semantic.color.type.muted.value;
   const tasks = plan.tasks.filter((t) => t.milestoneId === milestone.id);
+  const progress = milestoneProgress(milestone, plan.tasks, now);
+  const awaiting = tasks.find((t) => t.awaitingReview);
+  // A milestone that needs you, or that a link pointed at, opens on its details.
+  const [expanded, setExpanded] = useState(focused || progress.needsYou);
   const headingId = `milestone-${milestone.id}`;
+  const detailsId = `${headingId}-details`;
+  const Caret = expanded ? CaretDownIcon : CaretRightIcon;
 
   return (
     <Card
@@ -102,10 +133,16 @@ function MilestoneCard({
       aria-labelledby={headingId}
       sx={{ p: 0 }}
     >
-      <CardContent sx={{ p: SPACE.block, "&:last-child": { pb: SPACE.block } }}>
-        <Stack gap={SPACE.group}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.group} flexWrap="wrap">
-            <Stack gap={SPACE.pair}>
+      <Stack direction="row" alignItems="flex-start" gap={SPACE.group} sx={{ p: SPACE.block }}>
+        <ButtonBase
+          aria-expanded={expanded}
+          aria-controls={detailsId}
+          onClick={() => setExpanded((v) => !v)}
+          sx={{ flex: 1, minWidth: 0, justifyContent: "flex-start", textAlign: "left", borderRadius: 1 }}
+        >
+          <Stack direction="row" alignItems="flex-start" gap={SPACE.item} sx={{ minWidth: 0 }}>
+            <Caret aria-hidden style={{ width: 20, height: 20, flexShrink: 0, marginTop: 18, color: muted }} />
+            <Stack gap={SPACE.pair} sx={{ minWidth: 0 }}>
               <Typography variant="textMd" sx={{ color: muted }}>
                 Milestone {number}
               </Typography>
@@ -117,21 +154,44 @@ function MilestoneCard({
               >
                 {milestone.title}
               </Typography>
+              <Typography variant="body1" sx={{ color: muted }}>
+                <Box component="span" sx={{ color: tokens.semantic.color.type.default.value }}>
+                  {progress.owner}
+                </Box>
+                {progress.blockedBy && progress.blockedBy !== "you" ? ` · Waiting on ${progress.blockedBy}` : null}
+              </Typography>
             </Stack>
-            <StatusIndicator color={STATUS_COLOR[status]} label={status} />
           </Stack>
+        </ButtonBase>
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
-              gap: SPACE.block,
-            }}
-          >
+        <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ flexShrink: 0 }}>
+          {progress.needsYou ? (
+            <>
+              <StatusIndicator color="warning" label="Needs you" />
+              {awaiting && onConfirmTask ? (
+                <Button
+                  variant="contained"
+                  size="xsmall"
+                  onClick={() => onConfirmTask(awaiting.id)}
+                  aria-label={`Confirm and close ${awaiting.description}`}
+                >
+                  Confirm and close
+                </Button>
+              ) : null}
+            </>
+          ) : (
+            <StatusIndicator color={STATUS_COLOR[progress.status]} label={progress.status} />
+          )}
+        </Stack>
+      </Stack>
+
+      <Collapse in={expanded} id={detailsId}>
+        <Stack gap={SPACE.block} sx={{ px: SPACE.block, pb: SPACE.block }}>
+          <Stack gap={SPACE.pair}>
             <Contract label="Starts when">{milestone.startsWhen}</Contract>
             <Contract label="Done when">{milestone.doneWhen}</Contract>
             <Contract label="Approval">{milestone.approver}</Contract>
-          </Box>
+          </Stack>
 
           <TaskTable
             tasks={tasks}
@@ -140,6 +200,17 @@ function MilestoneCard({
             highlightTaskId={highlightTaskId}
             ariaLabel={`Tasks in ${milestone.title}`}
           />
+
+          {showTimeline ? (
+            <Stack gap={SPACE.item}>
+              <FieldLabel>Timeline</FieldLabel>
+              <TimelineList
+                items={tasks.flatMap((task) => task.history.map((entry) => ({ entry, context: task.description })))}
+                ariaLabel={`Timeline for ${milestone.title}`}
+                now={now}
+              />
+            </Stack>
+          ) : null}
 
           {/* Hidden unless the Demo settings toggle is on. */}
           {showRules ? (
@@ -160,16 +231,20 @@ function MilestoneCard({
             </Accordion>
           ) : null}
         </Stack>
-      </CardContent>
+      </Collapse>
     </Card>
   );
 }
 
+/** One line of the milestone's contract: a muted label, then the condition. */
 function Contract({ label, children }: { label: string; children: string }) {
+  const { tokens } = useTheme();
   return (
-    <Stack gap={SPACE.pair}>
-      <FieldLabel>{label}</FieldLabel>
-      <Typography variant="body1">{children}</Typography>
-    </Stack>
+    <Typography variant="body1">
+      <Box component="span" sx={{ color: tokens.semantic.color.type.muted.value }}>
+        {label}:{" "}
+      </Box>
+      {children}
+    </Typography>
   );
 }
