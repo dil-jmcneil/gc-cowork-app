@@ -6,7 +6,6 @@ import { isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
 import { PAST_WORKSTREAMS } from "./pastWorkstreams";
 import type { TaskOwner } from "./people";
 import type { Workstream, WorkstreamDraft, WorkstreamTask, TaskStatus, WorkstreamPlan } from "./workstream";
-import { summarizeWorkstream } from "./workstreamDraft";
 import type { HistoryEntry } from "./thread";
 import {
   assignmentEmail,
@@ -47,7 +46,7 @@ type WorkstreamStoreState = {
 const nowIso = () => new Date().toISOString();
 
 export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
-  /** Apply `update` to one task, then refresh the workstream's summary. */
+  /** Apply `update` to one task. The workstream's summary is derived from its tasks (`workstreamAttention`). */
   const updateTask = (workstreamId: string, taskId: string, update: (task: WorkstreamTask) => WorkstreamTask) =>
     set((state) => ({
       workstreams: state.workstreams.map((p) => {
@@ -75,7 +74,6 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
         ...draft,
         name: draft.name.trim() || fallbackName,
         id: makeId(),
-        statusSummary: summarizeWorkstream(draft),
         createdAt,
         plan: {
           ...draft.plan,
@@ -106,8 +104,7 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
       set((state) => ({
         workstreams: state.workstreams.map((p) => {
           if (p.id !== id) return p;
-          const plan = { ...p.plan, status: "accepted" as const };
-          return { ...p, plan, statusSummary: summarizeWorkstream({ plan }) };
+          return { ...p, plan: { ...p.plan, status: "accepted" as const } };
         }),
       })),
 
@@ -124,11 +121,6 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
           statusChangeNote(status, nowIso()),
         ),
       );
-      set((state) => ({
-        workstreams: state.workstreams.map((p) =>
-          p.id === workstreamId ? { ...p, statusSummary: summarizeWorkstream(p) } : p,
-        ),
-      }));
     },
 
     confirmTaskDone: (workstreamId, taskId) => {
@@ -138,11 +130,6 @@ export const useWorkstreamStore = create<WorkstreamStoreState>((set, get) => {
           confirmedDoneNote(nowIso()),
         ),
       );
-      set((state) => ({
-        workstreams: state.workstreams.map((p) =>
-          p.id === workstreamId ? { ...p, statusSummary: summarizeWorkstream(p) } : p,
-        ),
-      }));
     },
 
     nudgeTask: (workstreamId, taskId) =>

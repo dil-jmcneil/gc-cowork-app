@@ -129,6 +129,8 @@ The OOUX Project object is called a **workstream** everywhere: in the UI, in rou
 
 Every link goes to the workstream page (`workstreamHref`, with `?milestone=&task=` to open it on a task), and the page always has Cowork's chat on the right. A new signal opens Cowork's draft on the same page. The task page, task and signal dialogs, the separate create page and "Revise via chat" are hidden, not deleted: `useMvpScopeStore().showPostMvpViews` (a Demo settings switch) brings them back. See `docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md`.
 
+Summaries lead with a bold headline that answers on its own (the GC's next action when there is one), then at most two supporting sentences (`src/workstreams/summary.ts`). The workstream's status summary is derived live by `workstreamAttention`, not stored.
+
 ### Plans are milestones plus rule rows
 
 Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into Boxes and Arrows"):

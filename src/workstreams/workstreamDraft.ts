@@ -1,9 +1,8 @@
 import type { PlannedSignal } from "@/signals/signal";
 import { LOGGED_IN_USER } from "@/user";
 
-import { findPerson, ownerShortName } from "./people";
-import { formatShortDate } from "./taskStatus";
-import type { Workstream, WorkstreamDraft, WorkstreamTask } from "./workstream";
+import { findPerson } from "./people";
+import type { WorkstreamDraft, WorkstreamTask } from "./workstream";
 
 const ASSOCIATE_GC = "pete.lin@acme.com";
 const CORPORATE_SECRETARY = "alex.kim@acme.com";
@@ -44,15 +43,4 @@ export function draftWorkstreamFromSignal(signal: PlannedSignal): WorkstreamDraf
       tasks,
     },
   };
-}
-
-/** Mocked "AI" status summary from task progress and the next deadline. */
-export function summarizeWorkstream(workstream: Pick<Workstream, "plan">): string {
-  const { tasks, status } = workstream.plan;
-  const done = tasks.filter((t) => t.status === "Done").length;
-  const next = tasks.filter((t) => t.status !== "Done").sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
-  const progress = `${done} of ${tasks.length} tasks done`;
-  if (!next) return `${progress}. Everything on the plan is complete.`;
-  const planNote = status === "draft" ? " The plan is still a draft." : "";
-  return `${progress}. Next up: ${next.description.charAt(0).toLowerCase()}${next.description.slice(1)} (${ownerShortName(next.delegate)}, due ${formatShortDate(next.deadline)}).${planNote}`;
 }

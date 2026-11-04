@@ -25,6 +25,8 @@ export type WorkstreamTask = {
    * the owner is outside the company. The task stays open until then.
    */
   awaitingReview?: boolean;
+  /** While awaiting review: the GC's next step, as the status summary's headline. */
+  reviewPrompt?: string;
 };
 
 /**
@@ -88,7 +90,5 @@ export type WorkstreamDraft = {
 
 export type Workstream = WorkstreamDraft & {
   id: string;
-  /** One or two sentences on where the workstream stands, from plan and task progress. */
-  statusSummary: string;
   createdAt: string;
 };

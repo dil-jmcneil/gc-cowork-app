@@ -18,7 +18,7 @@ beforeEach(() => {
 test("a status question gets the status summary and leaves the thread alone", () => {
   const before = task().history.length;
   const reply = handleTaskChatMessage(WORKSTREAM_ID, task().id, "Where does this stand?", NOW);
-  expect(reply).toMatch(/Morgan hasn't replied/);
+  expect(reply).toMatch(/followed up on Oct 30 \(1 of 3\)/);
   expect(task().history).toHaveLength(before);
 });
 

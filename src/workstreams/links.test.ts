@@ -28,7 +28,6 @@ test("calendar tasks link to their workstream, opened on the task's milestone", 
   const workstream: Workstream = {
     ...draftWorkstreamFromSignal(ATG_RULING),
     id: "ws-1",
-    statusSummary: "",
     createdAt: "2026-10-27T00:00:00Z",
   };
   const events = deriveCalendarEvents([workstream], new Date("2026-11-03T12:00:00Z"));

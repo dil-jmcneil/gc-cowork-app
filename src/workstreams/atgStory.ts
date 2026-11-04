@@ -88,7 +88,8 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         ),
       ],
       awaitingReview: true,
-      statusSummary: `Dana sent the memo and draft Section 8 to you on Nov 2. Your turn: review it, then confirm to close the task.`,
+      reviewPrompt: "Review Dana's memo and draft Section 8, then confirm it to close the task.",
+      statusSummary: "Dana sent the memo and draft Section 8 to you on Nov 2.",
     });
   }
 
@@ -167,7 +168,7 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         }),
       ],
       statusSummary:
-        "Morgan hasn't replied. Cowork followed up on Oct 30 (1 of 3) and tries again on Nov 4. After the third, it asks you.",
+        "Cowork followed up on Oct 30 (1 of 3) and tries again on Nov 4. After the third, it asks you.",
     });
   }
 
@@ -210,7 +211,5 @@ export function progressAtgWorkstream(workstream: Workstream): Workstream {
     ...workstream,
     createdAt: STARTED_AT,
     plan: { ...workstream.plan, tasks: workstream.plan.tasks.map(storyFor) },
-    statusSummary:
-      "Your turn: Dana sent the memo and draft Section 8 on Nov 2 and it needs your review. The Dec 15 committee slot is booked; Morgan hasn't replied yet (follow-up 1 of 3).",
   };
 }

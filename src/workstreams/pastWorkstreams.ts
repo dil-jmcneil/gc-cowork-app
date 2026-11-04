@@ -39,7 +39,6 @@ function fromPastSignal(signal: Signal, past: PastWorkstream): Workstream {
     sourceSignalId: signal.id,
     description: signal.summary,
     reasonsRelevant: signal.reasonsRelevant,
-    statusSummary: past.statusSummary,
     createdAt,
     plan: {
       proposedApproach:

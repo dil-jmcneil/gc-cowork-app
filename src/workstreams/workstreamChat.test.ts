@@ -1,9 +1,13 @@
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import { ATG_RULING } from "@/signals/signals";
 
+import { workstreamAttention } from "./workstreamAttention";
+import { summaryText } from "./summary";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "./workstreamChat";
 import { draftWorkstreamFromSignal } from "./workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "./workstreamStore";
+
+const NOW = new Date("2026-11-03T12:00:00Z");
 
 beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
@@ -20,7 +24,7 @@ const memoOf = (id: string) =>
 
 test("asking what's waiting on you names the memo, and how to close it", () => {
   const { id } = startAtgWorkstream();
-  const reply = handleWorkstreamChatMessage(id, "What's waiting on me?");
+  const reply = handleWorkstreamChatMessage(id, "What's waiting on me?", NOW);
   expect(reply).toMatch(/Dana Whitfield/);
   expect(reply).toMatch(/memo/i);
   expect(reply).toMatch(/Got it/);
@@ -28,39 +32,43 @@ test("asking what's waiting on you names the memo, and how to close it", () => {
 
 test('"Got it" closes the memo while it waits on your review', () => {
   const { id } = startAtgWorkstream();
-  const reply = handleWorkstreamChatMessage(id, "Got it, the memo looks good");
+  const reply = handleWorkstreamChatMessage(id, "Got it, the memo looks good", NOW);
   expect(reply).toMatch(/closed/);
   expect(memoOf(id)).toMatchObject({ status: "Done", awaitingReview: false });
-  expect(handleWorkstreamChatMessage(id, "What's waiting on me?")).toMatch(/Nothing/);
+  expect(handleWorkstreamChatMessage(id, "What's waiting on me?", NOW)).toMatch(/Nothing/);
 });
 
 test("asking to remove a milestone edits the plan", () => {
   const { id } = startAtgWorkstream();
-  const reply = handleWorkstreamChatMessage(id, "Remove milestone 4 and add its closing action to 3");
+  const reply = handleWorkstreamChatMessage(id, "Remove milestone 4 and add its closing action to 3", NOW);
   expect(reply).toMatch(/Milestone 4/);
   expect(useWorkstreamStore.getState().getWorkstream(id)!.plan.milestones).toHaveLength(3);
 });
 
 test("a status question gets the workstream's status summary", () => {
   const workstream = startAtgWorkstream();
-  expect(handleWorkstreamChatMessage(workstream.id, "Where does this stand?")).toBe(workstream.statusSummary);
+  expect(handleWorkstreamChatMessage(workstream.id, "Where does this stand?", NOW)).toBe(
+    summaryText(workstreamAttention(workstream, NOW).summary),
+  );
 });
 
 test("asking why it matters lists the relevance points", () => {
   const { id } = startAtgWorkstream();
-  expect(handleWorkstreamChatMessage(id, "Is this actually relevant to us?")).toContain(ATG_RULING.reasonsRelevant[0]);
+  expect(handleWorkstreamChatMessage(id, "Is this actually relevant to us?", NOW)).toContain(
+    ATG_RULING.reasonsRelevant[0],
+  );
 });
 
 test("anything else falls through to Cowork's usual reply", () => {
   const { id } = startAtgWorkstream();
-  expect(handleWorkstreamChatMessage(id, "Thanks")).toBeUndefined();
+  expect(handleWorkstreamChatMessage(id, "Thanks", NOW)).toBeUndefined();
 });
 
-test("the chat opens with the status summary, once", () => {
+test("the chat opens with the status summary's headline, once", () => {
   const workstream = startAtgWorkstream();
-  seedWorkstreamChat(workstream);
-  seedWorkstreamChat(workstream);
+  seedWorkstreamChat(workstream, NOW);
+  seedWorkstreamChat(workstream, NOW);
   const messages = useChatMessagesStore.getState().messagesByChatId[workstreamChatId(workstream.id)];
   expect(messages).toHaveLength(1);
-  expect(JSON.stringify(messages[0])).toContain("Dana sent the memo");
+  expect(JSON.stringify(messages[0])).toContain("Review Dana's memo");
 });

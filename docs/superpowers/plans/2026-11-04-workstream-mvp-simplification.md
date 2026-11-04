@@ -197,6 +197,12 @@ Phases 1 and 2 shipped with these answers (Nov 4):
 2. California and Cyber 8-K load as real workstreams, each with two milestones. The Workstreams nav lists them from the start.
 3. "Revise via chat" is the button that's hidden.
 
+Phase 3 (Nov 4):
+
+4. The workstream summary is derived from its tasks (`workstreamAttention`) instead of stored, so it never goes stale. `Workstream.statusSummary` and `summarizeWorkstream` are gone. Task-level summaries are still strings for now.
+5. "Waiting on others" means an overdue task or an owner who hasn't answered a follow-up. In ATG that's Morgan, whose website task isn't overdue yet; the headline moves to Morgan once you confirm the memo.
+6. "Waiting on you" names who is held up: the owners of not-started tasks in the next milestone (Alex Kim, for the memo).
+
 ## Open questions
 
 1. **A new signal: draft workstream page or signal dialog?** This plan creates a draft workstream and opens it on the one page, which matches the rule that every link goes to the workstream and keeps one mode. The other choice is to keep the signal dialog for new signals only.

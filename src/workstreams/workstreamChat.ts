@@ -1,8 +1,10 @@
 import { appendAssistantMessage, useChatMessagesStore } from "@/chat/chatMessagesStore";
 
 import { planEditFromChat } from "./planChat";
+import { summaryText } from "./summary";
 import { CONFIRMS_DONE, STATUS_QUESTION } from "./taskChat";
 import type { Workstream } from "./workstream";
+import { workstreamAttention } from "./workstreamAttention";
 import { useWorkstreamStore } from "./workstreamStore";
 
 const WAITING_ON_ME =
@@ -14,13 +16,13 @@ export function workstreamChatId(workstreamId: string): string {
   return `workstream-chat-${workstreamId}`;
 }
 
-/** The side chat opens with where the workstream stands, once per workstream. */
-export function seedWorkstreamChat(workstream: Workstream): void {
+/** The side chat opens with the status summary's headline, once per workstream. */
+export function seedWorkstreamChat(workstream: Workstream, now: Date): void {
   const id = workstreamChatId(workstream.id);
   if (useChatMessagesStore.getState().messagesByChatId[id]?.length) return;
   appendAssistantMessage(
     id,
-    `${workstream.statusSummary}\n\nAsk me what's waiting on you, why this matters, or what to change in the plan.`,
+    `${workstreamAttention(workstream, now).summary.headline}\n\nAsk me what's waiting on you, why this matters, or what to change in the plan.`,
   );
 }
 
@@ -30,7 +32,7 @@ export function seedWorkstreamChat(workstream: Workstream): void {
  * GC, and answers status and relevance questions. Returns undefined for
  * anything else, so the chat replies as usual.
  */
-export function handleWorkstreamChatMessage(workstreamId: string, text: string): string | undefined {
+export function handleWorkstreamChatMessage(workstreamId: string, text: string, now: Date): string | undefined {
   const store = useWorkstreamStore.getState();
   const workstream = store.getWorkstream(workstreamId);
   if (!workstream) return "I can't find that workstream anymore.";
@@ -63,6 +65,6 @@ export function handleWorkstreamChatMessage(workstreamId: string, text: string):
     return `Here's why it matters to Acme:\n\n${workstream.reasonsRelevant.map((r) => `- ${r}`).join("\n")}`;
   }
 
-  if (STATUS_QUESTION.test(message)) return workstream.statusSummary;
+  if (STATUS_QUESTION.test(message)) return summaryText(workstreamAttention(workstream, now).summary);
   return undefined;
 }

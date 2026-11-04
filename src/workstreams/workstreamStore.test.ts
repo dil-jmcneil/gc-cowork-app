@@ -19,7 +19,6 @@ test("createWorkstream stores the workstream and links it to its change", () => 
   };
   const workstream = useWorkstreamStore.getState().createWorkstream(draft);
   expect(workstream.name).toBe("Advance notice bylaw update");
-  expect(workstream.statusSummary.length).toBeGreaterThan(0);
   expect(useWorkstreamStore.getState().getWorkstreamForSignal(ATG_RULING.id)).toBe(workstream);
   expect(useWorkstreamStore.getState().getWorkstream(workstream.id)).toBe(workstream);
 });
