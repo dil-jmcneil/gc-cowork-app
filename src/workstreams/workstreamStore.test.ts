@@ -1,12 +1,16 @@
+import { summarizeTask } from "./taskStatus";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { ATG_RULING, SIGNALS } from "@/signals/signals";
 
 beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
-test("no signal has a workstream until the GC starts one", () => {
+test("only the past workstreams exist until the GC starts one", () => {
   const { getWorkstreamForSignal } = useWorkstreamStore.getState();
-  for (const signal of SIGNALS) expect(getWorkstreamForSignal(signal.id)).toBeUndefined();
+  for (const signal of SIGNALS) {
+    if (signal.pastWorkstream) expect(getWorkstreamForSignal(signal.id)?.name).toBe(signal.pastWorkstream.name);
+    else expect(getWorkstreamForSignal(signal.id)).toBeUndefined();
+  }
 });
 
 test("createWorkstream stores the workstream and links it to its change", () => {
@@ -16,7 +20,6 @@ test("createWorkstream stores the workstream and links it to its change", () => 
   };
   const workstream = useWorkstreamStore.getState().createWorkstream(draft);
   expect(workstream.name).toBe("Advance notice bylaw update");
-  expect(workstream.statusSummary.length).toBeGreaterThan(0);
   expect(useWorkstreamStore.getState().getWorkstreamForSignal(ATG_RULING.id)).toBe(workstream);
   expect(useWorkstreamStore.getState().getWorkstream(workstream.id)).toBe(workstream);
 });
@@ -55,13 +58,21 @@ describe("task actions", () => {
       channel: "email",
       to: ["Jordan Lee"],
     });
+    // The status line is about the new owner, not the old one's last reply.
+    expect(summarizeTask(task, new Date())).toMatch(
+      /^Reassigned to Jordan Lee on \w+ \d+\. Waiting on Jordan's reply\.$/,
+    );
   });
 
   test("setTaskStatus updates the status and records it as an action in the history", () => {
     useWorkstreamStore.getState().setTaskStatus(WORKSTREAM_ID, firstTask().id, "Done");
     const task = firstTask();
     expect(task.status).toBe("Done");
-    expect(task.history[task.history.length - 1]).toMatchObject({ kind: "action", actor: "Peter", summary: "Set the status to Done" });
+    expect(task.history[task.history.length - 1]).toMatchObject({
+      kind: "action",
+      actor: "Peter",
+      summary: "Set the status to Done",
+    });
   });
 
   test("nudgeTask sends the owner a reminder email", () => {

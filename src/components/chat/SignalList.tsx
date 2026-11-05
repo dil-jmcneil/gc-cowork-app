@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
 import { formatDate } from "@/lib/dates";
-import type { Workstream } from "@/workstreams/workstream";
+import { workstreamAttention } from "@/workstreams/workstreamAttention";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { SignalTags } from "@/components/signals/SignalTags";
 import {
@@ -104,7 +104,7 @@ function SignalCard({ signal }: { signal: Signal }) {
             <WorkstreamFooter
               name={workstream.name}
               to={`/workstreams/${workstream.id}`}
-              summary={withTaskCount(workstream.statusSummary, workstreamProgress(workstream))}
+              summary={workstreamAttention(workstream, new Date()).summary.headline}
             />
           </>
         ) : signal.pastWorkstream ? (
@@ -139,11 +139,6 @@ function SignalCard({ signal }: { signal: Signal }) {
 }
 
 /** Done tasks over all tasks, e.g. "1 of 7 tasks done". */
-function workstreamProgress(workstream: Workstream): string {
-  const { tasks } = workstream.plan;
-  return `${tasks.filter((t) => t.status === "Done").length} of ${tasks.length} tasks done`;
-}
-
 /** Leads a status summary with the task count, unless it already starts with one. */
 function withTaskCount(summary: string, progress: string): string {
   return /^\d+ of \d+ tasks done/.test(summary) ? summary : `${progress}. ${summary}`;

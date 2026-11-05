@@ -12,7 +12,6 @@ const WORKSTREAM: Workstream = {
   sourceSignalId: "atg-v-lane",
   description: "d",
   reasonsRelevant: [],
-  statusSummary: "s",
   createdAt: "2026-10-01T00:00:00Z",
   plan: {
     proposedApproach: "p",

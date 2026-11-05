@@ -1,6 +1,6 @@
 import type { WorkstreamTask } from "@/workstreams/workstream";
 import { DIRECTORY } from "@/workstreams/people";
-import { summarizeTask, taskAttention } from "@/workstreams/taskStatus";
+import { summarizeTask, taskAttention, taskDisplayStatus } from "@/workstreams/taskStatus";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
 const MAYA = DIRECTORY.find((p) => p.label === "Maya Chen")!;
@@ -9,6 +9,7 @@ function task(patch: Partial<WorkstreamTask>): WorkstreamTask {
   return {
     id: "t",
     description: "Review the tools",
+    doneWhen: "Peter confirms the tools are reviewed.",
     delegator: "Peter",
     delegate: MAYA,
     ccs: [],
@@ -62,4 +63,35 @@ test("an in-progress summary quotes the owner's latest reply", () => {
     NOW,
   );
   expect(summary).toContain("Halfway through the vendor list.");
+});
+
+describe("taskDisplayStatus", () => {
+  const base = task({});
+  const blocker = { ...base, id: "first", status: "In progress" as const };
+  const waiting = { ...base, id: "second", status: "In progress" as const, waitingOn: "first" };
+
+  test("a task waiting on your review needs your review", () => {
+    expect(taskDisplayStatus({ ...base, status: "In progress", awaitingReview: true }, [])).toEqual({
+      label: "Needs your review",
+    });
+  });
+
+  test("a task waiting on an unfinished task is blocked, by that task's owner or by you", () => {
+    expect(taskDisplayStatus(waiting, [blocker, waiting])).toEqual({
+      label: "Blocked",
+      blockedBy: blocker.delegate.label,
+    });
+    const reviewing = { ...blocker, awaitingReview: true };
+    expect(taskDisplayStatus(waiting, [reviewing, waiting])).toEqual({ label: "Blocked", blockedBy: "you" });
+  });
+
+  test("once the task it waits on is done, it shows its own status", () => {
+    expect(taskDisplayStatus(waiting, [{ ...blocker, status: "Done" }, waiting])).toEqual({ label: "In progress" });
+  });
+
+  test("done, in progress and not started show as they are", () => {
+    for (const status of ["Done", "In progress", "Not started"] as const) {
+      expect(taskDisplayStatus({ ...base, status }, [])).toEqual({ label: status });
+    }
+  });
 });

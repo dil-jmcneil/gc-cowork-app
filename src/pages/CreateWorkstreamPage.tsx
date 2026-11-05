@@ -17,7 +17,7 @@ import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 import { SideChatLayout } from "@/components/chat/SideChatLayout";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
 import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
-import { PlanMilestones } from "@/components/workstreams/PlanMilestones";
+import { TaskTable } from "@/components/workstreams/TaskTable";
 import { RuleTable } from "@/components/workstreams/RuleTable";
 import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
 import type { WorkstreamDraft } from "@/workstreams/workstream";
@@ -162,8 +162,9 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
                   slotProps={{ input: { id: "plan-approach" } }}
                 />
               </FormControl>
-              <PlanMilestones
-                plan={draft.plan}
+              <TaskTable
+                tasks={draft.plan.tasks}
+                detail="done-when"
                 onOwnerChange={(taskId, owner) =>
                   setPlan({
                     tasks: draft.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
@@ -174,12 +175,12 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
           </SectionCard>
 
           {showRules ? (
-            <SectionCard title="Rules for Every Milestone">
+            <SectionCard title="Rules Cowork Follows">
               <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
                 Cowork checks where the work stands after every reply and applies the rule that fits. When no rule fits,
                 it stops and asks you.
               </Typography>
-              <RuleTable rules={draft.plan.rules} ariaLabel="Rules for every milestone" />
+              <RuleTable rules={draft.plan.rules} ariaLabel="Rules Cowork follows" />
             </SectionCard>
           ) : null}
 

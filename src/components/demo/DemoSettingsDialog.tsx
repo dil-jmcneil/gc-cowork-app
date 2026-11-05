@@ -11,6 +11,7 @@ import {
 import CloseIcon from "@diligentcorp/atlas-react-bundle/icons/Close";
 import type { ReactNode } from "react";
 
+import { useMvpScopeStore } from "@/demo/mvpScopeStore";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useThemeVariantStore, type ThemeVariant } from "@/demo/themeVariantStore";
 
@@ -21,13 +22,15 @@ type DemoSettingsDialogProps = {
   onClose: () => void;
 };
 
-/** Demo settings panel: switches between the Default and Refreshed themes, and shows or hides plan rules. */
+/** Demo settings panel: switches between the Default and Refreshed themes, shows or hides plan rules, and brings back post-MVP views. */
 export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
   const { tokens } = useTheme();
   const themeVariant = useThemeVariantStore((s) => s.variant);
   const setThemeVariant = useThemeVariantStore((s) => s.setVariant);
   const showRules = usePlanRulesStore((s) => s.showRules);
   const setShowRules = usePlanRulesStore((s) => s.setShowRules);
+  const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
+  const setShowPostMvpViews = useMvpScopeStore((s) => s.setShowPostMvpViews);
 
   const selectThemeVariant = (next: ThemeVariant) => {
     setThemeVariant(next);
@@ -99,6 +102,18 @@ export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
                 />
               }
               label="Show Cowork's rules on plans"
+            />
+          </DemoSettingsSection>
+          <DemoSettingsSection label="Workstreams">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showPostMvpViews}
+                  onChange={(e) => setShowPostMvpViews(e.target.checked)}
+                  slotProps={{ input: { "aria-label": "Show post-MVP views" } }}
+                />
+              }
+              label="Show post-MVP views: task pages, task and signal dialogs, and the create page"
             />
           </DemoSettingsSection>
         </Stack>

@@ -1,7 +1,18 @@
 import { ATG_RULING } from "@/signals/signals";
 import { LOGGED_IN_USER } from "@/user";
 
+import {
+  AGENDA_BODY,
+  AGENDA_FILE,
+  COMPARISON_BODY,
+  COMPARISON_FILE,
+  MEMO_BODY,
+  MEMO_FILE,
+  OUTLINE_BODY,
+  OUTLINE_FILE,
+} from "./atgFiles";
 import { findPerson } from "./people";
+import { formatShortDate } from "./taskStatus";
 import type { Workstream, WorkstreamTask } from "./workstream";
 import {
   assignmentEmail,
@@ -12,15 +23,14 @@ import {
   gcChatMessage,
   ownerReply,
   relayEmail,
-  reminderEmail,
 } from "./threadMessages";
 
 /**
  * Demo shortcut: when the GC starts the ATG v. Lane workstream, its tasks jump
  * ahead to where they'd be after a few days (Tue Oct 27 to Mon Nov 2). Each
  * history shows a plan rule at work: the first email outside Acme waits for
- * Peter, a waiting owner's follow-ups are held, and a silent owner is chased
- * toward the three-follow-up circuit breaker.
+ * Peter, outside counsel's "done" waits for Peter's review, and a waiting
+ * owner's follow-ups are held until the task they wait on is done.
  */
 const STARTED_AT = "2026-10-27T13:25:00Z";
 
@@ -36,7 +46,7 @@ function withTask(task: WorkstreamTask, patch: Partial<WorkstreamTask>): Workstr
 function storyFor(task: WorkstreamTask): WorkstreamTask {
   const key = task.id.slice(ATG_RULING.id.length + 1);
 
-  if (key === "memo") {
+  if (key === "counsel") {
     const firstEmail = coworkEmail(
       DANA,
       "Delaware ruling: memo on Acme's Article II, Section 8",
@@ -49,23 +59,18 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         coworkAction("Compared Article II, Section 8 with the ruling", "2026-10-27T13:29:00Z", {
           detail: "Found four points for counsel and five items the bylaw already covers.",
         }),
-        fileAdded(
-          "Bylaw comparison, Article II, Section 8 v. ATG v. Lane.docx",
-          "Cowork",
-          "2026-10-27T13:29:30Z",
-          "Shared with Dana",
-        ),
+        fileAdded(COMPARISON_FILE, "Cowork", "2026-10-27T13:29:30Z", "Shared with Dana", COMPARISON_BODY),
         coworkAction("Held the first email to Dana for your review", "2026-10-27T13:30:30Z", {
           rule: "Cowork is about to email someone outside Acme for the first time.",
         }),
         coworkNote(
-          `Dana is outside Acme, so here's my first email to her before it goes. Reply "Send", or tell me what to change.\n\n"${firstEmail.body}"`,
+          `Dana is outside Acme, so here's my first email to Dana before it goes. Reply "Send", or tell me what to change.\n\n"${firstEmail.body}"`,
           "2026-10-27T13:31:00Z",
         ),
         gcChatMessage("Send.", "2026-10-27T14:02:00Z"),
         firstEmail,
         coworkAction("Set reminders for Dana", "2026-10-27T14:04:00Z", {
-          detail: "Follows up every three business days until she replies, up to three times.",
+          detail: "Follows up every three business days until Dana replies, up to three times.",
           rule: "An owner hasn't replied for three business days.",
         }),
         ownerReply(
@@ -77,67 +82,54 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
           DANA,
           `Done. I emailed ${GC} the memo and a draft Section 8 this afternoon, ahead of the Nov 6 date.`,
           "2026-11-02T21:40:00Z",
+          [MEMO_FILE],
         ),
+        fileAdded(MEMO_FILE, "Dana Whitfield", "2026-11-02T21:40:00Z", "Attached to Dana's email to you", MEMO_BODY),
         coworkAction("Held the task open for your review", "2026-11-02T21:41:00Z", {
-          detail: "Dana is outside Acme, so her \"done\" doesn't close the task. You confirm it once you've reviewed the memo.",
+          detail:
+            "Dana is outside Acme, so Dana's \"done\" doesn't close the task. You confirm it once you've reviewed the memo.",
           rule: "An owner outside Acme says a task is done.",
         }),
         coworkNote(
-          `Dana says she sent you the memo and draft Section 8: "Done. I emailed ${GC} the memo and a draft Section 8 this afternoon, ahead of the Nov 6 date." Review it, then reply "Got it" or confirm on the task, and I'll close it.`,
+          `Dana says the memo and draft Section 8 went to you: "Done. I emailed ${GC} the memo and a draft Section 8 this afternoon, ahead of the Nov 6 date." Review it, then reply "Got it" or confirm on the task, and I'll close it.`,
           "2026-11-02T21:42:00Z",
         ),
       ],
       awaitingReview: true,
-      statusSummary: `Dana sent the memo and draft Section 8 to you on Nov 2. Your turn: review it, then confirm to close the task.`,
+      reviewPrompt: "Review Dana's memo and draft Section 8, then confirm.",
+      reviewFile: MEMO_FILE,
+      statusSummary: "Dana sent the memo and draft Section 8 to you on Nov 2.",
     });
   }
 
-  if (key === "agenda") {
+  if (key === "prepare") {
     return withTask(task, {
-      status: "Done",
+      status: "In progress",
       history: [
         assignmentEmail(task, "2026-10-27T13:32:00Z"),
         ownerReply(
           ALEX,
-          "Done. The amendment is item 3 on the Governance Committee's Dec 15 agenda, and I've held Dec 18 for a special board meeting.",
-          "2026-10-29T15:10:00Z",
-          ["Governance Committee agenda, Dec 15.pdf"],
-        ),
-        fileAdded(
-          "Governance Committee agenda, Dec 15.pdf",
-          "Alex Kim",
-          "2026-10-29T15:10:00Z",
-          "Attached to Alex's email",
-        ),
-        coworkAction("Marked the task done", "2026-10-29T15:11:00Z", {
-          detail: "Alex is inside Acme, so the reply closed the task.",
-        }),
-      ],
-      statusSummary:
-        "Done on Oct 29. The amendment is item 3 on the Dec 15 committee agenda, and Dec 18 is held for the board.",
-    });
-  }
-
-  if (key === "questionnaire") {
-    return withTask(task, {
-      history: [
-        assignmentEmail(task, "2026-10-27T13:33:00Z"),
-        ownerReply(
-          ALEX,
-          "I'll start once counsel's draft text is in, so the new questions match it.",
+          "I'll hold the Dec 15 Governance Committee slot now, and start the questionnaire once counsel's draft text is in, so the new questions match it.",
           "2026-10-27T19:45:00Z",
         ),
         coworkAction("Held follow-ups for Alex", "2026-10-27T19:46:00Z", {
-          detail: "Alex is waiting on Dana's memo. Cowork sends Alex the draft text when you approve it.",
+          detail: "Alex is waiting on counsel's view. Cowork tells Alex when you approve the draft text.",
           rule: "An owner is waiting on another task before they can start.",
         }),
+        ownerReply(
+          ALEX,
+          "The amendment is item 3 on the Governance Committee's Dec 15 agenda, and I've held Dec 18 for a special board meeting.",
+          "2026-10-29T15:10:00Z",
+          [AGENDA_FILE],
+        ),
+        fileAdded(AGENDA_FILE, "Alex Kim", "2026-10-29T15:10:00Z", "Attached to Alex's email", AGENDA_BODY),
       ],
       statusSummary:
-        "Waiting on your approval of counsel's draft text, which arrived Nov 2. Cowork is holding follow-ups and sends Alex the text when you approve it.",
+        "The Dec 15 committee slot is booked. Alex starts the questionnaire once you approve counsel's text.",
     });
   }
 
-  if (key === "8k") {
+  if (key === "adopt") {
     return withTask(task, {
       history: [
         assignmentEmail(task, "2026-10-27T13:34:00Z"),
@@ -152,26 +144,11 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         }),
       ],
       statusSummary:
-        "Pete has an 8-K shell ready. The deadline is four business days after the board adopts, so Dec 24 if it adopts on Dec 18.",
+        "Pete has an 8-K shell ready. It's due four business days after the board adopts, so Dec 24 if it adopts Dec 18.",
     });
   }
 
-  if (key === "website") {
-    return withTask(task, {
-      history: [
-        assignmentEmail(task, "2026-10-27T13:35:00Z"),
-        reminderEmail(task, "2026-10-30T13:00:00Z", { n: 1, of: 3 }),
-        coworkAction("Scheduled the next follow-up for Nov 4", "2026-10-30T13:01:00Z", {
-          detail: "Morgan hasn't replied. After the third follow-up, Cowork stops and asks you.",
-          rule: "An owner hasn't replied for three business days.",
-        }),
-      ],
-      statusSummary:
-        "Morgan hasn't replied. Cowork followed up on Oct 30 (1 of 3) and tries again on Nov 4. After the third, it asks you.",
-    });
-  }
-
-  if (key === "process") {
+  if (key === "watch") {
     const note = "Make sure the process says who signs the deficiency letter.";
     return withTask(task, {
       status: "In progress",
@@ -179,25 +156,52 @@ function storyFor(task: WorkstreamTask): WorkstreamTask {
         assignmentEmail(task, "2026-10-27T13:36:00Z"),
         ownerReply(
           PETE,
-          "Drafting it now. The first deficiency letter will list every ground, so we never have to send a second one. Outline attached.",
+          "Drafting the notice review process now. The first deficiency letter will list every ground, so we never have to send a second one. Outline attached.",
           "2026-10-30T17:25:00Z",
-          ["Nomination notice review process (outline).docx"],
+          [OUTLINE_FILE],
         ),
-        fileAdded(
-          "Nomination notice review process (outline).docx",
-          "Pete Lin",
-          "2026-10-30T17:25:00Z",
-          "Attached to Pete's email",
-        ),
+        fileAdded(OUTLINE_FILE, "Pete Lin", "2026-10-30T17:25:00Z", "Attached to Pete's email", OUTLINE_BODY),
         gcChatMessage(note, "2026-11-02T14:10:00Z"),
         relayEmail(task, note, "2026-11-02T14:11:00Z"),
       ],
+      statusSummary: "Pete is drafting the notice review process, with your note on who signs the deficiency letter.",
     });
   }
 
   return withTask(task, {
     history: [assignmentEmail(task, "2026-10-27T13:37:00Z")],
   });
+}
+
+const PREPARE_ID = `${ATG_RULING.id}-prepare`;
+
+/**
+ * After you confirm counsel's memo, Cowork applies the "share the draft" rule:
+ * it tells Alex the text is approved and resumes follow-ups. The text itself
+ * comes from you, so counsel's privileged files never pass through Cowork.
+ */
+export function afterAtgTaskConfirmed(workstream: Workstream, taskId: string, sentAt: string): Workstream {
+  if (!isAtgWorkstream(workstream) || taskId !== `${ATG_RULING.id}-counsel`) return workstream;
+  const tasks = workstream.plan.tasks.map((task) => {
+    if (task.id !== PREPARE_ID || task.status === "Done") return task;
+    return withTask(task, {
+      history: [
+        ...task.history,
+        coworkEmail(
+          ALEX,
+          `Re: ${task.description}`,
+          `Hi Alex, ${GC} approved counsel's draft text for Article II, Section 8, and is forwarding it to you now. You can start the questionnaire so the new questions match it. It's due ${formatShortDate(task.deadline)}.`,
+          sentAt,
+        ),
+        coworkAction("Told Alex the draft text is approved", sentAt, {
+          detail: "Follow-ups for Alex resume, counting toward the due date.",
+          rule: "The draft text is approved, and the questionnaire and agenda owners don't have it yet.",
+        }),
+      ],
+      statusSummary: `${GC} approved the draft text on ${formatShortDate(sentAt)}, so Alex can start the questionnaire. Due ${formatShortDate(task.deadline)}.`,
+    });
+  });
+  return { ...workstream, plan: { ...workstream.plan, tasks } };
 }
 
 export function isAtgWorkstream(workstream: Pick<Workstream, "sourceSignalId">): boolean {
@@ -210,7 +214,5 @@ export function progressAtgWorkstream(workstream: Workstream): Workstream {
     ...workstream,
     createdAt: STARTED_AT,
     plan: { ...workstream.plan, tasks: workstream.plan.tasks.map(storyFor) },
-    statusSummary:
-      "Your turn: Dana sent the memo and draft Section 8 on Nov 2 and it needs your review. The Dec 15 committee slot is booked; Morgan hasn't replied yet (follow-up 1 of 3).",
   };
 }

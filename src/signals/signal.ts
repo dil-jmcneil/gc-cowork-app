@@ -1,4 +1,4 @@
-import type { Milestone, PlanRule, TaskStatus } from "@/workstreams/workstream";
+import type { PlanRule, TaskStatus } from "@/workstreams/workstream";
 
 export type SignalStatus = "New" | "In review" | "In progress" | "Closed";
 
@@ -22,22 +22,33 @@ export type TaskTemplate = {
   /** Stable within the signal, so stories can find the task again. */
   id: string;
   description: string;
+  /** What done looks like: the end state and who confirms it, not the steps. */
+  doneWhen: string;
   /** Email of the suggested owner, in the directory or a known outside contact. */
   ownerEmail: string;
+  /** People kept informed, by email. */
+  ccEmails: string[];
   /** ISO date, yyyy-mm-dd. */
   due: string;
+  /** The template id of a task that has to finish first. */
+  waitingOn?: string;
+  /** The words in the plan's approach that describe this task, removed with it. */
+  approachPhrase?: string;
 };
 
-/** The plan Cowork proposes for a signal: milestones with their tasks, plus rules for every milestone. */
+/** The plan Cowork proposes for a signal: big-picture tasks plus the rules Cowork follows to work them. */
 export type PlanTemplate = {
+  /** The Create workstream summary: what the signal is, why it matters to Acme, and what Cowork suggests. */
+  brief: { headline: string; support: string[] };
   approach: string;
-  milestones: (Milestone & { tasks: TaskTemplate[] })[];
+  tasks: TaskTemplate[];
   rules: PlanRule[];
 };
 
 /**
- * A workstream from before this prototype's story begins. The prototype only
- * shows its name, progress and tasks (on the calendar); it has no pages.
+ * A workstream from before this prototype's story begins. It loads as a real
+ * workstream (`src/workstreams/pastWorkstreams.ts`), with a page and its tasks
+ * on the calendar.
  */
 export type PastWorkstream = {
   name: string;
@@ -52,6 +63,8 @@ export type PastWorkstream = {
 export type PastWorkstreamTask = {
   id: string;
   description: string;
+  doneWhen: string;
+  waitingOn?: string;
   /** Owner's display name. */
   owner: string;
   /** ISO date, yyyy-mm-dd. */

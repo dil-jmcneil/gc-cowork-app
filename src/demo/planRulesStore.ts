@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
 /**
- * Whether plans show the rules Cowork follows: each milestone's "How Cowork
- * Handles This" table and the "Rules for Every Milestone" card. Hidden by
+ * Whether plans show the rules Cowork follows: the "Rules Cowork Follows"
+ * card on a workstream, and the rule cited on Cowork's actions. Hidden by
  * default; a Demo settings toggle exposes them. Persisted in localStorage.
  */
 const STORAGE_KEY = "gc-cowork-show-plan-rules";

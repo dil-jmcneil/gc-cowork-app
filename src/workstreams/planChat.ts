@@ -1,20 +1,20 @@
 import { LOGGED_IN_USER } from "@/user";
 
-import type { Milestone, WorkstreamPlan } from "./workstream";
+import type { WorkstreamPlan, WorkstreamTask } from "./workstream";
 
 const NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 };
 const REMOVE = /\b(remove|drop|delete|cut|take out)\b/i;
 const CLOSING = /\b(clos(e|ing)|final (step|approval|sign-?off))\b/i;
 
-/** Milestone numbers mentioned in a message, in order: "milestone 4", "m3", "milestone three". */
-function milestoneNumbers(text: string): number[] {
+/** Task numbers mentioned in a message, in order: "task 4", "t3", "task three". Milestone is the old word for task. */
+function taskNumbers(text: string): number[] {
   const found: number[] = [];
-  for (const match of text.matchAll(/\b(?:milestone|m)\s*#?\s*(\d+|one|two|three|four|five|six)\b/gi)) {
+  for (const match of text.matchAll(/\b(?:task|milestone|t|m)\s*#?\s*(\d+|one|two|three|four|five|six)\b/gi)) {
     const raw = match[1].toLowerCase();
     found.push(NUMBER_WORDS[raw] ?? Number(raw));
   }
-  // "...add the closing action to 3" names the target without the word "milestone".
-  const trailing = text.match(/\b(?:to|into|onto)\s+(?:milestone\s*)?(\d+|one|two|three|four|five|six)\b/i);
+  // "...add the closing action to 3" names the target without the word "task".
+  const trailing = text.match(/\b(?:to|into|onto)\s+(?:(?:task|milestone)\s*)?(\d+|one|two|three|four|five|six)\b/i);
   if (trailing) {
     const raw = trailing[1].toLowerCase();
     const n = NUMBER_WORDS[raw] ?? Number(raw);
@@ -23,71 +23,78 @@ function milestoneNumbers(text: string): number[] {
   return found;
 }
 
-/** "Peter closes the signal" → "closes the signal": the action, without whoever does it. */
-function action(approver: string): string {
-  const name = `${LOGGED_IN_USER.firstName} `;
-  return approver.startsWith(name) ? approver.slice(name.length) : approver;
+const GC = LOGGED_IN_USER.firstName;
+
+/** The GC's closing step at the end of a done-when line: "…, and Peter closes the signal." → "Peter closes the signal". */
+function closingStep(doneWhen: string): string | undefined {
+  return doneWhen.match(new RegExp(`(?:,? and |\\. |^)(${GC} [^.]+)\\.$`))?.[1];
 }
 
-function lowerFirst(text: string): string {
-  return text.charAt(0).toLowerCase() + text.slice(1);
+/** "Peter closes the signal" → "closes the signal": the action, without whoever does it. */
+function action(step: string): string {
+  return step.startsWith(`${GC} `) ? step.slice(GC.length + 1) : step;
+}
+
+/** Adds a closing step to a done-when line, joining it to the GC's own step when it ends with one. */
+function withClosingStep(doneWhen: string, step: string): string {
+  const base = doneWhen.replace(/\.$/, "");
+  return closingStep(doneWhen) ? `${base} and ${action(step)}.` : `${base}. ${step}.`;
 }
 
 export type PlanEdit = { plan: WorkstreamPlan; reply: string };
 
 /**
- * Cowork's reply when the GC asks, in chat, to remove a milestone from the
- * plan. The milestone's tasks go with it. When the message mentions its
- * closing action and names another milestone, that milestone takes over the
- * approval. Returns undefined for anything else, so the chat replies as usual.
+ * Cowork's reply when the GC asks, in chat, to remove a task from the plan.
+ * When the message mentions its closing step and names another task, that
+ * task takes the step over. Tasks that waited on the removed one stop
+ * waiting. Returns undefined for anything else, so the chat replies as usual.
  */
 export function planEditFromChat(plan: WorkstreamPlan, text: string): PlanEdit | undefined {
   if (!REMOVE.test(text)) return undefined;
-  const [removeNumber, targetNumber] = milestoneNumbers(text);
+  const [removeNumber, targetNumber] = taskNumbers(text);
   if (!removeNumber) return undefined;
 
-  const removed = plan.milestones[removeNumber - 1];
+  const removed = plan.tasks[removeNumber - 1];
   if (!removed) {
-    return {
-      plan,
-      reply: `The plan has ${plan.milestones.length} milestones, so there's no Milestone ${removeNumber} to remove.`,
-    };
+    return { plan, reply: `The plan has ${plan.tasks.length} tasks, so there's no task ${removeNumber} to remove.` };
   }
-  if (plan.milestones.length === 1) {
-    return { plan, reply: "That's the only milestone, so I left it in. A plan needs at least one." };
+  if (plan.tasks.length === 1) {
+    return { plan, reply: "That's the only task, so I left it in. A plan needs at least one." };
   }
 
-  const removedTasks = plan.tasks.filter((t) => t.milestoneId === removed.id);
+  const step = closingStep(removed.doneWhen);
   const wantsClosing = CLOSING.test(text);
-  const target = targetNumber && targetNumber !== removeNumber ? plan.milestones[targetNumber - 1] : undefined;
+  const target = targetNumber && targetNumber !== removeNumber ? plan.tasks[targetNumber - 1] : undefined;
 
-  const milestones: Milestone[] = plan.milestones
-    .filter((m) => m.id !== removed.id)
-    .map((m) =>
-      wantsClosing && target && m.id === target.id
-        ? { ...m, approver: `${m.approver} and ${action(removed.approver)}` }
-        : m,
-    );
+  const tasks: WorkstreamTask[] = plan.tasks
+    .filter((t) => t.id !== removed.id)
+    .map((t) => {
+      let next = t;
+      if (next.waitingOn === removed.id) {
+        const { waitingOn: _gone, ...rest } = next;
+        next = rest;
+      }
+      if (wantsClosing && step && target && t.id === target.id)
+        next = { ...next, doneWhen: withClosingStep(t.doneWhen, step) };
+      return next;
+    });
   const next: WorkstreamPlan = {
     ...plan,
-    milestones,
-    tasks: plan.tasks.filter((t) => t.milestoneId !== removed.id),
+    tasks,
     proposedApproach: removed.approachPhrase
       ? plan.proposedApproach.replace(removed.approachPhrase, "")
       : plan.proposedApproach,
   };
 
-  const taskNote = removedTasks.length
-    ? ` and its ${removedTasks.length === 1 ? "task" : `${removedTasks.length} tasks`} (${removedTasks.map((t) => lowerFirst(t.description)).join("; ")})`
-    : "";
-  let reply = `I removed Milestone ${removeNumber}, ${removed.title},${taskNote}.`;
+  let reply = `I removed Task ${removeNumber}, ${removed.description}.`;
+  if (!step) return { plan: next, reply };
   if (wantsClosing && target) {
-    const newNumber = milestones.findIndex((m) => m.id === target.id) + 1;
-    reply += ` Milestone ${newNumber}, ${target.title}, now ends with the closing step: "${milestones[newNumber - 1].approver}."`;
+    const updated = tasks.find((t) => t.id === target.id)!;
+    reply += ` Task ${tasks.indexOf(updated) + 1}, ${updated.description}, now ends with it: "${updated.doneWhen}"`;
   } else if (wantsClosing) {
-    reply += ` Which milestone should take over its closing step, "${removed.approver}"?`;
+    reply += ` Which task should take over its closing step, "${step}"?`;
   } else {
-    reply += ` Its closing step, "${removed.approver}," went with it. Tell me which milestone should take it over.`;
+    reply += ` Its closing step, "${step}," went with it. Tell me which task should take it over.`;
   }
   return { plan: next, reply };
 }

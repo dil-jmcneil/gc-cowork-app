@@ -1,6 +1,6 @@
 import { Alert, Box, Link, Snackbar, Stack, Typography, useTheme } from "@mui/material";
 import { useMemo, useState, type ReactNode } from "react";
-import { Link as RouterLink, useSearchParams } from "react-router";
+import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 
 import { deriveCalendarEvents, type CalendarEvent } from "@/calendar/complianceEvents";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/calendar/weeks";
 import { SignalDialog } from "@/components/home/SignalDialog";
 import { TaskQuickView, type TaskRef } from "@/components/tasks/TaskQuickView";
+import { useMvpScopeStore } from "@/demo/mvpScopeStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { SIGNALS } from "@/signals/signals";
 
@@ -89,6 +90,8 @@ export function ComplianceCalendar({
   const [toast, setToast] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<TaskRef | null>(null);
   const [openSignalId, setOpenSignalId] = useState<string | null>(null);
+  const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
+  const navigate = useNavigate();
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
 
   const range = rangeFor(variant, view, anchor);
@@ -101,8 +104,16 @@ export function ComplianceCalendar({
     setToast(event.owner ? `Nudge sent to ${event.owner}.` : "Nudge sent.");
   };
 
-  /** Tasks open the task quick view; deadlines and past workstreams' tasks open their signal. */
+  /**
+   * MVP: every event opens its workstream page on the task, or the
+   * signal's draft when it has none. With post-MVP views on, tasks open the
+   * task quick view and deadlines open their signal, as before.
+   */
   const handleOpen = (event: CalendarEvent) => {
+    if (!showPostMvpViews) {
+      if (event.href) navigate(event.href);
+      return;
+    }
     if (event.kind === "task") setOpenTask({ workstreamId: event.workstreamId, taskId: event.taskId });
     else setOpenSignalId(event.signalId);
   };

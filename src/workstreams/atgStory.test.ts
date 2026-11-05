@@ -2,10 +2,16 @@ import { deriveCalendarEvents } from "@/calendar/complianceEvents";
 import { handleTaskChatMessage } from "@/workstreams/taskChat";
 import { temporalBand } from "@/calendar/weeks";
 import { ATG_RULING } from "@/signals/signals";
-import { currentMilestone } from "@/workstreams/milestones";
+import { taskDisplayStatus } from "@/workstreams/taskStatus";
+import { workstreamAttention } from "@/workstreams/workstreamAttention";
+import { handleWorkstreamChatMessage } from "@/workstreams/workstreamChat";
 import { isMessage } from "@/workstreams/thread";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
+
+const NOW = new Date("2026-11-03T12:00:00Z");
+const COUNSEL = `${ATG_RULING.id}-counsel`;
+const PREPARE = `${ATG_RULING.id}-prepare`;
 
 beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
@@ -16,36 +22,37 @@ function startAtgWorkstream() {
 
 const byKey = (key: string) => startAtgWorkstream().plan.tasks.find((t) => t.id === `${ATG_RULING.id}-${key}`)!;
 
+/** Each task's display status, keyed by its template id. */
+function statuses(workstreamId: string) {
+  const { tasks } = useWorkstreamStore.getState().getWorkstream(workstreamId)!.plan;
+  return Object.fromEntries(tasks.map((t) => [t.id.slice(ATG_RULING.id.length + 1), taskDisplayStatus(t, tasks)]));
+}
+
 test("starting the workstream fills its tasks in as if work began a few days ago", () => {
   const workstream = startAtgWorkstream();
   for (const task of workstream.plan.tasks) expect(task.history.length).toBeGreaterThan(0);
-  expect(workstream.plan.tasks.find((t) => t.id.endsWith("-agenda"))!.status).toBe("Done");
-  expect(currentMilestone(workstream.plan.milestones, workstream.plan.tasks)?.id).toBe("assess");
-  expect(workstream.createdAt <= workstream.plan.tasks.flatMap((t) => t.history.map((e) => e.sentAt)).sort()[0]).toBe(true);
+  expect(workstream.createdAt <= workstream.plan.tasks.flatMap((t) => t.history.map((e) => e.sentAt)).sort()[0]).toBe(
+    true,
+  );
 });
 
-test("Cowork shows Peter its first email to outside counsel, and sends it only after he says so", () => {
-  const messages = byKey("memo").history.filter(isMessage);
+test("Cowork shows Peter its first email to outside counsel, and sends it only once Peter says so", () => {
+  const messages = byKey("counsel").history.filter(isMessage);
   expect(messages[0]).toMatchObject({ authorRole: "cowork", channel: "chat", to: ["Peter"] });
   expect(messages[1]).toMatchObject({ authorRole: "delegator", body: "Send." });
   expect(messages[2]).toMatchObject({ authorRole: "cowork", channel: "email", to: ["Dana Whitfield"] });
 });
 
 test("an owner waiting on another task has follow-ups held, as an action citing the rule", () => {
-  const last = byKey("questionnaire").history.at(-1)!;
-  expect(last).toMatchObject({ kind: "action", actor: "Cowork", summary: "Held follow-ups for Alex" });
-  expect(last.kind === "action" && last.rule).toMatch(/waiting on another task/);
-});
-
-test("a silent owner is chased toward the circuit breaker", () => {
-  const messages = byKey("website").history.filter(isMessage);
-  expect(messages.some((m) => m.authorRole === "delegate")).toBe(false);
-  expect(messages.at(-1)!.body).toContain("Follow-up 1 of 3");
+  const held = byKey("prepare").history.find((e) => e.kind === "action" && e.summary === "Held follow-ups for Alex")!;
+  expect(held.kind === "action" && held.rule).toMatch(/waiting on another task/);
 });
 
 test("files owners attach and artifacts Cowork makes show up as file entries", () => {
   const files = startAtgWorkstream().plan.tasks.flatMap((t) => t.history.filter((e) => e.kind === "file"));
-  expect(files.map((f) => f.kind === "file" && f.addedBy)).toEqual(expect.arrayContaining(["Cowork", "Alex Kim", "Pete Lin"]));
+  expect(files.map((f) => f.kind === "file" && f.addedBy)).toEqual(
+    expect.arrayContaining(["Cowork", "Alex Kim", "Pete Lin"]),
+  );
 });
 
 test("each thread is in time order", () => {
@@ -55,50 +62,112 @@ test("each thread is in time order", () => {
   }
 });
 
-
-test("the early tasks land this week and next on the calendar, so the widget shows them", () => {
+test("the first two tasks land this week and next on the calendar, so the widget shows them", () => {
   const TODAY = "2026-11-03";
-  const due = (key: string) => byKey(key).deadline;
-  expect(temporalBand(due("memo"), TODAY)).toBe("this-week");
-  expect(temporalBand(due("agenda"), TODAY)).toBe("next-week");
-  expect(temporalBand(due("questionnaire"), TODAY)).toBe("next-week");
-  // The questionnaire still follows counsel's memo, and everything stays ahead of the window.
-  expect(due("questionnaire") > due("memo")).toBe(true);
-  expect(due("questionnaire") < ATG_RULING.deadlines[0].date).toBe(true);
+  expect(temporalBand(byKey("counsel").deadline, TODAY)).toBe("this-week");
+  expect(temporalBand(byKey("prepare").deadline, TODAY)).toBe("next-week");
+  expect(byKey("prepare").deadline < ATG_RULING.deadlines[0].date).toBe(true);
 });
 
-describe("the memo is done by Dana and waiting on Peter's review", () => {
+describe("Dana finished counsel's view, and it waits on Peter's review", () => {
   test("Dana's done doesn't close it; Cowork holds it open and asks Peter", () => {
-    const memo = byKey("memo");
-    expect(memo.status).toBe("In progress");
-    expect(memo.awaitingReview).toBe(true);
-    const last = memo.history.slice(-3);
+    const counsel = byKey("counsel");
+    expect(counsel.status).toBe("In progress");
+    expect(counsel.awaitingReview).toBe(true);
+    const last = counsel.history.slice(-4);
     expect(last[0]).toMatchObject({ kind: "message", authorRole: "delegate", authorName: "Dana Whitfield" });
-    expect(last[1]).toMatchObject({ kind: "action", summary: "Held the task open for your review" });
-    expect(last[2]).toMatchObject({ kind: "message", authorRole: "cowork", to: ["Peter"] });
+    expect(last[1]).toMatchObject({ kind: "file", name: counsel.reviewFile });
+    expect(last[2]).toMatchObject({ kind: "action", summary: "Held the task open for your review" });
+    expect(last[3]).toMatchObject({ kind: "message", authorRole: "cowork", to: ["Peter"] });
   });
 
   test("confirming closes it and records who closed it", () => {
     const workstream = startAtgWorkstream();
-    useWorkstreamStore.getState().confirmTaskDone(workstream.id, `${ATG_RULING.id}-memo`);
-    const memo = useWorkstreamStore.getState().getTask(workstream.id, `${ATG_RULING.id}-memo`)!;
-    expect(memo).toMatchObject({ status: "Done", awaitingReview: false });
-    expect(memo.history.at(-1)).toMatchObject({ kind: "action", actor: "Peter" });
+    useWorkstreamStore.getState().confirmTaskDone(workstream.id, COUNSEL);
+    const counsel = useWorkstreamStore.getState().getTask(workstream.id, COUNSEL)!;
+    expect(counsel).toMatchObject({ status: "Done", awaitingReview: false });
+    expect(counsel.statusSummary).toMatch(/^You confirmed Dana's work on \w+ \d+\.$/);
+    expect(counsel.history.at(-1)).toMatchObject({ kind: "action", actor: "Peter" });
   });
 
-  test("replying \"Got it\" in the task chat closes it too", () => {
+  test('replying "Got it" in the task chat closes it too', () => {
     const workstream = startAtgWorkstream();
-    const reply = handleTaskChatMessage(workstream.id, `${ATG_RULING.id}-memo`, "Got it, looks good", new Date());
+    const reply = handleTaskChatMessage(workstream.id, COUNSEL, "Got it, looks good", new Date());
     expect(reply).toMatch(/closed the task/);
-    expect(useWorkstreamStore.getState().getTask(workstream.id, `${ATG_RULING.id}-memo`)!.status).toBe("Done");
+    expect(useWorkstreamStore.getState().getTask(workstream.id, COUNSEL)!.status).toBe("Done");
   });
 
-  test("the calendar asks for a review, not a nudge", () => {
+  test("the calendar asks for a review, not a nudge, and its Review opens the workstream on the task", () => {
     const workstream = startAtgWorkstream();
-    const event = deriveCalendarEvents([workstream], new Date("2026-11-03T12:00:00Z")).find(
-      (e) => e.id === `${ATG_RULING.id}-memo`,
-    )!;
+    const event = deriveCalendarEvents([workstream], NOW).find((e) => e.id === COUNSEL)!;
     expect(event.priority.label).toBe("Needs your review");
     expect(event.attention).toBe("review");
+    expect(event.href).toBe(`/workstreams/${workstream.id}?task=${COUNSEL}`);
+  });
+});
+
+describe("the demo: counsel's view needs your review, and clearing it moves the story on", () => {
+  test("at the start, counsel's view needs your review, and preparing the change is blocked by you", () => {
+    const { id } = startAtgWorkstream();
+    expect(statuses(id)).toEqual({
+      counsel: { label: "Needs your review" },
+      prepare: { label: "Blocked", blockedBy: "you" },
+      adopt: { label: "Blocked", blockedBy: "Alex Kim" },
+      watch: { label: "In progress" },
+    });
+    expect(workstreamAttention(useWorkstreamStore.getState().getWorkstream(id)!, NOW).summary.headline).toMatch(
+      /^Review Dana's memo/,
+    );
+  });
+
+  test.each([
+    ["the status summary", (id: string) => useWorkstreamStore.getState().confirmTaskDone(id, COUNSEL)],
+    ['the chat reply "Got it"', (id: string) => void handleWorkstreamChatMessage(id, "Got it", NOW)],
+  ])("clearing it from %s unblocks preparing the change", (_, clear) => {
+    const { id } = startAtgWorkstream();
+    clear(id);
+    expect(statuses(id)).toMatchObject({ counsel: { label: "Done" }, prepare: { label: "In progress" } });
+    const { summary, waitingOnYou } = workstreamAttention(useWorkstreamStore.getState().getWorkstream(id)!, NOW);
+    expect(waitingOnYou).toHaveLength(0);
+    expect(summary.headline).toBe("On track: 1 of 4 tasks done.");
+  });
+
+  test("Cowork tells Alex the text is approved, and the activity log shows it", () => {
+    const { id } = startAtgWorkstream();
+    useWorkstreamStore.getState().confirmTaskDone(id, COUNSEL);
+    const prepare = useWorkstreamStore.getState().getTask(id, PREPARE)!;
+    const [email, action] = prepare.history.slice(-2);
+    expect(email).toMatchObject({ kind: "message", authorRole: "cowork", channel: "email", to: ["Alex Kim"] });
+    expect(action).toMatchObject({ kind: "action", actor: "Cowork", summary: "Told Alex the draft text is approved" });
+    expect(action.kind === "action" && action.rule).toMatch(/draft text is approved/);
+    expect(prepare.statusSummary).toMatch(/so Alex can start the questionnaire/);
+  });
+
+  test("marking counsel's view Done from the task list does the same as confirming it", () => {
+    const { id } = startAtgWorkstream();
+    useWorkstreamStore.getState().setTaskStatus(id, COUNSEL, "Done");
+    const counsel = useWorkstreamStore.getState().getTask(id, COUNSEL)!;
+    expect(counsel).toMatchObject({ status: "Done", awaitingReview: false });
+    expect(counsel.statusSummary).toMatch(/^You marked it done on \w+ \d+\.$/);
+    expect(statuses(id).prepare).toEqual({ label: "In progress" });
+    const prepare = useWorkstreamStore.getState().getTask(id, PREPARE)!;
+    expect(
+      prepare.history.some((e) => e.kind === "action" && e.summary === "Told Alex the draft text is approved"),
+    ).toBe(true);
+  });
+
+  test("the task waiting on your review links the draft to review", () => {
+    const counsel = byKey("counsel");
+    const file = counsel.history.find((e) => e.kind === "file" && e.name === counsel.reviewFile);
+    expect(file).toMatchObject({ kind: "file", addedBy: "Dana Whitfield" });
+    expect(file?.kind === "file" && file.body).toMatch(/Bottom line/);
+  });
+
+  test("confirming twice doesn't tell Alex twice", () => {
+    const { id } = startAtgWorkstream();
+    useWorkstreamStore.getState().confirmTaskDone(id, COUNSEL);
+    useWorkstreamStore.getState().confirmTaskDone(id, COUNSEL);
+    const prepare = useWorkstreamStore.getState().getTask(id, PREPARE)!;
+    expect(prepare.history.filter((e) => e.kind === "action" && e.summary.startsWith("Told Alex"))).toHaveLength(1);
   });
 });

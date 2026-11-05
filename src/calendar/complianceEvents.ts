@@ -1,5 +1,6 @@
 import type { Workstream, WorkstreamTask } from "@/workstreams/workstream";
 import { isTaskOverdue, taskActivity, taskAttention } from "@/workstreams/taskStatus";
+import { draftWorkstreamHref, workstreamHref } from "@/workstreams/links";
 import { signalType, type PastWorkstream, type PastWorkstreamTask } from "@/signals/signal";
 import { SIGNALS } from "@/signals/signals";
 
@@ -43,7 +44,7 @@ type EventBase = {
   source: string;
   /** Who owns it, when someone does. */
   owner?: string;
-  /** Fallback link when the event isn't opened in an overlay. */
+  /** Where opening the event goes: its workstream page, or the signal's draft. */
   href?: string;
   /** What opening the event shows, for the hover tooltip. */
   linkLabel: string;
@@ -133,10 +134,10 @@ function taskEvent(workstream: Workstream, task: WorkstreamTask, now: Date): Cal
     title: task.description,
     source: workstream.name,
     owner,
-    href: `/workstreams/${workstream.id}/tasks/${task.id}`,
+    href: workstreamHref(workstream.id, { taskId: task.id }),
     linkLabel: `Task in ${workstream.name}`,
     summary: taskActivity(task, now),
-    workstream: { name: workstream.name, href: `/workstreams/${workstream.id}` },
+    workstream: { name: workstream.name, href: workstreamHref(workstream.id) },
     ...taskState(task, owner, workstream.name, now),
   };
 }
@@ -192,12 +193,12 @@ export function deriveCalendarEvents(workstreams: Workstream[], now: Date): Cale
           : { label: "Needs a workstream" as const, color: "warning" as const },
         summary: deadline.description ? `${signal.title}. ${deadline.description}` : signal.title,
         ...(live
-          ? { workstream: { name: live.name, href: `/workstreams/${live.id}` } }
+          ? { workstream: { name: live.name, href: workstreamHref(live.id) } }
           : signal.pastWorkstream
             ? { workstream: { name: signal.pastWorkstream.name } }
             : {}),
         source: signal.title,
-        href: hasWorkstream ? "/" : `/workstreams/new?signal=${encodeURIComponent(signal.id)}`,
+        href: live ? workstreamHref(live.id) : hasWorkstream ? "/" : draftWorkstreamHref(signal.id),
         linkLabel: `${signalType(signal)}: ${signal.title}`,
         nextStep: hasWorkstream
           ? "Track it through the workstream's tasks"
@@ -208,8 +209,9 @@ export function deriveCalendarEvents(workstreams: Workstream[], now: Date): Cale
     }),
   );
 
+  // A past workstream that's loaded as a real one lists its tasks below, with links.
   const referenceEvents = SIGNALS.flatMap((signal) =>
-    signal.pastWorkstream
+    signal.pastWorkstream && !workstreamBySignal.has(signal.id)
       ? signal.pastWorkstream.tasks.map((task) => referenceTaskEvent(signal.id, signal.pastWorkstream!, task, now))
       : [],
   );

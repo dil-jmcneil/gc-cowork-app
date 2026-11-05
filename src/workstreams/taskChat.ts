@@ -5,9 +5,9 @@ import { useWorkstreamStore } from "./workstreamStore";
 import { summarizeTask } from "./taskStatus";
 
 /** A reply that confirms an owner's "done", e.g. "Got it", "Looks good, close it", "Confirmed". */
-const CONFIRMS_DONE = /\b(got it|confirm(ed)?|looks good|approved?|close (it|the task)|mark (it )?(as )?done|received)\b/i;
+export const CONFIRMS_DONE = /\b(got it|confirm(ed)?|looks good|approved?|close (it|the task)|mark (it )?(as )?done|received)\b/i;
 
-const STATUS_QUESTION = /\b(status|stand|update|where|progress|how'?s it going)\b|\?$/i;
+export const STATUS_QUESTION = /\b(status|stand|update|where|progress|how'?s it going)\b|\?$/i;
 
 /** Chat thread id for a task's side panel; kept out of chat history. */
 export function taskChatId(taskId: string): string {

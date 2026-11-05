@@ -53,7 +53,7 @@ Text stays between 12px and 18px. In this bundle the MUI variants render a step 
 | --- | --- | --- |
 | 18px semibold | `h4` + emphasis weight | Page titles and dialog titles |
 | 16px semibold | `h5` + emphasis weight | The one headline on a card, e.g. an attention card's title |
-| 14px semibold | `h6` + emphasis weight | Card and section headings, milestone titles |
+| 14px semibold | `h6` + emphasis weight | Card and section headings |
 | 14px (Type/Md) | `body1` | The default for content: values, table cells, messages, summaries. Add emphasis weight for names and subjects |
 | 12px | `textMd` | Sparingly, for helper text an experienced user can skip: field labels, timestamps, meta lines, table headers |
 
@@ -119,19 +119,29 @@ Anything Cowork surfaces for the GC is a **signal** (`src/signals`). Its kind is
 
 Every signal lists why it matters to Acme under one label, **Relevance** (`RELEVANCE_LABEL`), whatever its type. Don't add per-type names like "Points for Counsel" or "Reasons Relevant".
 
-The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`). Past signals (`PAST_SIGNALS`) stay out of the attention pane; two have past workstreams that exist only as data, with tasks on the calendar and no pages.
+The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`). Past signals (`PAST_SIGNALS`) stay out of the attention pane; two have past workstreams, which load as real workstreams (`src/workstreams/pastWorkstreams.ts`) with pages and tasks on the calendar.
 
 ### Workstreams and history
 
-The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the workstream page rolls every task's history into one list.
+The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the UI calls this the **timeline** (`TimelineList`). It opens on the last two days, then steps to 10 more, then all. Each task's timeline opens from "Open activity log" on its row.
 
-### Plans are milestones plus rule rows
+### MVP scope: one workstream page
+
+Every link goes to the workstream page (`workstreamHref`, with `?task=` to open it on a task), and the page always has Cowork's chat on the right. A new signal opens Cowork's draft on the same page. The task page, task quick-view and signal dialogs, the older create page and "Revise via chat" are hidden, not deleted: `useMvpScopeStore().showPostMvpViews` (a Demo settings switch) brings them back. See `docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md`.
+
+Summaries lead with a bold headline that answers on its own (the GC's next action when there is one), then at most two supporting sentences (`src/workstreams/summary.ts`). Write all of Cowork's copy with the `smart-brevity` skill (`.claude/skills/smart-brevity/SKILL.md`). The workstream's status summary is derived live by `workstreamAttention`, not stored.
+
+### Plans are tasks plus rule rows
 
 Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into Boxes and Arrows"):
 
-- **Milestones** are a short, ordered spine. Each is a contract: what must be true to start, what must exist when it's done, and who approves the handover. Don't describe the route inside a milestone.
-- **Rules** are flat rows of *when* (precondition), *Cowork does* (bounded actions, with a circuit breaker where retries are involved) and *until* (postcondition). Rows never refer to other rows. Add failures and edge cases as new `exception` rows instead of new steps.
-- Rules that apply everywhere live on the plan; the rest live on their milestone. Always include a "no rule fits" row that stops and asks the GC.
+- **Tasks** are the big steps: a short list in deadline order. Each is a contract: an owner, CCs, a deadline, and **what done looks like** (`doneWhen`), a postcondition naming who confirms it ("Peter confirms whether the ruling affects Acme's bylaws"). Never describe the route inside a task. A task can wait on another (`waitingOn`); it shows Blocked until that one is done.
+- A task shows one of five statuses (`taskDisplayStatus`): Not started, In progress, Needs your review, Blocked, Done.
+- **Rules** are flat rows of *when* (precondition), *Cowork does* (bounded actions, with a circuit breaker where retries are involved) and *until* (postcondition). Rows never refer to other rows. Add failures and edge cases as new `exception` rows instead of new steps. Always include a "no rule fits" row that stops and asks the GC.
+
+### Workstream layouts
+
+One page, two layouts. **Create** (a draft, `/workstreams/new?signal=`): what the signal is, why it matters and what Cowork suggests; Relevance and Source cards; the Plan card (task, owner, CC, deadline, status, then "Done when"); Accept and start. **View** (`/workstreams/:id`): the status summary beside Artifacts (every file Cowork or a person added); the Tasks card (each task's second line is its status summary, with "Open activity log" in a dialog); Relevance and Sources, collapsed. Owners are editable in both; in View, changing one reassigns the task and Cowork emails the new owner, and the status badge is a menu (Not started, In progress, Done; Done from the list counts as confirming). Artifact titles, and "Open the draft" on a task waiting on your review, open the file in the main panel (`?file=`) with a Back button; the chat stays open. Story files carry mock text (`src/workstreams/atgFiles.ts`).
 
 ## Writing style
 
