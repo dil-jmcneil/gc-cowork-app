@@ -23,7 +23,7 @@ import { ArtifactsCard } from "@/components/workstreams/ArtifactsCard";
 import { FileView } from "@/components/workstreams/FileView";
 import { KeyDatesCard, KeyDatesList } from "@/components/workstreams/KeyDates";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
-import { SourceDetails, SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
+import { SourceSignalCard, SourceStrip } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
 import { RuleTable } from "@/components/workstreams/RuleTable";
 import { TaskActivityDialog } from "@/components/workstreams/TaskActivityDialog";
@@ -283,10 +283,11 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
 
           <StatusSummary label="Summary" summary={signal.plan.brief} />
 
+          <SourceSignalCard signal={signal} />
+
           <PeerCards>
             <RelevanceCard reasonsRelevant={draft.reasonsRelevant} />
             <KeyDatesCard deadlines={signal.deadlines} />
-            <SourceSignalCard signal={signal} />
           </PeerCards>
 
           <SectionCard title="Plan">
@@ -398,13 +399,13 @@ function RelevanceCard({ reasonsRelevant }: { reasonsRelevant: string[] }) {
   );
 }
 
-/** Three peers in a row: Relevance, Key Dates and Source; stacked on narrow screens. */
+/** Relevance and Key Dates side by side, under the Source strip; stacked on narrow screens. */
 function PeerCards({ children }: { children: ReactNode }) {
   return (
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+        gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
         gap: SPACE.block,
         alignItems: "stretch",
       }}
@@ -436,23 +437,25 @@ function RelevanceAndSources({
           />
         </AccordionSummary>
         <AccordionDetails id="relevance-sources-details">
-          <PeerCards>
-            <Stack gap={SPACE.group}>
-              <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
-              <Typography variant="body1">{description}</Typography>
-              <RelevanceList reasonsRelevant={reasonsRelevant} />
-            </Stack>
-            <Stack gap={SPACE.group}>
-              <FieldLabel>Key Dates</FieldLabel>
-              <KeyDatesList deadlines={signal?.deadlines ?? []} />
-            </Stack>
+          <Stack gap={SPACE.block}>
             {signal ? (
               <Stack gap={SPACE.group}>
                 <FieldLabel>Source</FieldLabel>
-                <SourceDetails signal={signal} />
+                <SourceStrip signal={signal} />
               </Stack>
             ) : null}
-          </PeerCards>
+            <PeerCards>
+              <Stack gap={SPACE.group}>
+                <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
+                <Typography variant="body1">{description}</Typography>
+                <RelevanceList reasonsRelevant={reasonsRelevant} />
+              </Stack>
+              <Stack gap={SPACE.group}>
+                <FieldLabel>Key Dates</FieldLabel>
+                <KeyDatesList deadlines={signal?.deadlines ?? []} />
+              </Stack>
+            </PeerCards>
+          </Stack>
         </AccordionDetails>
       </Accordion>
     </Card>
