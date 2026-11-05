@@ -68,7 +68,7 @@ test("the chat opens with the status summary's headline, once", () => {
   const workstream = startAtgWorkstream();
   seedWorkstreamChat(workstream, NOW);
   seedWorkstreamChat(workstream, NOW);
-  const messages = useChatMessagesStore.getState().messagesByChatId[workstreamChatId(workstream.id)];
+  const messages = useChatMessagesStore.getState().messagesByChatId[workstreamChatId(workstream)];
   expect(messages).toHaveLength(1);
   expect(JSON.stringify(messages[0])).toContain("Review Dana's memo");
 });

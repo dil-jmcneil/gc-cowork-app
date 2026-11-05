@@ -1,5 +1,7 @@
+import { shownRelevance } from "@/signals/signal";
 import { appendAssistantMessage, useChatMessagesStore } from "@/chat/chatMessagesStore";
 
+import { draftChatId } from "./draftChat";
 import { planEditFromChat } from "./planChat";
 import { summaryText } from "./summary";
 import { CONFIRMS_DONE, STATUS_QUESTION } from "./taskChat";
@@ -12,14 +14,17 @@ const WAITING_ON_ME =
   /\b(waiting on (me|you)|my turn|on my plate|for me to do|what do i (need|have) to do|anything for me|need from me|blocked on me)\b/i;
 const RELEVANCE = /\b(relevant|relevance|why (does|should) (this|it) matter|does (this|it) (apply|matter))\b/i;
 
-/** Chat thread id for a workstream page's side panel; kept out of chat history. */
-export function workstreamChatId(workstreamId: string): string {
-  return `workstream-chat-${workstreamId}`;
+/**
+ * Chat thread id for a workstream page's side panel; kept out of chat history.
+ * It's the draft's thread, so the conversation carries on after you start.
+ */
+export function workstreamChatId(workstream: Pick<Workstream, "sourceSignalId">): string {
+  return draftChatId(workstream.sourceSignalId);
 }
 
 /** The side chat opens with the status summary's headline, once per workstream. */
 export function seedWorkstreamChat(workstream: Workstream, now: Date): void {
-  const id = workstreamChatId(workstream.id);
+  const id = workstreamChatId(workstream);
   if (useChatMessagesStore.getState().messagesByChatId[id]?.length) return;
   appendAssistantMessage(
     id,
@@ -63,7 +68,9 @@ export function handleWorkstreamChatMessage(workstreamId: string, text: string, 
   }
 
   if (RELEVANCE.test(message)) {
-    return `Here's why it matters to Acme:\n\n${workstream.reasonsRelevant.map((r) => `- ${r}`).join("\n")}`;
+    return `Here's why it matters to Acme:\n\n${shownRelevance(workstream.reasonsRelevant)
+      .map((r) => `- ${r}`)
+      .join("\n")}`;
   }
 
   if (STATUS_QUESTION.test(message)) return summaryText(workstreamAttention(workstream, now).summary);

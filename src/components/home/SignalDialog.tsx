@@ -21,11 +21,14 @@ import { Link as RouterLink, useNavigate } from "react-router";
 import { startChatFromPrompt } from "@/chat/startChat";
 import { formatDate } from "@/lib/dates";
 import { SignalTags } from "@/components/signals/SignalTags";
+import { workstreamHref } from "@/workstreams/links";
+import { workstreamAttention } from "@/workstreams/workstreamAttention";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import {
   ISSUED_LABEL,
   RELEVANCE_LABEL,
   SOURCE_LINK_LABEL,
+  shownRelevance,
   signalType,
   pastWorkstreamProgress,
   type Signal,
@@ -138,7 +141,7 @@ export function SignalDialog({ signal, onClose }: { signal: Signal | null; onClo
             <Stack gap={SPACE.item}>
               <SectionLabel>{RELEVANCE_LABEL}</SectionLabel>
               <Stack gap={SPACE.item}>
-                {signal.reasonsRelevant.map((reason) => (
+                {shownRelevance(signal.reasonsRelevant).map((reason) => (
                   <Stack key={reason} direction="row" gap={SPACE.item} alignItems="flex-start">
                     <InfoIcon
                       aria-hidden
@@ -159,7 +162,7 @@ export function SignalDialog({ signal, onClose }: { signal: Signal | null; onClo
             <Stack gap={SPACE.block}>
               {signal.deadlines.length ? (
                 <Stack gap={SPACE.item}>
-                  <SectionLabel>Key Deadlines</SectionLabel>
+                  <SectionLabel>Key Dates</SectionLabel>
                   <Stack gap={SPACE.item}>
                     {signal.deadlines.map((deadline) => (
                       <Stack key={deadline.label} gap={SPACE.pair}>
@@ -186,11 +189,23 @@ export function SignalDialog({ signal, onClose }: { signal: Signal | null; onClo
                   <SectionLabel>Linked Workstreams</SectionLabel>
                 </Stack>
                 {workstream ? (
-                  <Link component={RouterLink} to={`/workstreams/${workstream.id}`} onClick={onClose} underline="hover">
-                    <Typography variant="body1" sx={{ color: "inherit", fontWeight: emphasis }}>
-                      {workstream.name}
+                  <Stack gap={SPACE.pair}>
+                    <Link
+                      component={RouterLink}
+                      to={workstreamHref(workstream.id)}
+                      onClick={onClose}
+                      underline="hover"
+                      sx={{ alignSelf: "flex-start" }}
+                    >
+                      <Typography variant="body1" sx={{ color: "inherit", fontWeight: emphasis }}>
+                        {workstream.name}
+                      </Typography>
+                    </Link>
+                    {/* The same one-line status the signal's card in chat shows. */}
+                    <Typography variant="body1" sx={{ color: muted }}>
+                      {workstreamAttention(workstream, new Date()).summary.headline}
                     </Typography>
-                  </Link>
+                  </Stack>
                 ) : signal.pastWorkstream ? (
                   <Stack gap={SPACE.pair}>
                     <Typography variant="body1" sx={{ fontWeight: emphasis }}>

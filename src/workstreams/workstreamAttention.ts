@@ -12,8 +12,17 @@ export type AttentionItem = {
   detail: string;
 };
 
+/**
+ * How the status summary is colored, with Atlas status colors: warning when a
+ * step waits on you (human in the loop), error when something is blocking the
+ * work, information when it's on track. Waiting on you wins, since that's the
+ * headline.
+ */
+export type SummaryTone = "warning" | "error" | "information";
+
 export type WorkstreamAttention = {
   summary: Summary;
+  tone: SummaryTone;
   waitingOnYou: AttentionItem[];
   waitingOnOthers: AttentionItem[];
 };
@@ -51,9 +60,7 @@ function nudgeHeadline(task: WorkstreamTask, now: Date): string {
 function heldUpBy(workstream: Workstream, task: WorkstreamTask): string | undefined {
   const owners = [
     ...new Set(
-      workstream.plan.tasks
-        .filter((t) => t.waitingOn === task.id && t.status !== "Done")
-        .map((t) => t.delegate.label),
+      workstream.plan.tasks.filter((t) => t.waitingOn === task.id && t.status !== "Done").map((t) => t.delegate.label),
     ),
   ];
   if (!owners.length) return undefined;
@@ -98,6 +105,7 @@ export function workstreamAttention(workstream: Workstream, now: Date): Workstre
         headline: reviewHeadline(mine.task),
         support: capSupport([mine.detail, heldUpBy(workstream, mine.task)]),
       },
+      tone: "warning",
       waitingOnYou,
       waitingOnOthers,
     };
@@ -106,9 +114,10 @@ export function workstreamAttention(workstream: Workstream, now: Date): Workstre
   if (theirs) {
     return {
       summary: { headline: nudgeHeadline(theirs.task, now), support: capSupport([theirs.detail]) },
+      tone: "error",
       waitingOnYou,
       waitingOnOthers,
     };
   }
-  return { summary: progressSummary(workstream), waitingOnYou, waitingOnOthers };
+  return { summary: progressSummary(workstream), tone: "information", waitingOnYou, waitingOnOthers };
 }

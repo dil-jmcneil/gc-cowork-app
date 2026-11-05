@@ -24,7 +24,7 @@ import type { WorkstreamDraft } from "@/workstreams/workstream";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { hasPlan } from "@/signals/signal";
+import { hasPlan, shownRelevance } from "@/signals/signal";
 import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 import { RELEVANCE_LABEL } from "@/signals/signal";
@@ -134,7 +134,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
                     <Stack gap={SPACE.pair}>
                       <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
                       <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
-                        {draft.reasonsRelevant.map((reason) => (
+                        {shownRelevance(draft.reasonsRelevant).map((reason) => (
                           <Typography component="li" variant="body1" key={reason}>
                             {reason}
                           </Typography>

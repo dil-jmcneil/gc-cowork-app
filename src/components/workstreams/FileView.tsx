@@ -1,11 +1,12 @@
 import ArrowLeftIcon from "@diligentcorp/atlas-react-bundle/icons/ArrowLeft";
-import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
 import { Box, Button, Card, CardContent, Container, Stack, Typography, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 
 import { SPACE } from "@/lib/layout";
 import { formatShortDate } from "@/workstreams/taskStatus";
 import type { HistoryFile } from "@/workstreams/thread";
+
+import { FileTypeIcon } from "./DocumentChip";
 
 /**
  * A file opened from the workstream, shown in the main panel (Cowork's chat
@@ -43,7 +44,11 @@ export function FileView({
         </Button>
 
         <Stack direction="row" gap={SPACE.group} alignItems="flex-start">
-          <OpenFileIcon aria-hidden style={{ width: 28, height: 28, flexShrink: 0, color: muted, marginTop: 2 }} />
+          <FileTypeIcon
+            name={file.name}
+            aria-hidden
+            style={{ width: 28, height: 28, flexShrink: 0, color: muted, marginTop: 2 }}
+          />
           <Stack gap={SPACE.pair} sx={{ minWidth: 0 }}>
             <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
               {file.name}

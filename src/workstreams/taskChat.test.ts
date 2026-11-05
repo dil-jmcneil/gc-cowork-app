@@ -7,7 +7,10 @@ import { handleTaskChatMessage, seedTaskChat, taskChatId } from "@/workstreams/t
 const NOW = new Date("2026-11-03T12:00:00Z");
 let WORKSTREAM_ID = "";
 const task = () =>
-  useWorkstreamStore.getState().getWorkstream(WORKSTREAM_ID)!.plan.tasks.find((t) => t.id === `${ATG_RULING.id}-adopt`)!;
+  useWorkstreamStore
+    .getState()
+    .getWorkstream(WORKSTREAM_ID)!
+    .plan.tasks.find((t) => t.id === `${ATG_RULING.id}-adopt`)!;
 
 beforeEach(() => {
   useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] });

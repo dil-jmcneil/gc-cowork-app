@@ -1,6 +1,6 @@
 import type { WorkstreamTask } from "@/workstreams/workstream";
 import { DIRECTORY } from "@/workstreams/people";
-import { summarizeTask, taskAttention, taskDisplayStatus } from "@/workstreams/taskStatus";
+import { orderedTasks, summarizeTask, taskAttention, taskDisplayStatus } from "@/workstreams/taskStatus";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
 const MAYA = DIRECTORY.find((p) => p.label === "Maya Chen")!;
@@ -93,5 +93,17 @@ describe("taskDisplayStatus", () => {
     for (const status of ["Done", "In progress", "Not started"] as const) {
       expect(taskDisplayStatus({ ...base, status }, [])).toEqual({ label: status });
     }
+  });
+});
+
+describe("orderedTasks", () => {
+  test("numbers tasks in deadline order, keeping plan order for ties", () => {
+    const tasks = [
+      task({ id: "c", deadline: "2026-12-01" }),
+      task({ id: "a", deadline: "2026-11-01" }),
+      task({ id: "b1", deadline: "2026-11-15" }),
+      task({ id: "b2", deadline: "2026-11-15" }),
+    ];
+    expect(orderedTasks(tasks).map((t) => t.id)).toEqual(["a", "b1", "b2", "c"]);
   });
 });

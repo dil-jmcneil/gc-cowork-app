@@ -11,6 +11,6 @@ export function seedDraftChat(signal: Signal): void {
   if (useChatMessagesStore.getState().messagesByChatId[id]?.length) return;
   appendAssistantMessage(
     id,
-    `I drafted this workstream from "${signal.title}". Ask me to change the plan, add a task, or suggest an owner.`,
+    `I drafted this workstream from "${signal.title}". Ask me to change the plan, by task number, or tell me "Start" when it looks right and I'll email each owner.`,
   );
 }

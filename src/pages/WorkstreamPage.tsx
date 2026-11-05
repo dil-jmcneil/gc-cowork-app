@@ -1,28 +1,28 @@
+import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
+import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
-  Card,
+  ButtonBase,
+  Collapse,
   Container,
-  GridLegacy as Grid,
   Link,
   Snackbar,
   Stack,
   Typography,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { scrollContentTo, scrollContentToTop, SideChatLayout } from "@/components/chat/SideChatLayout";
-import { ArtifactsCard } from "@/components/workstreams/ArtifactsCard";
+import { AllFilesDialog, workstreamFiles } from "@/components/workstreams/AllFilesDialog";
 import { FileView } from "@/components/workstreams/FileView";
-import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
-import { SourceDetails, SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
+import { KeyDatesCard } from "@/components/workstreams/KeyDates";
+import { SectionCard } from "@/components/workstreams/SectionCard";
+import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
 import { RuleTable } from "@/components/workstreams/RuleTable";
 import { TaskActivityDialog } from "@/components/workstreams/TaskActivityDialog";
@@ -37,23 +37,25 @@ import type { HistoryFile } from "@/workstreams/thread";
 import type { PlanRule, WorkstreamDraft } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
 import { workstreamAttention } from "@/workstreams/workstreamAttention";
+import { asksToStart, startWorkstream } from "@/workstreams/startWorkstream";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
+import { sendUserMessage } from "@/runtime/assistantReply";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { hasPlan, RELEVANCE_LABEL, type PlannedSignal, type Signal } from "@/signals/signal";
+import { hasPlan, RELEVANCE_LABEL, shownRelevance, type PlannedSignal, type Signal } from "@/signals/signal";
 import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 
 /**
- * A started workstream (the View layout): the status summary beside its
- * artifacts, then the tasks, each with its owner, status line and activity
- * log, then the signal's relevance and sources, collapsed. Cowork's chat is
+ * A started workstream (the View layout): the status summary across the top,
+ * then the tasks, each with its owner, status line, files and activity log
+ * (with "All files" for every file at once), then the signal's relevance,
+ * key dates and source, collapsed. Cowork's chat is
  * always open on the right. A link can open it on a task.
  */
 export default function WorkstreamPage() {
   const { workstreamId } = useParams<{ workstreamId: string }>();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { presets } = useTheme();
   const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
   const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.id === workstreamId));
   const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
@@ -64,6 +66,7 @@ export default function WorkstreamPage() {
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [activityTaskId, setActivityTaskId] = useState<string | null>(null);
+  const [showAllFiles, setShowAllFiles] = useState(false);
   const now = new Date();
   const focus = workstreamFocusFromSearch(search);
 
@@ -108,7 +111,7 @@ export default function WorkstreamPage() {
     <SideChatLayout
       // A fresh layout per workstream, so one workstream doesn't open at another's scroll position.
       key={workstream.id}
-      chatId={workstreamChatId(workstream.id)}
+      chatId={workstreamChatId(workstream)}
       onUserMessage={(text) => handleWorkstreamChatMessage(workstream.id, text, new Date())}
     >
       {opened ? (
@@ -123,48 +126,49 @@ export default function WorkstreamPage() {
           <Stack gap={SPACE.section}>
             <PageHeader eyebrow="Workstream" title={workstream.name} />
 
-            <Grid {...presets.GridPresets.page}>
-              <Grid item sm={4} md={8} lg={5} xl={8}>
-                <StatusSummary
-                  {...workstreamAttention(workstream, now)}
-                  nudged={nudged}
-                  onConfirm={({ task }) => confirm(task.id)}
-                  onNudge={({ task }) => {
-                    nudgeTask(workstream.id, task.id);
-                    setNudged((prev) => new Set(prev).add(task.id));
-                    setToast(`Nudge sent to ${task.delegate.label}.`);
-                  }}
-                />
-              </Grid>
-              <Grid item sm={4} md={8} lg={3} xl={4}>
-                <ArtifactsCard tasks={tasks} hrefFor={(fileId) => workstreamHref(workstream.id, { fileId })} />
-              </Grid>
-            </Grid>
+            <StatusSummary
+              {...workstreamAttention(workstream, now)}
+              nudged={nudged}
+              onConfirm={({ task }) => confirm(task.id)}
+              onNudge={({ task }) => {
+                nudgeTask(workstream.id, task.id);
+                setNudged((prev) => new Set(prev).add(task.id));
+                setToast(`Nudge sent to ${task.delegate.label}.`);
+              }}
+            />
 
             <SectionCard
               title="Tasks"
               action={
-                // Post-MVP: the side chat replaces "Revise via chat".
-                showPostMvpViews ? (
-                  <Stack direction="row" gap={SPACE.item}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() =>
-                        startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
-                          workstreamId: workstream.id,
-                        })
-                      }
-                    >
-                      Revise via chat
-                    </Button>
-                    {workstream.plan.status === "accepted" ? null : (
-                      <Button variant="contained" size="small" onClick={() => acceptPlan(workstream.id)}>
-                        Accept plan
+                <Stack direction="row" alignItems="center" gap={SPACE.block}>
+                  {/* Each task shows its own files; this lists every file in one place. */}
+                  <Link component="button" type="button" underline="hover" onClick={() => setShowAllFiles(true)}>
+                    <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
+                      All files ({workstreamFiles(tasks).length})
+                    </Typography>
+                  </Link>
+                  {/* Post-MVP: the side chat replaces "Revise via chat". */}
+                  {showPostMvpViews ? (
+                    <Stack direction="row" gap={SPACE.item}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() =>
+                          startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
+                            workstreamId: workstream.id,
+                          })
+                        }
+                      >
+                        Revise via chat
                       </Button>
-                    )}
-                  </Stack>
-                ) : null
+                      {workstream.plan.status === "accepted" ? null : (
+                        <Button variant="contained" size="small" onClick={() => acceptPlan(workstream.id)}>
+                          Accept plan
+                        </Button>
+                      )}
+                    </Stack>
+                  ) : null}
+                </Stack>
               }
             >
               <TaskTable
@@ -179,23 +183,26 @@ export default function WorkstreamPage() {
                   setTaskStatus(workstream.id, taskId, status);
                   if (task) setToast(`"${task.description}" is now ${status.toLowerCase()}.`);
                 }}
-                onOwnerChange={(taskId, owner) => {
-                  assignTask(workstream.id, taskId, owner);
-                  setToast(`Reassigned to ${owner.label}. Cowork emailed them the task.`);
-                }}
+                showCc={showPostMvpViews}
+                // Post-MVP: owners are editable. The MVP shows them as text.
+                onOwnerChange={
+                  showPostMvpViews
+                    ? (taskId, owner) => {
+                        assignTask(workstream.id, taskId, owner);
+                        setToast(`Reassigned to ${owner.label}. Cowork emailed them the task.`);
+                      }
+                    : undefined
+                }
               />
             </SectionCard>
 
-            <RelevanceAndSources
-              description={workstream.description}
-              reasonsRelevant={workstream.reasonsRelevant}
-              signal={signal}
-            />
+            <RelevanceAndSources reasonsRelevant={workstream.reasonsRelevant} signal={signal} />
             <RulesCard rules={workstream.plan.rules} />
           </Stack>
         </Container>
       )}
 
+      <AllFilesDialog open={showAllFiles} tasks={tasks} onClose={() => setShowAllFiles(false)} onOpenFile={openFile} />
       <TaskActivityDialog
         task={tasks.find((t) => t.id === activityTaskId)}
         now={now}
@@ -238,26 +245,30 @@ export function DraftWorkstreamPage() {
 
 /**
  * The Create layout: what the signal is, why it matters and what Cowork
- * suggests; relevance and source side by side; then the plan's tasks, each
- * with an owner you can change and what done looks like.
+ * suggests; Relevance, Key Dates and Source side by side; then the plan's
+ * tasks, each with an owner you can change and what done looks like.
  */
 function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   const navigate = useNavigate();
-  const { presets } = useTheme();
-  const createWorkstream = useWorkstreamStore((s) => s.createWorkstream);
+  const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
   const [draft, setDraft] = useState<WorkstreamDraft>(() => draftWorkstreamFromSignal(signal));
+  const chatId = draftChatId(signal.id);
 
   useEffect(() => seedDraftChat(signal), [signal]);
 
+  /** Start the workstream and open it; Cowork's reply in chat says what it's sending. */
   const start = () => {
-    const workstream = createWorkstream({ ...draft, plan: { ...draft.plan, status: "accepted" } });
+    const { workstream, reply } = startWorkstream(draft);
     navigate(workstreamHref(workstream.id));
+    return reply;
   };
 
   return (
     <SideChatLayout
-      chatId={draftChatId(signal.id)}
+      chatId={chatId}
       onUserMessage={(text) => {
+        // Typing "Start" here does the same as the button: the chat is how you work this page.
+        if (asksToStart(text)) return start();
         const edit = planEditFromChat(draft.plan, text);
         if (!edit) return undefined;
         setDraft((d) => ({ ...d, plan: edit.plan }));
@@ -270,36 +281,44 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
 
           <StatusSummary label="Summary" summary={signal.plan.brief} />
 
-          <Grid {...presets.GridPresets.page}>
-            <Grid item sm={4} md={8} lg={4} xl={6}>
-              <RelevanceCard reasonsRelevant={draft.reasonsRelevant} />
-            </Grid>
-            <Grid item sm={4} md={8} lg={4} xl={6}>
-              <SourceSignalCard signal={signal} />
-            </Grid>
-          </Grid>
+          <SourceSignalCard signal={signal} />
+
+          <PeerCards>
+            <RelevanceCard reasonsRelevant={draft.reasonsRelevant} />
+            <KeyDatesCard deadlines={signal.deadlines} />
+          </PeerCards>
 
           <SectionCard title="Plan">
             <Typography variant="body1">{draft.plan.proposedApproach}</Typography>
             <TaskTable
               tasks={draft.plan.tasks}
               detail="done-when"
-              onOwnerChange={(taskId, owner) =>
-                setDraft((d) => ({
-                  ...d,
-                  plan: {
-                    ...d.plan,
-                    tasks: d.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
-                  },
-                }))
+              showCc={showPostMvpViews}
+              // Post-MVP: owners are editable. The MVP shows them as text.
+              onOwnerChange={
+                showPostMvpViews
+                  ? (taskId, owner) =>
+                      setDraft((d) => ({
+                        ...d,
+                        plan: {
+                          ...d.plan,
+                          tasks: d.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
+                        },
+                      }))
+                  : undefined
               }
             />
+            <Alert severity="info">
+              When you start, Cowork emails each owner their task, its deadline and what done looks like, then follows
+              up until it's done. Nothing goes out before you start.
+            </Alert>
           </SectionCard>
 
           <RulesCard rules={draft.plan.rules} />
 
           <Stack direction="row" justifyContent="flex-end">
-            <Button variant="contained" onClick={start}>
+            {/* The button sends the same message you could type, so the chat shows how to work this page. */}
+            <Button variant="contained" onClick={() => sendUserMessage(chatId, ACCEPT_AND_START, start())}>
               Accept and start
             </Button>
           </Stack>
@@ -308,6 +327,9 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
     </SideChatLayout>
   );
 }
+
+/** What the Accept and start button posts in chat, as if you'd typed it. */
+const ACCEPT_AND_START = "Accept the plan and start the workstream.";
 
 /** A link to `?task=` scrolls the page to that task once it has laid out. */
 function useScrollToTask(taskId: string | undefined) {
@@ -354,27 +376,16 @@ function RulesCard({ rules }: { rules: PlanRule[] }) {
   );
 }
 
-/** How many relevance points show before "Show more". */
-const RELEVANCE_SHOWN = 2;
-
+/** Relevance never shows more than two reasons. */
 function RelevanceList({ reasonsRelevant }: { reasonsRelevant: string[] }) {
-  const [showAll, setShowAll] = useState(false);
-  const reasons = showAll ? reasonsRelevant : reasonsRelevant.slice(0, RELEVANCE_SHOWN);
   return (
-    <Stack gap={SPACE.pair}>
-      <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
-        {reasons.map((reason) => (
-          <Typography component="li" variant="body1" key={reason}>
-            {reason}
-          </Typography>
-        ))}
-      </Box>
-      {reasonsRelevant.length > RELEVANCE_SHOWN && !showAll ? (
-        <Button variant="text" size="small" onClick={() => setShowAll(true)} sx={{ alignSelf: "flex-start" }}>
-          Show {reasonsRelevant.length - RELEVANCE_SHOWN} more
-        </Button>
-      ) : null}
-    </Stack>
+    <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
+      {shownRelevance(reasonsRelevant).map((reason) => (
+        <Typography component="li" variant="body1" key={reason}>
+          {reason}
+        </Typography>
+      ))}
+    </Box>
   );
 }
 
@@ -386,49 +397,68 @@ function RelevanceCard({ reasonsRelevant }: { reasonsRelevant: string[] }) {
   );
 }
 
-/** The signal, why it matters and its source, collapsed: once the workstream has started, you know them. */
-function RelevanceAndSources({
-  description,
-  reasonsRelevant,
-  signal,
-}: {
-  description: string;
-  reasonsRelevant: string[];
-  signal?: Signal;
-}) {
-  const { presets } = useTheme();
-  const AccordionHeader = presets.AccordionPresets.components.Header;
+/** Relevance and Key Dates side by side, under the Source strip; stacked on narrow screens. */
+function PeerCards({ children }: { children: ReactNode }) {
   return (
-    <Card component="section" aria-label="Relevance and Sources" sx={{ p: 0 }}>
-      <Accordion disableGutters data-atlas-alignment="start">
-        <AccordionSummary aria-controls="relevance-sources-details" id="relevance-sources-header">
-          <AccordionHeader
-            titleTextProps={{ text: "Relevance and Sources", variant: "body1", component: "h2" }}
-            subtitleText={signal ? `${signal.title} · ${signal.source}` : undefined}
-          />
-        </AccordionSummary>
-        <AccordionDetails id="relevance-sources-details">
-          <Grid {...presets.GridPresets.page}>
-            <Grid item sm={4} md={8} lg={5} xl={8}>
-              <Stack gap={SPACE.group}>
-                <Typography variant="body1">{description}</Typography>
-                <Stack gap={SPACE.pair}>
-                  <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
-                  <RelevanceList reasonsRelevant={reasonsRelevant} />
-                </Stack>
-              </Stack>
-            </Grid>
-            <Grid item sm={4} md={8} lg={3} xl={4}>
-              {signal ? (
-                <Stack gap={SPACE.item}>
-                  <FieldLabel>Source</FieldLabel>
-                  <SourceDetails signal={signal} />
-                </Stack>
-              ) : null}
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
-    </Card>
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+        gap: SPACE.block,
+        alignItems: "stretch",
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** The signal, why it matters, its key dates and its source, collapsed: once the workstream has started, you know them. */
+function RelevanceAndSources({ reasonsRelevant, signal }: { reasonsRelevant: string[]; signal?: Signal }) {
+  const { tokens } = useTheme();
+  const [open, setOpen] = useState(false);
+  const muted = tokens.semantic.color.type.muted.value;
+  const Caret = open ? CaretDownIcon : CaretRightIcon;
+  return (
+    <Stack component="section" aria-labelledby="relevance-sources-heading" gap={SPACE.block}>
+      {/* A header outside the cards; opening it shows them as laid out on Create. */}
+      <ButtonBase
+        aria-expanded={open}
+        aria-controls="relevance-sources-details"
+        onClick={() => setOpen((v) => !v)}
+        sx={{
+          alignSelf: "flex-start",
+          gap: SPACE.item,
+          borderRadius: tokens.semantic.radius.sm.value,
+          textAlign: "left",
+        }}
+      >
+        <Caret aria-hidden style={{ width: 20, height: 20, flexShrink: 0, color: muted }} />
+        <Stack>
+          <Typography
+            id="relevance-sources-heading"
+            variant="h6"
+            component="h2"
+            sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+          >
+            Relevance, Key Dates and Source
+          </Typography>
+          {signal ? (
+            <Typography variant="textMd" sx={{ color: muted }}>
+              {signal.title} · {signal.source}
+            </Typography>
+          ) : null}
+        </Stack>
+      </ButtonBase>
+      <Collapse in={open} id="relevance-sources-details" unmountOnExit>
+        <Stack gap={SPACE.block}>
+          {signal ? <SourceSignalCard signal={signal} /> : null}
+          <PeerCards>
+            <RelevanceCard reasonsRelevant={reasonsRelevant} />
+            <KeyDatesCard deadlines={signal?.deadlines ?? []} />
+          </PeerCards>
+        </Stack>
+      </Collapse>
+    </Stack>
   );
 }

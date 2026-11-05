@@ -73,3 +73,19 @@ test("every workstream summary follows the rules: one headline, two support sent
     expect(summary.support.reduce((n, s) => n + summarySentences(s), 0)).toBeLessThanOrEqual(2);
   }
 });
+
+describe("tone", () => {
+  test("a step waiting on you is a warning", () => {
+    expect(workstreamAttention(startAtgWorkstream(), NOW).tone).toBe("warning");
+  });
+
+  test("a blocking issue on someone else is an error", () => {
+    const climate = PAST_WORKSTREAMS.find((w) => w.name === "Climate disclosure readiness")!;
+    expect(workstreamAttention(climate, NOW).tone).toBe("error");
+  });
+
+  test("on track is informational", () => {
+    const cyber = PAST_WORKSTREAMS.find((w) => w.name === "Cyber 8-K readiness")!;
+    expect(workstreamAttention(cyber, NOW).tone).toBe("information");
+  });
+});

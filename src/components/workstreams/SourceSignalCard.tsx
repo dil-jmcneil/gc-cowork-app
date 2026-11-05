@@ -1,63 +1,68 @@
+import CalendarIcon from "@diligentcorp/atlas-react-bundle/icons/Calendar";
 import ScaleIcon from "@diligentcorp/atlas-react-bundle/icons/Scale";
-import { Link, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Link, Stack, Typography, useTheme } from "@mui/material";
 
 import { formatDate } from "@/lib/dates";
 import { SignalTags } from "@/components/signals/SignalTags";
 import { ISSUED_LABEL, SOURCE_LINK_LABEL, signalType, type Signal } from "@/signals/signal";
 import { STATUS_COLOR, currentStatus } from "@/signals/signalStatus";
 
-import { FieldLabel, SectionCard } from "./SectionCard";
+import { SectionCard } from "./SectionCard";
 import { SPACE } from "@/lib/layout";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 
+/** The Source card, laid across the page above Relevance and Key Dates. */
 export function SourceSignalCard({ signal }: { signal: Signal }) {
   return (
     <SectionCard title="Source" icon={<ScaleIcon aria-hidden />}>
-      <SourceDetails signal={signal} />
+      <SourceStrip signal={signal} />
     </SectionCard>
   );
 }
 
-/** Who issued the signal, its tags, the source link, when it was issued, and its deadlines. */
-export function SourceDetails({ signal }: { signal: Signal }) {
-  const { presets } = useTheme();
+/**
+ * The signal's source laid out horizontally, as in the signal dialog's header:
+ * who issued it and the link to read it, when it was issued with its status at
+ * the right, then its tags. Its dates are in Key Dates.
+ */
+export function SourceStrip({ signal }: { signal: Signal }) {
+  const { tokens, presets } = useTheme();
   const hasWorkstream = useWorkstreamStore((s) => s.workstreams.some((w) => w.sourceSignalId === signal.id));
   const status = currentStatus(signal, hasWorkstream);
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const muted = tokens.semantic.color.type.muted.value;
+  const type = signalType(signal);
+
   return (
     <Stack gap={SPACE.group}>
-      <Stack direction="row" alignItems="center" gap={SPACE.item} flexWrap="wrap">
-        <StatusIndicator color={STATUS_COLOR[status]} label={status} />
-        <Typography variant="body1">{signal.source}</Typography>
+      <Stack direction="row" alignItems="baseline" justifyContent="space-between" gap={SPACE.block} flexWrap="wrap">
+        <Typography variant="body1">
+          {signal.source}
+          {signal.citation ? <Box component="span" sx={{ color: muted }}>{` · ${signal.citation}`}</Box> : null}
+        </Typography>
+        {signal.sourceUrl ? (
+          <Link href={signal.sourceUrl} target="_blank" rel="noopener noreferrer" underline="hover">
+            <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
+              {SOURCE_LINK_LABEL[type]}
+            </Typography>
+          </Link>
+        ) : null}
       </Stack>
-      <Typography variant="body1">{signal.title}</Typography>
-      <SignalTags tags={signal.tags} />
-      {signal.sourceUrl ? (
-        <Link
-          href={signal.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          underline="hover"
-          sx={{ alignSelf: "flex-start" }}
-        >
+
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={SPACE.block}>
+        <Stack direction="row" alignItems="flex-start" gap={SPACE.item} sx={{ color: muted, minWidth: 0 }}>
+          <CalendarIcon aria-hidden style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
           <Typography variant="body1" sx={{ color: "inherit" }}>
-            {SOURCE_LINK_LABEL[signalType(signal)]}
+            {ISSUED_LABEL[type]} {formatDate(signal.issuedDate)}
+            {signal.history ? `. ${signal.history}.` : ""}
           </Typography>
-        </Link>
-      ) : null}
-      <Stack gap={SPACE.pair}>
-        <FieldLabel>{ISSUED_LABEL[signalType(signal)]}</FieldLabel>
-        <Typography variant="body1">{formatDate(signal.issuedDate)}</Typography>
-        {signal.history ? <Typography variant="body1">{signal.history}</Typography> : null}
+        </Stack>
+        <Box sx={{ flexShrink: 0 }}>
+          <StatusIndicator color={STATUS_COLOR[status]} label={status} />
+        </Box>
       </Stack>
-      <Stack gap={SPACE.pair}>
-        <FieldLabel>{signal.deadlines.length === 1 ? "Deadline" : "Deadlines"}</FieldLabel>
-        {signal.deadlines.map((d) => (
-          <Typography key={d.label} variant="body1">
-            {d.label} · {formatDate(d.date)}
-          </Typography>
-        ))}
-      </Stack>
+
+      <SignalTags tags={signal.tags} />
     </Stack>
   );
 }
