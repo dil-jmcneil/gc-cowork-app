@@ -3,16 +3,18 @@ import { useState } from "react";
 
 import { SPACE } from "@/lib/layout";
 import type { Summary } from "@/workstreams/summary";
-import type { AttentionItem } from "@/workstreams/workstreamAttention";
+import type { AttentionItem, SummaryTone } from "@/workstreams/workstreamAttention";
 
 /**
  * The workstream's status summary, styled to stand apart from the cards below
- * it: a tinted panel with an accent bar. The bold headline answers on its own
+ * it: a tinted panel with an accent bar, in yellow when a step waits on you,
+ * red when something blocks the work, and blue otherwise. The bold headline answers on its own
  * (your next action, when there is one), then one or two supporting sentences,
  * then what's waiting on you and on others, each with the action that clears it.
  */
 export function StatusSummary({
   label = "Status Summary",
+  tone = "information",
   summary,
   waitingOnYou = [],
   waitingOnOthers = [],
@@ -22,6 +24,8 @@ export function StatusSummary({
 }: {
   /** The panel's heading: "Status Summary" for a started workstream, "Summary" for a draft. */
   label?: string;
+  /** Atlas status color: warning when a step waits on you, error when something blocks the work. */
+  tone?: SummaryTone;
   summary: Summary;
   waitingOnYou?: AttentionItem[];
   waitingOnOthers?: AttentionItem[];
@@ -31,7 +35,7 @@ export function StatusSummary({
   onNudge?: (item: AttentionItem) => void;
 }) {
   const { tokens } = useTheme();
-  const info = tokens.component.statusIndicator.colors.information;
+  const info = tokens.component.statusIndicator.colors[tone];
 
   return (
     <Box

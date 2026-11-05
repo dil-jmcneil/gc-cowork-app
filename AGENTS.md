@@ -129,7 +129,7 @@ The OOUX Project object is called a **workstream** everywhere: in the UI, in rou
 
 Every link goes to the workstream page (`workstreamHref`, with `?task=` to open it on a task), except attention cards, which open the signal dialog (`SignalDialog`: the chat signal card's content, plus Create or View workstream). The page always has Cowork's chat on the right. A new signal opens Cowork's draft on the same page. The task page, task quick-view dialog, the older create page and "Revise via chat" are hidden, not deleted: `useMvpScopeStore().showPostMvpViews` (a Demo settings switch) brings them back. See `docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md`.
 
-Summaries lead with a bold headline that answers on its own (the GC's next action when there is one), then at most two supporting sentences (`src/workstreams/summary.ts`). Write all of Cowork's copy with the `smart-brevity` skill (`.claude/skills/smart-brevity/SKILL.md`). The workstream's status summary is derived live by `workstreamAttention`, not stored.
+Summaries lead with a bold headline that answers on its own (the GC's next action when there is one), then at most two supporting sentences (`src/workstreams/summary.ts`). Write all of Cowork's copy with the `smart-brevity` skill (`.claude/skills/smart-brevity/SKILL.md`). The workstream's status summary is derived live by `workstreamAttention`, not stored. Its panel uses Atlas status colors by `tone`: warning (yellow) when a step waits on the GC, error (red) when something blocks the work, information (blue) when it's on track.
 
 ### Plans are tasks plus rule rows
 
