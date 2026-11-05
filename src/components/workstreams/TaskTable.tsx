@@ -136,7 +136,14 @@ export function TaskTable({
                 ) : null}
               </Box>
 
-              <Stack direction="row" alignItems="baseline" justifyContent="space-between" gap={SPACE.block}>
+              {/* 4px closer to the Owner and Deadline fields than the other gaps. */}
+              <Stack
+                direction="row"
+                alignItems="baseline"
+                justifyContent="space-between"
+                gap={SPACE.block}
+                sx={{ mt: -SPACE.pair }}
+              >
                 <Typography variant="body1" sx={{ color: muted }}>
                   {detail === "done-when" ? (
                     <>
@@ -293,7 +300,7 @@ export function taskAnchorId(taskId: string): string {
 function OwnerValue({ owner }: { owner: TaskOwner }) {
   const { tokens } = useTheme();
   return (
-    <Stack gap={SPACE.pair}>
+    <Stack>
       <Typography variant="body1">{owner.label}</Typography>
       <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
         {owner.detail.split(" · ")[0]}
