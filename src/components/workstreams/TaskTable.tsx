@@ -1,10 +1,12 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
-import { Box, ButtonBase, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
+import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
+import { Box, ButtonBase, Chip, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
 import { useState, type ReactNode } from "react";
 
 import { formatDate } from "@/lib/dates";
 import { SPACE } from "@/lib/layout";
 import { orderedTasks, taskDisplayStatus, type TaskDisplayLabel } from "@/workstreams/taskStatus";
+import type { HistoryFile } from "@/workstreams/thread";
 import type { TaskStatus, WorkstreamTask } from "@/workstreams/workstream";
 import type { TaskOwner } from "@/workstreams/people";
 
@@ -172,10 +174,42 @@ export function TaskTable({
                   </Link>
                 ) : null}
               </Stack>
+
+              {detail === "status" && onOpenFile ? <TaskFiles task={task} onOpenFile={onOpenFile} /> : null}
             </Stack>
           </Box>
         );
       })}
+    </Stack>
+  );
+}
+
+/** The files on a task, as chips that open them: what Cowork created and what people uploaded. */
+function TaskFiles({ task, onOpenFile }: { task: WorkstreamTask; onOpenFile: (fileId: string) => void }) {
+  const files = task.history.filter((e): e is HistoryFile => e.kind === "file");
+  if (!files.length) return null;
+  return (
+    <Stack
+      component="ul"
+      direction="row"
+      gap={SPACE.item}
+      flexWrap="wrap"
+      aria-label={`Files on ${task.description}`}
+      sx={{ listStyle: "none", m: 0, p: 0 }}
+    >
+      {files.map((file) => (
+        <li key={file.id}>
+          <Chip
+            icon={<OpenFileIcon aria-hidden />}
+            label={file.name}
+            variant="outlined"
+            size="small"
+            clickable
+            onClick={() => onOpenFile(file.id)}
+            aria-label={`Open ${file.name}`}
+          />
+        </li>
+      ))}
     </Stack>
   );
 }

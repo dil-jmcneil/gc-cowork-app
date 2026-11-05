@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   Container,
-  GridLegacy as Grid,
   Link,
   Snackbar,
   Stack,
@@ -19,7 +18,7 @@ import { Link as RouterLink, Navigate, useLocation, useNavigate, useParams, useS
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { scrollContentTo, scrollContentToTop, SideChatLayout } from "@/components/chat/SideChatLayout";
-import { ArtifactsCard } from "@/components/workstreams/ArtifactsCard";
+import { AllFilesDialog, workstreamFiles } from "@/components/workstreams/AllFilesDialog";
 import { FileView } from "@/components/workstreams/FileView";
 import { KeyDatesCard, KeyDatesList } from "@/components/workstreams/KeyDates";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
@@ -47,16 +46,16 @@ import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 
 /**
- * A started workstream (the View layout): the status summary beside its
- * artifacts, then the tasks, each with its owner, status line and activity
- * log, then the signal's relevance and sources, collapsed. Cowork's chat is
+ * A started workstream (the View layout): the status summary across the top,
+ * then the tasks, each with its owner, status line, files and activity log
+ * (with "All files" for every file at once), then the signal's relevance,
+ * key dates and source, collapsed. Cowork's chat is
  * always open on the right. A link can open it on a task.
  */
 export default function WorkstreamPage() {
   const { workstreamId } = useParams<{ workstreamId: string }>();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { presets } = useTheme();
   const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
   const workstream = useWorkstreamStore((s) => s.workstreams.find((p) => p.id === workstreamId));
   const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
@@ -67,6 +66,7 @@ export default function WorkstreamPage() {
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [activityTaskId, setActivityTaskId] = useState<string | null>(null);
+  const [showAllFiles, setShowAllFiles] = useState(false);
   const now = new Date();
   const focus = workstreamFocusFromSearch(search);
 
@@ -126,48 +126,49 @@ export default function WorkstreamPage() {
           <Stack gap={SPACE.section}>
             <PageHeader eyebrow="Workstream" title={workstream.name} />
 
-            <Grid {...presets.GridPresets.page}>
-              <Grid item sm={4} md={8} lg={5} xl={8}>
-                <StatusSummary
-                  {...workstreamAttention(workstream, now)}
-                  nudged={nudged}
-                  onConfirm={({ task }) => confirm(task.id)}
-                  onNudge={({ task }) => {
-                    nudgeTask(workstream.id, task.id);
-                    setNudged((prev) => new Set(prev).add(task.id));
-                    setToast(`Nudge sent to ${task.delegate.label}.`);
-                  }}
-                />
-              </Grid>
-              <Grid item sm={4} md={8} lg={3} xl={4}>
-                <ArtifactsCard tasks={tasks} hrefFor={(fileId) => workstreamHref(workstream.id, { fileId })} />
-              </Grid>
-            </Grid>
+            <StatusSummary
+              {...workstreamAttention(workstream, now)}
+              nudged={nudged}
+              onConfirm={({ task }) => confirm(task.id)}
+              onNudge={({ task }) => {
+                nudgeTask(workstream.id, task.id);
+                setNudged((prev) => new Set(prev).add(task.id));
+                setToast(`Nudge sent to ${task.delegate.label}.`);
+              }}
+            />
 
             <SectionCard
               title="Tasks"
               action={
-                // Post-MVP: the side chat replaces "Revise via chat".
-                showPostMvpViews ? (
-                  <Stack direction="row" gap={SPACE.item}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() =>
-                        startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
-                          workstreamId: workstream.id,
-                        })
-                      }
-                    >
-                      Revise via chat
-                    </Button>
-                    {workstream.plan.status === "accepted" ? null : (
-                      <Button variant="contained" size="small" onClick={() => acceptPlan(workstream.id)}>
-                        Accept plan
+                <Stack direction="row" alignItems="center" gap={SPACE.block}>
+                  {/* Each task shows its own files; this lists every file in one place. */}
+                  <Link component="button" type="button" underline="hover" onClick={() => setShowAllFiles(true)}>
+                    <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
+                      All files ({workstreamFiles(tasks).length})
+                    </Typography>
+                  </Link>
+                  {/* Post-MVP: the side chat replaces "Revise via chat". */}
+                  {showPostMvpViews ? (
+                    <Stack direction="row" gap={SPACE.item}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() =>
+                          startChatFromPrompt(`Help me revise the plan for "${workstream.name}".`, navigate, {
+                            workstreamId: workstream.id,
+                          })
+                        }
+                      >
+                        Revise via chat
                       </Button>
-                    )}
-                  </Stack>
-                ) : null
+                      {workstream.plan.status === "accepted" ? null : (
+                        <Button variant="contained" size="small" onClick={() => acceptPlan(workstream.id)}>
+                          Accept plan
+                        </Button>
+                      )}
+                    </Stack>
+                  ) : null}
+                </Stack>
               }
             >
               <TaskTable
@@ -205,6 +206,7 @@ export default function WorkstreamPage() {
         </Container>
       )}
 
+      <AllFilesDialog open={showAllFiles} tasks={tasks} onClose={() => setShowAllFiles(false)} onOpenFile={openFile} />
       <TaskActivityDialog
         task={tasks.find((t) => t.id === activityTaskId)}
         now={now}
