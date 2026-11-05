@@ -113,7 +113,7 @@ export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
                   slotProps={{ input: { "aria-label": "Show post-MVP views" } }}
                 />
               }
-              label="Show post-MVP views: task pages, task and signal dialogs, and the create page"
+              label="Show post-MVP views: task pages, the task dialog, and the older create page"
             />
           </DemoSettingsSection>
         </Stack>

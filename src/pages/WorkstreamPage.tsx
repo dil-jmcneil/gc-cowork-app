@@ -14,13 +14,14 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { scrollContentTo, scrollContentToTop, SideChatLayout } from "@/components/chat/SideChatLayout";
 import { ArtifactsCard } from "@/components/workstreams/ArtifactsCard";
 import { FileView } from "@/components/workstreams/FileView";
+import { KeyDatesCard, KeyDatesList } from "@/components/workstreams/KeyDates";
 import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
 import { SourceDetails, SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
@@ -39,7 +40,7 @@ import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } fro
 import { workstreamAttention } from "@/workstreams/workstreamAttention";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
-import { hasPlan, RELEVANCE_LABEL, type PlannedSignal, type Signal } from "@/signals/signal";
+import { hasPlan, RELEVANCE_LABEL, shownRelevance, type PlannedSignal, type Signal } from "@/signals/signal";
 import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 
@@ -238,12 +239,11 @@ export function DraftWorkstreamPage() {
 
 /**
  * The Create layout: what the signal is, why it matters and what Cowork
- * suggests; relevance and source side by side; then the plan's tasks, each
- * with an owner you can change and what done looks like.
+ * suggests; Relevance, Key Dates and Source side by side; then the plan's
+ * tasks, each with an owner you can change and what done looks like.
  */
 function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   const navigate = useNavigate();
-  const { presets } = useTheme();
   const createWorkstream = useWorkstreamStore((s) => s.createWorkstream);
   const [draft, setDraft] = useState<WorkstreamDraft>(() => draftWorkstreamFromSignal(signal));
 
@@ -270,14 +270,11 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
 
           <StatusSummary label="Summary" summary={signal.plan.brief} />
 
-          <Grid {...presets.GridPresets.page}>
-            <Grid item sm={4} md={8} lg={4} xl={6}>
-              <RelevanceCard reasonsRelevant={draft.reasonsRelevant} />
-            </Grid>
-            <Grid item sm={4} md={8} lg={4} xl={6}>
-              <SourceSignalCard signal={signal} />
-            </Grid>
-          </Grid>
+          <PeerCards>
+            <RelevanceCard reasonsRelevant={draft.reasonsRelevant} />
+            <KeyDatesCard deadlines={signal.deadlines} />
+            <SourceSignalCard signal={signal} />
+          </PeerCards>
 
           <SectionCard title="Plan">
             <Typography variant="body1">{draft.plan.proposedApproach}</Typography>
@@ -354,27 +351,16 @@ function RulesCard({ rules }: { rules: PlanRule[] }) {
   );
 }
 
-/** How many relevance points show before "Show more". */
-const RELEVANCE_SHOWN = 2;
-
+/** Relevance never shows more than two reasons. */
 function RelevanceList({ reasonsRelevant }: { reasonsRelevant: string[] }) {
-  const [showAll, setShowAll] = useState(false);
-  const reasons = showAll ? reasonsRelevant : reasonsRelevant.slice(0, RELEVANCE_SHOWN);
   return (
-    <Stack gap={SPACE.pair}>
-      <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
-        {reasons.map((reason) => (
-          <Typography component="li" variant="body1" key={reason}>
-            {reason}
-          </Typography>
-        ))}
-      </Box>
-      {reasonsRelevant.length > RELEVANCE_SHOWN && !showAll ? (
-        <Button variant="text" size="small" onClick={() => setShowAll(true)} sx={{ alignSelf: "flex-start" }}>
-          Show {reasonsRelevant.length - RELEVANCE_SHOWN} more
-        </Button>
-      ) : null}
-    </Stack>
+    <Box component="ul" sx={{ m: 0, pl: SPACE.block }}>
+      {shownRelevance(reasonsRelevant).map((reason) => (
+        <Typography component="li" variant="body1" key={reason}>
+          {reason}
+        </Typography>
+      ))}
+    </Box>
   );
 }
 
@@ -386,7 +372,23 @@ function RelevanceCard({ reasonsRelevant }: { reasonsRelevant: string[] }) {
   );
 }
 
-/** The signal, why it matters and its source, collapsed: once the workstream has started, you know them. */
+/** Three peers in a row: Relevance, Key Dates and Source; stacked on narrow screens. */
+function PeerCards({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+        gap: SPACE.block,
+        alignItems: "stretch",
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** The signal, why it matters, its key dates and its source, collapsed: once the workstream has started, you know them. */
 function RelevanceAndSources({
   description,
   reasonsRelevant,
@@ -399,34 +401,32 @@ function RelevanceAndSources({
   const { presets } = useTheme();
   const AccordionHeader = presets.AccordionPresets.components.Header;
   return (
-    <Card component="section" aria-label="Relevance and Sources" sx={{ p: 0 }}>
+    <Card component="section" aria-label="Relevance, Key Dates and Source" sx={{ p: 0 }}>
       <Accordion disableGutters data-atlas-alignment="start">
         <AccordionSummary aria-controls="relevance-sources-details" id="relevance-sources-header">
           <AccordionHeader
-            titleTextProps={{ text: "Relevance and Sources", variant: "body1", component: "h2" }}
+            titleTextProps={{ text: "Relevance, Key Dates and Source", variant: "body1", component: "h2" }}
             subtitleText={signal ? `${signal.title} · ${signal.source}` : undefined}
           />
         </AccordionSummary>
         <AccordionDetails id="relevance-sources-details">
-          <Grid {...presets.GridPresets.page}>
-            <Grid item sm={4} md={8} lg={5} xl={8}>
+          <PeerCards>
+            <Stack gap={SPACE.group}>
+              <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
+              <Typography variant="body1">{description}</Typography>
+              <RelevanceList reasonsRelevant={reasonsRelevant} />
+            </Stack>
+            <Stack gap={SPACE.group}>
+              <FieldLabel>Key Dates</FieldLabel>
+              <KeyDatesList deadlines={signal?.deadlines ?? []} />
+            </Stack>
+            {signal ? (
               <Stack gap={SPACE.group}>
-                <Typography variant="body1">{description}</Typography>
-                <Stack gap={SPACE.pair}>
-                  <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
-                  <RelevanceList reasonsRelevant={reasonsRelevant} />
-                </Stack>
+                <FieldLabel>Source</FieldLabel>
+                <SourceDetails signal={signal} />
               </Stack>
-            </Grid>
-            <Grid item sm={4} md={8} lg={3} xl={4}>
-              {signal ? (
-                <Stack gap={SPACE.item}>
-                  <FieldLabel>Source</FieldLabel>
-                  <SourceDetails signal={signal} />
-                </Stack>
-              ) : null}
-            </Grid>
-          </Grid>
+            ) : null}
+          </PeerCards>
         </AccordionDetails>
       </Accordion>
     </Card>

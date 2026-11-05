@@ -2,9 +2,10 @@ import { create } from "zustand";
 
 /**
  * MVP scope (docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md):
- * every link goes to the workstream page. The task page, the task and signal
- * dialogs, the separate create page and "Revise via chat" stay in the code for
- * later, hidden unless this Demo settings switch shows them. Persisted in
+ * every link goes to the workstream page. The task page, the task quick-view
+ * dialog, the older create page and "Revise via chat" stay in the code for
+ * later, hidden unless this Demo settings switch shows them. (The signal
+ * dialog is back: attention cards open it.) Persisted in
  * localStorage.
  */
 const STORAGE_KEY = "gc-cowork-show-post-mvp-views";

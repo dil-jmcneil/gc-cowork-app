@@ -117,7 +117,7 @@ The org name and logo you can set on the `AppLayout` component in `App.tsx` shou
 
 Anything Cowork surfaces for the GC is a **signal** (`src/signals`). Its kind is a metadata tag, not a separate object: each signal has exactly one `type` tag ("Court ruling", "Regulatory change", "Enforcement action", "Peer filing") plus optional `jurisdiction` and `topic` tags. Don't call a signal an "insight", or a "regulatory change" unless its type tag says so. Chat still understands "insights" when the user types it.
 
-Every signal lists why it matters to Acme under one label, **Relevance** (`RELEVANCE_LABEL`), whatever its type. Don't add per-type names like "Points for Counsel" or "Reasons Relevant".
+Every signal lists why it matters to Acme under one label, **Relevance** (`RELEVANCE_LABEL`), whatever its type. Show at most two reasons anywhere (`shownRelevance`). Don't add per-type names like "Points for Counsel" or "Reasons Relevant".
 
 The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-cowork-discovery/operating use case`). Past signals (`PAST_SIGNALS`) stay out of the attention pane; two have past workstreams, which load as real workstreams (`src/workstreams/pastWorkstreams.ts`) with pages and tasks on the calendar.
 
@@ -127,7 +127,7 @@ The OOUX Project object is called a **workstream** everywhere: in the UI, in rou
 
 ### MVP scope: one workstream page
 
-Every link goes to the workstream page (`workstreamHref`, with `?task=` to open it on a task), and the page always has Cowork's chat on the right. A new signal opens Cowork's draft on the same page. The task page, task quick-view and signal dialogs, the older create page and "Revise via chat" are hidden, not deleted: `useMvpScopeStore().showPostMvpViews` (a Demo settings switch) brings them back. See `docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md`.
+Every link goes to the workstream page (`workstreamHref`, with `?task=` to open it on a task), except attention cards, which open the signal dialog (`SignalDialog`: the chat signal card's content, plus Create or View workstream). The page always has Cowork's chat on the right. A new signal opens Cowork's draft on the same page. The task page, task quick-view dialog, the older create page and "Revise via chat" are hidden, not deleted: `useMvpScopeStore().showPostMvpViews` (a Demo settings switch) brings them back. See `docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md`.
 
 Summaries lead with a bold headline that answers on its own (the GC's next action when there is one), then at most two supporting sentences (`src/workstreams/summary.ts`). Write all of Cowork's copy with the `smart-brevity` skill (`.claude/skills/smart-brevity/SKILL.md`). The workstream's status summary is derived live by `workstreamAttention`, not stored.
 
@@ -141,7 +141,7 @@ Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into
 
 ### Workstream layouts
 
-One page, two layouts. **Create** (a draft, `/workstreams/new?signal=`): what the signal is, why it matters and what Cowork suggests; Relevance and Source cards; the Plan card (task, owner, CC, deadline, status, then "Done when"); Accept and start. **View** (`/workstreams/:id`): the status summary beside Artifacts (every file Cowork or a person added); the Tasks card (each task's second line is its status summary, with "Open activity log" in a dialog); Relevance and Sources, collapsed. Owners are editable in both; in View, changing one reassigns the task and Cowork emails the new owner, and the status badge is a menu (Not started, In progress, Done; Done from the list counts as confirming). Artifact titles, and "Open the draft" on a task waiting on your review, open the file in the main panel (`?file=`) with a Back button; the chat stays open. Story files carry mock text (`src/workstreams/atgFiles.ts`).
+One page, two layouts. **Create** (a draft, `/workstreams/new?signal=`): what the signal is, why it matters and what Cowork suggests; Relevance, Key Dates and Source cards side by side; the Plan card (task, owner, CC, deadline, status, then "Done when"); Accept and start. **View** (`/workstreams/:id`): the status summary beside Artifacts (every file Cowork or a person added); the Tasks card (each task's second line is its status summary, with "Open activity log" in a dialog); Relevance, Key Dates and Source, collapsed. Owners are editable in both; in View, changing one reassigns the task and Cowork emails the new owner, and the status badge is a menu (Not started, In progress, Done; Done from the list counts as confirming). Artifact titles, and "Open the draft" on a task waiting on your review, open the file in the main panel (`?file=`) with a Back button; the chat stays open. Story files carry mock text (`src/workstreams/atgFiles.ts`).
 
 ## Writing style
 

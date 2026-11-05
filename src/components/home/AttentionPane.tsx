@@ -26,11 +26,9 @@ import {
   useTheme,
 } from "@mui/material";
 import { useState, type MouseEvent, type ReactNode } from "react";
-import { Link as RouterLink, useNavigate } from "react-router";
+import { Link as RouterLink } from "react-router";
 
 import { SignalDialog } from "@/components/home/SignalDialog";
-import { useMvpScopeStore } from "@/demo/mvpScopeStore";
-import { draftWorkstreamHref, workstreamHref } from "@/workstreams/links";
 import { ATTENTION_ITEMS, type AttentionItem } from "@/home/attentionItems";
 import { attentionView, nextMonday, useAttentionStore } from "@/home/attentionStore";
 import { SIGNALS } from "@/signals/signals";
@@ -44,8 +42,7 @@ type Toast = { message: string; undo: () => void };
 
 /**
  * Figma "Attention pane" (AI agentic playground, 3274:11121): a plain title,
- * then one card per item. Each card opens its workstream (or Cowork's draft of
- * one, for a new signal), and its menu snoozes
+ * then one card per item. Each card opens the signal's dialog, and its menu snoozes
  * the item until next Monday or dismisses it.
  */
 export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { heading?: string }) {
@@ -58,17 +55,10 @@ export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { headi
   const openSignal = SIGNALS.find((c) => c.id === openSignalId) ?? null;
   const muted = tokens.semantic.color.type.muted.value;
 
-  const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
-  const navigate = useNavigate();
-
+  // Each card opens the signal's dialog; from there you create or view its workstream.
   const open = (id: string) => {
     store.markSeen(id);
-    if (showPostMvpViews) {
-      setOpenSignalId(id);
-      return;
-    }
-    const workstream = useWorkstreamStore.getState().getWorkstreamForSignal(id);
-    navigate(workstream ? workstreamHref(workstream.id) : draftWorkstreamHref(id));
+    setOpenSignalId(id);
   };
   const snooze = (item: AttentionItem) => {
     store.snooze(item.id);

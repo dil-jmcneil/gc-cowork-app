@@ -1,3 +1,4 @@
+import { shownRelevance } from "@/signals/signal";
 import { appendAssistantMessage, useChatMessagesStore } from "@/chat/chatMessagesStore";
 
 import { planEditFromChat } from "./planChat";
@@ -63,7 +64,9 @@ export function handleWorkstreamChatMessage(workstreamId: string, text: string, 
   }
 
   if (RELEVANCE.test(message)) {
-    return `Here's why it matters to Acme:\n\n${workstream.reasonsRelevant.map((r) => `- ${r}`).join("\n")}`;
+    return `Here's why it matters to Acme:\n\n${shownRelevance(workstream.reasonsRelevant)
+      .map((r) => `- ${r}`)
+      .join("\n")}`;
   }
 
   if (STATUS_QUESTION.test(message)) return summaryText(workstreamAttention(workstream, now).summary);

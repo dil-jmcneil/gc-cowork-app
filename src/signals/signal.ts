@@ -143,3 +143,10 @@ export const SOURCE_LINK_LABEL: Record<SignalType, string> = {
  * both described the same thing.
  */
 export const RELEVANCE_LABEL = "Relevance";
+
+/** Relevance never shows more than two reasons, wherever it appears. */
+export const RELEVANCE_SHOWN = 2;
+
+export function shownRelevance(reasons: string[]): string[] {
+  return reasons.slice(0, RELEVANCE_SHOWN);
+}

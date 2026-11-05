@@ -18,7 +18,7 @@ export function SourceSignalCard({ signal }: { signal: Signal }) {
   );
 }
 
-/** Who issued the signal, its tags, the source link, when it was issued, and its deadlines. */
+/** Who issued the signal, its tags, the source link, and when it was issued. Its dates are in Key Dates. */
 export function SourceDetails({ signal }: { signal: Signal }) {
   const { presets } = useTheme();
   const hasWorkstream = useWorkstreamStore((s) => s.workstreams.some((w) => w.sourceSignalId === signal.id));
@@ -49,14 +49,6 @@ export function SourceDetails({ signal }: { signal: Signal }) {
         <FieldLabel>{ISSUED_LABEL[signalType(signal)]}</FieldLabel>
         <Typography variant="body1">{formatDate(signal.issuedDate)}</Typography>
         {signal.history ? <Typography variant="body1">{signal.history}</Typography> : null}
-      </Stack>
-      <Stack gap={SPACE.pair}>
-        <FieldLabel>{signal.deadlines.length === 1 ? "Deadline" : "Deadlines"}</FieldLabel>
-        {signal.deadlines.map((d) => (
-          <Typography key={d.label} variant="body1">
-            {d.label} · {formatDate(d.date)}
-          </Typography>
-        ))}
       </Stack>
     </Stack>
   );

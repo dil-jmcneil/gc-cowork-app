@@ -11,6 +11,7 @@ import {
   ISSUED_LABEL,
   RELEVANCE_LABEL,
   SOURCE_LINK_LABEL,
+  shownRelevance,
   signalType,
   type Signal,
   hasPlan,
@@ -81,7 +82,7 @@ function SignalCard({ signal }: { signal: Signal }) {
         >
           {/* Every signal has Relevance; only some have deadlines, so Relevance takes the left column. */}
           <Detail label={RELEVANCE_LABEL} fullWidth={signal.deadlines.length === 0}>
-            {signal.reasonsRelevant.map((reason) => (
+            {shownRelevance(signal.reasonsRelevant).map((reason) => (
               <Typography key={reason} variant="body1">
                 {reason}
               </Typography>
