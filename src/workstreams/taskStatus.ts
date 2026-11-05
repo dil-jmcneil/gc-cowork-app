@@ -30,6 +30,17 @@ export function taskAttention(
   return undefined;
 }
 
+/**
+ * The plan's tasks in the order they're shown and numbered: by deadline,
+ * keeping plan order for ties. "Task 2" in chat means the second one here.
+ */
+export function orderedTasks<T extends Pick<WorkstreamTask, "deadline">>(tasks: T[]): T[] {
+  return tasks
+    .map((task, index) => ({ task, index }))
+    .sort((a, b) => a.task.deadline.localeCompare(b.task.deadline) || a.index - b.index)
+    .map(({ task }) => task);
+}
+
 /** The five statuses a task shows in the plan. */
 export type TaskDisplayLabel = "Not started" | "In progress" | "Needs your review" | "Blocked" | "Done";
 

@@ -42,3 +42,9 @@ test("it leaves other messages, and missing tasks, alone", () => {
   expect(missing.plan).toBe(plan);
   expect(missing.reply).toMatch(/no task 9/);
 });
+
+test("task numbers follow deadline order, the order the plan shows", () => {
+  const shuffled = { ...plan, tasks: [plan.tasks[3], plan.tasks[0], plan.tasks[1], plan.tasks[2]] };
+  const edit = planEditFromChat(shuffled, "remove task 4")!;
+  expect(edit.reply).toContain("Task 4, Watch the nomination window");
+});

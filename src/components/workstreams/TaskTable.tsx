@@ -19,7 +19,7 @@ import { Fragment, useState } from "react";
 
 import { formatDate } from "@/lib/dates";
 import { SPACE } from "@/lib/layout";
-import { taskDisplayStatus, type TaskDisplayLabel } from "@/workstreams/taskStatus";
+import { orderedTasks, taskDisplayStatus, type TaskDisplayLabel } from "@/workstreams/taskStatus";
 import type { TaskStatus, WorkstreamTask } from "@/workstreams/workstream";
 import type { TaskOwner } from "@/workstreams/people";
 
@@ -48,6 +48,7 @@ export function TaskTable({
   onStatusChange,
   summarize,
   highlightTaskId,
+  showCc = false,
   ariaLabel = "Tasks",
 }: {
   tasks: WorkstreamTask[];
@@ -63,6 +64,8 @@ export function TaskTable({
   onOpenFile?: (fileId: string) => void;
   /** The status line for a task, for the "status" detail. */
   summarize?: (task: WorkstreamTask) => string;
+  /** Post-MVP: a CC column. The MVP shows the owner only. */
+  showCc?: boolean;
   /** The task a link opened the page on; its rows are tinted. */
   highlightTaskId?: string;
 }) {
@@ -70,7 +73,9 @@ export function TaskTable({
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
   const highlight = tokens.component.statusIndicator.colors.information.backgroundColor.value;
   const muted = tokens.semantic.color.type.muted.value;
-  const ordered = [...tasks].sort((a, b) => a.deadline.localeCompare(b.deadline));
+  // Numbered in the same order chat uses: "task 2" is the second row.
+  const ordered = orderedTasks(tasks);
+  const columns = showCc ? 6 : 5;
 
   return (
     <TableContainer>
@@ -86,15 +91,18 @@ export function TaskTable({
       >
         <TableHead>
           <TableRow>
-            <TableCell sx={{ width: "32%" }}>Task</TableCell>
+            <TableCell sx={{ width: 32, pr: 0 }} aria-label="Number">
+              #
+            </TableCell>
+            <TableCell sx={{ width: "34%" }}>Task</TableCell>
             <TableCell>Owner</TableCell>
-            <TableCell>CC</TableCell>
+            {showCc ? <TableCell>CC</TableCell> : null}
             <TableCell>Deadline</TableCell>
             <TableCell>Status</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {ordered.map((task) => {
+          {ordered.map((task, index) => {
             // A draft hasn't started, so nothing is blocked yet: show each task's own status.
             const status = detail === "done-when" ? { label: task.status } : taskDisplayStatus(task, tasks);
             const highlighted = task.id === highlightTaskId;
@@ -107,6 +115,9 @@ export function TaskTable({
                   aria-current={highlighted ? "true" : undefined}
                   sx={rowSx}
                 >
+                  <TableCell sx={{ pr: 0, color: muted, fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+                    {index + 1}
+                  </TableCell>
                   <TableCell sx={{ whiteSpace: "normal", fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
                     {task.description}
                   </TableCell>
@@ -121,7 +132,9 @@ export function TaskTable({
                       <OwnerCell owner={task.delegate} />
                     )}
                   </TableCell>
-                  <TableCell sx={{ whiteSpace: "normal" }}>{task.ccs.map((cc) => cc.label).join(", ")}</TableCell>
+                  {showCc ? (
+                    <TableCell sx={{ whiteSpace: "normal" }}>{task.ccs.map((cc) => cc.label).join(", ")}</TableCell>
+                  ) : null}
                   <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDate(task.deadline)}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {onStatusChange ? (
@@ -132,7 +145,8 @@ export function TaskTable({
                   </TableCell>
                 </TableRow>
                 <TableRow className="task-detail" sx={rowSx}>
-                  <TableCell colSpan={5} sx={{ pt: 0, whiteSpace: "normal" }}>
+                  <TableCell />
+                  <TableCell colSpan={columns - 1} sx={{ pt: 0, whiteSpace: "normal" }}>
                     <Stack direction="row" alignItems="baseline" justifyContent="space-between" gap={SPACE.block}>
                       <Typography variant="body1" sx={{ color: muted }}>
                         {detail === "done-when" ? (

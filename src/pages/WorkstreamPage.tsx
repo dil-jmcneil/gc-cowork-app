@@ -38,7 +38,9 @@ import type { HistoryFile } from "@/workstreams/thread";
 import type { PlanRule, WorkstreamDraft } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
 import { workstreamAttention } from "@/workstreams/workstreamAttention";
+import { asksToStart, startWorkstream } from "@/workstreams/startWorkstream";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
+import { sendUserMessage } from "@/runtime/assistantReply";
 import { useWorkstreamStore } from "@/workstreams/workstreamStore";
 import { hasPlan, RELEVANCE_LABEL, shownRelevance, type PlannedSignal, type Signal } from "@/signals/signal";
 import { SIGNALS } from "@/signals/signals";
@@ -109,7 +111,7 @@ export default function WorkstreamPage() {
     <SideChatLayout
       // A fresh layout per workstream, so one workstream doesn't open at another's scroll position.
       key={workstream.id}
-      chatId={workstreamChatId(workstream.id)}
+      chatId={workstreamChatId(workstream)}
       onUserMessage={(text) => handleWorkstreamChatMessage(workstream.id, text, new Date())}
     >
       {opened ? (
@@ -180,10 +182,16 @@ export default function WorkstreamPage() {
                   setTaskStatus(workstream.id, taskId, status);
                   if (task) setToast(`"${task.description}" is now ${status.toLowerCase()}.`);
                 }}
-                onOwnerChange={(taskId, owner) => {
-                  assignTask(workstream.id, taskId, owner);
-                  setToast(`Reassigned to ${owner.label}. Cowork emailed them the task.`);
-                }}
+                showCc={showPostMvpViews}
+                // Post-MVP: owners are editable. The MVP shows them as text.
+                onOwnerChange={
+                  showPostMvpViews
+                    ? (taskId, owner) => {
+                        assignTask(workstream.id, taskId, owner);
+                        setToast(`Reassigned to ${owner.label}. Cowork emailed them the task.`);
+                      }
+                    : undefined
+                }
               />
             </SectionCard>
 
@@ -244,20 +252,25 @@ export function DraftWorkstreamPage() {
  */
 function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   const navigate = useNavigate();
-  const createWorkstream = useWorkstreamStore((s) => s.createWorkstream);
+  const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
   const [draft, setDraft] = useState<WorkstreamDraft>(() => draftWorkstreamFromSignal(signal));
+  const chatId = draftChatId(signal.id);
 
   useEffect(() => seedDraftChat(signal), [signal]);
 
+  /** Start the workstream and open it; Cowork's reply in chat says what it's sending. */
   const start = () => {
-    const workstream = createWorkstream({ ...draft, plan: { ...draft.plan, status: "accepted" } });
+    const { workstream, reply } = startWorkstream(draft);
     navigate(workstreamHref(workstream.id));
+    return reply;
   };
 
   return (
     <SideChatLayout
-      chatId={draftChatId(signal.id)}
+      chatId={chatId}
       onUserMessage={(text) => {
+        // Typing "Start" here does the same as the button: the chat is how you work this page.
+        if (asksToStart(text)) return start();
         const edit = planEditFromChat(draft.plan, text);
         if (!edit) return undefined;
         setDraft((d) => ({ ...d, plan: edit.plan }));
@@ -281,22 +294,32 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
             <TaskTable
               tasks={draft.plan.tasks}
               detail="done-when"
-              onOwnerChange={(taskId, owner) =>
-                setDraft((d) => ({
-                  ...d,
-                  plan: {
-                    ...d.plan,
-                    tasks: d.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
-                  },
-                }))
+              showCc={showPostMvpViews}
+              // Post-MVP: owners are editable. The MVP shows them as text.
+              onOwnerChange={
+                showPostMvpViews
+                  ? (taskId, owner) =>
+                      setDraft((d) => ({
+                        ...d,
+                        plan: {
+                          ...d.plan,
+                          tasks: d.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
+                        },
+                      }))
+                  : undefined
               }
             />
+            <Alert severity="info">
+              When you start, Cowork emails each owner their task, its deadline and what done looks like, then follows
+              up until it's done. Nothing goes out before you start.
+            </Alert>
           </SectionCard>
 
           <RulesCard rules={draft.plan.rules} />
 
           <Stack direction="row" justifyContent="flex-end">
-            <Button variant="contained" onClick={start}>
+            {/* The button sends the same message you could type, so the chat shows how to work this page. */}
+            <Button variant="contained" onClick={() => sendUserMessage(chatId, ACCEPT_AND_START, start())}>
               Accept and start
             </Button>
           </Stack>
@@ -305,6 +328,9 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
     </SideChatLayout>
   );
 }
+
+/** What the Accept and start button posts in chat, as if you'd typed it. */
+const ACCEPT_AND_START = "Accept the plan and start the workstream.";
 
 /** A link to `?task=` scrolls the page to that task once it has laid out. */
 function useScrollToTask(taskId: string | undefined) {

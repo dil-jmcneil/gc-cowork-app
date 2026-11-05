@@ -51,9 +51,7 @@ function nudgeHeadline(task: WorkstreamTask, now: Date): string {
 function heldUpBy(workstream: Workstream, task: WorkstreamTask): string | undefined {
   const owners = [
     ...new Set(
-      workstream.plan.tasks
-        .filter((t) => t.waitingOn === task.id && t.status !== "Done")
-        .map((t) => t.delegate.label),
+      workstream.plan.tasks.filter((t) => t.waitingOn === task.id && t.status !== "Done").map((t) => t.delegate.label),
     ),
   ];
   if (!owners.length) return undefined;

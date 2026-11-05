@@ -1,5 +1,6 @@
 import { LOGGED_IN_USER } from "@/user";
 
+import { orderedTasks } from "./taskStatus";
 import type { WorkstreamPlan, WorkstreamTask } from "./workstream";
 
 const NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 };
@@ -54,7 +55,9 @@ export function planEditFromChat(plan: WorkstreamPlan, text: string): PlanEdit |
   const [removeNumber, targetNumber] = taskNumbers(text);
   if (!removeNumber) return undefined;
 
-  const removed = plan.tasks[removeNumber - 1];
+  // Numbers follow the order the plan shows its tasks in.
+  const ordered = orderedTasks(plan.tasks);
+  const removed = ordered[removeNumber - 1];
   if (!removed) {
     return { plan, reply: `The plan has ${plan.tasks.length} tasks, so there's no task ${removeNumber} to remove.` };
   }
@@ -64,7 +67,7 @@ export function planEditFromChat(plan: WorkstreamPlan, text: string): PlanEdit |
 
   const step = closingStep(removed.doneWhen);
   const wantsClosing = CLOSING.test(text);
-  const target = targetNumber && targetNumber !== removeNumber ? plan.tasks[targetNumber - 1] : undefined;
+  const target = targetNumber && targetNumber !== removeNumber ? ordered[targetNumber - 1] : undefined;
 
   const tasks: WorkstreamTask[] = plan.tasks
     .filter((t) => t.id !== removed.id)
@@ -90,7 +93,7 @@ export function planEditFromChat(plan: WorkstreamPlan, text: string): PlanEdit |
   if (!step) return { plan: next, reply };
   if (wantsClosing && target) {
     const updated = tasks.find((t) => t.id === target.id)!;
-    reply += ` Task ${tasks.indexOf(updated) + 1}, ${updated.description}, now ends with it: "${updated.doneWhen}"`;
+    reply += ` Task ${orderedTasks(tasks).indexOf(updated) + 1}, ${updated.description}, now ends with it: "${updated.doneWhen}"`;
   } else if (wantsClosing) {
     reply += ` Which task should take over its closing step, "${step}"?`;
   } else {
