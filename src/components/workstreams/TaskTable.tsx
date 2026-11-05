@@ -83,7 +83,7 @@ export function TaskTable({
               columnGap: SPACE.group,
               // Room above and below each task; a divider between them, none after the last.
               px: SPACE.group,
-              py: SPACE.section,
+              py: SPACE.block,
               borderTop: index === 0 ? "none" : `1px solid ${divider}`,
               borderRadius: highlighted ? tokens.semantic.radius.sm.value : 0,
               bgcolor: highlighted ? highlight : undefined,
@@ -91,7 +91,7 @@ export function TaskTable({
           >
             <NumberBadge number={index + 1} />
 
-            <Stack gap={SPACE.block} sx={{ minWidth: 0 }}>
+            <Stack gap={SPACE.group} sx={{ minWidth: 0 }}>
               <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={SPACE.block}>
                 <Typography variant="h5" component="h3" sx={{ fontWeight: emphasis, minWidth: 0 }}>
                   {task.description}
@@ -136,7 +136,7 @@ export function TaskTable({
                 ) : null}
               </Box>
 
-              {/* 4px closer to the Owner and Deadline fields than the other gaps. */}
+              {/* 4px closer to the Owner and Deadline fields than the other gaps (8px). */}
               <Stack
                 direction="row"
                 alignItems="baseline"
