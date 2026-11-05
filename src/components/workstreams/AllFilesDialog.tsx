@@ -1,11 +1,12 @@
 import CloseIcon from "@diligentcorp/atlas-react-bundle/icons/Close";
-import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
 import { Dialog, DialogContent, DialogTitle, IconButton, Link, Stack, Typography, useTheme } from "@mui/material";
 
 import { DETAIL_DIALOG_PAPER, SPACE } from "@/lib/layout";
 import { formatShortDate } from "@/workstreams/taskStatus";
 import { newestFirst, type HistoryFile } from "@/workstreams/thread";
 import type { WorkstreamTask } from "@/workstreams/workstream";
+
+import { FileTypeIcon } from "./DocumentChip";
 
 /** Every file on the workstream's tasks: what Cowork created and what people uploaded. */
 export function workstreamFiles(tasks: WorkstreamTask[]): { file: HistoryFile; task: WorkstreamTask }[] {
@@ -65,7 +66,8 @@ export function AllFilesDialog({
           <Stack component="ul" gap={SPACE.group} aria-label="All files" sx={{ listStyle: "none", m: 0, p: 0 }}>
             {files.map(({ file, task }) => (
               <Stack component="li" key={file.id} direction="row" gap={SPACE.item} alignItems="flex-start">
-                <OpenFileIcon
+                <FileTypeIcon
+                  name={file.name}
                   aria-hidden
                   style={{ width: 20, height: 20, flexShrink: 0, color: muted, marginTop: 2 }}
                 />

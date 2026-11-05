@@ -1,6 +1,5 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
-import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
-import { Box, ButtonBase, Chip, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
+import { Box, ButtonBase, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
 import { useState, type ReactNode } from "react";
 
 import { formatDate } from "@/lib/dates";
@@ -10,6 +9,7 @@ import type { HistoryFile } from "@/workstreams/thread";
 import type { TaskStatus, WorkstreamTask } from "@/workstreams/workstream";
 import type { TaskOwner } from "@/workstreams/people";
 
+import { DocumentChip } from "./DocumentChip";
 import { OwnerTypeahead } from "./OwnerTypeahead";
 
 const STATUS_COLOR: Record<TaskDisplayLabel, "subtle" | "information" | "warning" | "error" | "success"> = {
@@ -198,16 +198,8 @@ function TaskFiles({ task, onOpenFile }: { task: WorkstreamTask; onOpenFile: (fi
       sx={{ listStyle: "none", m: 0, p: 0 }}
     >
       {files.map((file) => (
-        <li key={file.id}>
-          <Chip
-            icon={<OpenFileIcon aria-hidden />}
-            label={file.name}
-            variant="outlined"
-            size="small"
-            clickable
-            onClick={() => onOpenFile(file.id)}
-            aria-label={`Open ${file.name}`}
-          />
+        <li key={file.id} style={{ minWidth: 0, maxWidth: "100%" }}>
+          <DocumentChip name={file.name} onOpen={() => onOpenFile(file.id)} />
         </li>
       ))}
     </Stack>
