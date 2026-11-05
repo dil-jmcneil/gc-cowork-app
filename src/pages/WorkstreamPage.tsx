@@ -1,11 +1,11 @@
+import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
+import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
-  Card,
+  ButtonBase,
+  Collapse,
   Container,
   Link,
   Snackbar,
@@ -20,9 +20,9 @@ import { startChatFromPrompt } from "@/chat/startChat";
 import { scrollContentTo, scrollContentToTop, SideChatLayout } from "@/components/chat/SideChatLayout";
 import { AllFilesDialog, workstreamFiles } from "@/components/workstreams/AllFilesDialog";
 import { FileView } from "@/components/workstreams/FileView";
-import { KeyDatesCard, KeyDatesList } from "@/components/workstreams/KeyDates";
-import { FieldLabel, SectionCard } from "@/components/workstreams/SectionCard";
-import { SourceSignalCard, SourceStrip } from "@/components/workstreams/SourceSignalCard";
+import { KeyDatesCard } from "@/components/workstreams/KeyDates";
+import { SectionCard } from "@/components/workstreams/SectionCard";
+import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
 import { RuleTable } from "@/components/workstreams/RuleTable";
 import { TaskActivityDialog } from "@/components/workstreams/TaskActivityDialog";
@@ -196,11 +196,7 @@ export default function WorkstreamPage() {
               />
             </SectionCard>
 
-            <RelevanceAndSources
-              description={workstream.description}
-              reasonsRelevant={workstream.reasonsRelevant}
-              signal={signal}
-            />
+            <RelevanceAndSources reasonsRelevant={workstream.reasonsRelevant} signal={signal} />
             <RulesCard rules={workstream.plan.rules} />
           </Stack>
         </Container>
@@ -418,48 +414,51 @@ function PeerCards({ children }: { children: ReactNode }) {
 }
 
 /** The signal, why it matters, its key dates and its source, collapsed: once the workstream has started, you know them. */
-function RelevanceAndSources({
-  description,
-  reasonsRelevant,
-  signal,
-}: {
-  description: string;
-  reasonsRelevant: string[];
-  signal?: Signal;
-}) {
-  const { presets } = useTheme();
-  const AccordionHeader = presets.AccordionPresets.components.Header;
+function RelevanceAndSources({ reasonsRelevant, signal }: { reasonsRelevant: string[]; signal?: Signal }) {
+  const { tokens } = useTheme();
+  const [open, setOpen] = useState(false);
+  const muted = tokens.semantic.color.type.muted.value;
+  const Caret = open ? CaretDownIcon : CaretRightIcon;
   return (
-    <Card component="section" aria-label="Relevance, Key Dates and Source" sx={{ p: 0 }}>
-      <Accordion disableGutters data-atlas-alignment="start">
-        <AccordionSummary aria-controls="relevance-sources-details" id="relevance-sources-header">
-          <AccordionHeader
-            titleTextProps={{ text: "Relevance, Key Dates and Source", variant: "body1", component: "h2" }}
-            subtitleText={signal ? `${signal.title} · ${signal.source}` : undefined}
-          />
-        </AccordionSummary>
-        <AccordionDetails id="relevance-sources-details">
-          <Stack gap={SPACE.block}>
-            {signal ? (
-              <Stack gap={SPACE.group}>
-                <FieldLabel>Source</FieldLabel>
-                <SourceStrip signal={signal} />
-              </Stack>
-            ) : null}
-            <PeerCards>
-              <Stack gap={SPACE.group}>
-                <FieldLabel>{RELEVANCE_LABEL}</FieldLabel>
-                <Typography variant="body1">{description}</Typography>
-                <RelevanceList reasonsRelevant={reasonsRelevant} />
-              </Stack>
-              <Stack gap={SPACE.group}>
-                <FieldLabel>Key Dates</FieldLabel>
-                <KeyDatesList deadlines={signal?.deadlines ?? []} />
-              </Stack>
-            </PeerCards>
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-    </Card>
+    <Stack component="section" aria-labelledby="relevance-sources-heading" gap={SPACE.block}>
+      {/* A header outside the cards; opening it shows them as laid out on Create. */}
+      <ButtonBase
+        aria-expanded={open}
+        aria-controls="relevance-sources-details"
+        onClick={() => setOpen((v) => !v)}
+        sx={{
+          alignSelf: "flex-start",
+          gap: SPACE.item,
+          borderRadius: tokens.semantic.radius.sm.value,
+          textAlign: "left",
+        }}
+      >
+        <Caret aria-hidden style={{ width: 20, height: 20, flexShrink: 0, color: muted }} />
+        <Stack>
+          <Typography
+            id="relevance-sources-heading"
+            variant="h6"
+            component="h2"
+            sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+          >
+            Relevance, Key Dates and Source
+          </Typography>
+          {signal ? (
+            <Typography variant="textMd" sx={{ color: muted }}>
+              {signal.title} · {signal.source}
+            </Typography>
+          ) : null}
+        </Stack>
+      </ButtonBase>
+      <Collapse in={open} id="relevance-sources-details" unmountOnExit>
+        <Stack gap={SPACE.block}>
+          {signal ? <SourceSignalCard signal={signal} /> : null}
+          <PeerCards>
+            <RelevanceCard reasonsRelevant={reasonsRelevant} />
+            <KeyDatesCard deadlines={signal?.deadlines ?? []} />
+          </PeerCards>
+        </Stack>
+      </Collapse>
+    </Stack>
   );
 }
