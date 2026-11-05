@@ -1,21 +1,6 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
-import {
-  Box,
-  ButtonBase,
-  Link,
-  Menu,
-  MenuItem,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import { Fragment, useState } from "react";
+import { Box, ButtonBase, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
+import { useState, type ReactNode } from "react";
 
 import { formatDate } from "@/lib/dates";
 import { SPACE } from "@/lib/layout";
@@ -34,10 +19,12 @@ const STATUS_COLOR: Record<TaskDisplayLabel, "subtle" | "information" | "warning
 };
 
 /**
- * The plan's tasks, in deadline order: task, owner, CC, deadline and status,
- * then a second line. In a draft that line says what done looks like; once
- * the workstream has started it's Cowork's summary of where the task stands,
- * with a link to its activity log. Pass `onOwnerChange` to make owners editable.
+ * The plan's tasks as divided blocks, in deadline order. Each has a numbered
+ * badge and the task's name with its status at the right; labeled Owner and
+ * Deadline fields; then a closing line. In a draft that line says what done
+ * looks like; once the workstream has started it's Cowork's summary of where
+ * the task stands, with a link to its activity log. Pass `onOwnerChange` to
+ * make owners editable.
  */
 export function TaskTable({
   tasks,
@@ -64,126 +51,166 @@ export function TaskTable({
   onOpenFile?: (fileId: string) => void;
   /** The status line for a task, for the "status" detail. */
   summarize?: (task: WorkstreamTask) => string;
-  /** Post-MVP: a CC column. The MVP shows the owner only. */
+  /** Post-MVP: a CC field. The MVP shows the owner only. */
   showCc?: boolean;
-  /** The task a link opened the page on; its rows are tinted. */
+  /** The task a link opened the page on; its block is tinted. */
   highlightTaskId?: string;
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
-  const highlight = tokens.component.statusIndicator.colors.information.backgroundColor.value;
+  const emphasis = tokens.semantic.fontWeight.emphasis.value;
   const muted = tokens.semantic.color.type.muted.value;
-  // Numbered in the same order chat uses: "task 2" is the second row.
+  const divider = tokens.semantic.color.ui.divider.default.value;
+  const highlight = tokens.component.statusIndicator.colors.information.backgroundColor.value;
+  // Numbered in the same order chat uses: "task 2" is the second block.
   const ordered = orderedTasks(tasks);
-  const columns = showCc ? 6 : 5;
 
   return (
-    <TableContainer>
-      <Table
-        size="small"
-        aria-label={ariaLabel}
-        sx={(theme) => ({
-          "& .MuiTableCell-body": theme.typography.body1,
-          // Each task is two rows: no divider between them, one under the pair, none under the last.
-          "& .task-main .MuiTableCell-root": { borderBottom: "none", pb: SPACE.pair },
-          "& .MuiTableBody-root .task-detail:last-of-type .MuiTableCell-root": { borderBottom: "none" },
-        })}
+    <Stack component="ol" aria-label={ariaLabel} sx={{ listStyle: "none", m: 0, p: 0 }}>
+      {ordered.map((task, index) => {
+        // A draft hasn't started, so nothing is blocked yet: show each task's own status.
+        const status = detail === "done-when" ? { label: task.status } : taskDisplayStatus(task, tasks);
+        const highlighted = task.id === highlightTaskId;
+        return (
+          <Box
+            component="li"
+            key={task.id}
+            id={taskAnchorId(task.id)}
+            aria-current={highlighted ? "true" : undefined}
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "28px minmax(0, 1fr)",
+              columnGap: SPACE.group,
+              // Room above and below each task; a divider between them, none after the last.
+              px: SPACE.group,
+              py: SPACE.section,
+              borderTop: index === 0 ? "none" : `1px solid ${divider}`,
+              borderRadius: highlighted ? tokens.semantic.radius.sm.value : 0,
+              bgcolor: highlighted ? highlight : undefined,
+            }}
+          >
+            <NumberBadge number={index + 1} />
+
+            <Stack gap={SPACE.block} sx={{ minWidth: 0 }}>
+              <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={SPACE.block}>
+                <Typography variant="h5" component="h3" sx={{ fontWeight: emphasis, minWidth: 0 }}>
+                  {task.description}
+                </Typography>
+                <Box sx={{ flexShrink: 0, whiteSpace: "nowrap" }}>
+                  {onStatusChange ? (
+                    <StatusMenu task={task} label={status.label} onChange={(next) => onStatusChange(task.id, next)} />
+                  ) : (
+                    <StatusIndicator color={STATUS_COLOR[status.label]} label={status.label} />
+                  )}
+                </Box>
+              </Stack>
+
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: showCc
+                    ? "minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr)"
+                    : "minmax(0, 2fr) minmax(0, 1fr)",
+                  columnGap: SPACE.section,
+                  rowGap: SPACE.group,
+                }}
+              >
+                <Field label="Owner">
+                  {onOwnerChange ? (
+                    <OwnerTypeahead
+                      value={task.delegate}
+                      onChange={(owner) => onOwnerChange(task.id, owner)}
+                      ariaLabel={`Owner of ${task.description}`}
+                    />
+                  ) : (
+                    <OwnerValue owner={task.delegate} />
+                  )}
+                </Field>
+                <Field label="Deadline">
+                  <Typography variant="body1">{formatDate(task.deadline)}</Typography>
+                </Field>
+                {showCc ? (
+                  <Field label="CC">
+                    <Typography variant="body1">{task.ccs.map((cc) => cc.label).join(", ") || "None"}</Typography>
+                  </Field>
+                ) : null}
+              </Box>
+
+              <Stack direction="row" alignItems="baseline" justifyContent="space-between" gap={SPACE.block}>
+                <Typography variant="body1" sx={{ color: muted }}>
+                  {detail === "done-when" ? (
+                    <>
+                      <Box component="span" sx={{ fontWeight: emphasis }}>
+                        Done when:{" "}
+                      </Box>
+                      {task.doneWhen}
+                    </>
+                  ) : (
+                    <>
+                      {summarize?.(task) ?? ""}
+                      <ReviewFileLink task={task} onOpenFile={onOpenFile} />
+                    </>
+                  )}
+                </Typography>
+                {detail === "status" && onOpenActivity ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    underline="hover"
+                    onClick={() => onOpenActivity(task.id)}
+                    aria-label={`Open activity log for ${task.description}`}
+                    sx={{ flexShrink: 0, font: "inherit" }}
+                  >
+                    Open activity log
+                  </Link>
+                ) : null}
+              </Stack>
+            </Stack>
+          </Box>
+        );
+      })}
+    </Stack>
+  );
+}
+
+/** The task's number in a rounded badge, so "task 2" in chat is easy to find. */
+function NumberBadge({ number }: { number: number }) {
+  const { tokens } = useTheme();
+  return (
+    <Box
+      component="span"
+      aria-label={`Task ${number}`}
+      sx={{
+        width: 28,
+        height: 28,
+        borderRadius: "50%",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: tokens.semantic.color.surface.variant.value,
+        color: tokens.semantic.color.type.default.value,
+      }}
+    >
+      <Typography variant="body1" component="span" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+        {number}
+      </Typography>
+    </Box>
+  );
+}
+
+/** A small muted label over its value. */
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  const { tokens } = useTheme();
+  return (
+    <Stack gap={SPACE.pair} sx={{ minWidth: 0 }}>
+      <Typography
+        variant="textMd"
+        sx={{ color: tokens.semantic.color.type.muted.value, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
       >
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ width: 32, pr: 0 }} aria-label="Number">
-              #
-            </TableCell>
-            <TableCell sx={{ width: "34%" }}>Task</TableCell>
-            <TableCell>Owner</TableCell>
-            {showCc ? <TableCell>CC</TableCell> : null}
-            <TableCell>Deadline</TableCell>
-            <TableCell>Status</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {ordered.map((task, index) => {
-            // A draft hasn't started, so nothing is blocked yet: show each task's own status.
-            const status = detail === "done-when" ? { label: task.status } : taskDisplayStatus(task, tasks);
-            const highlighted = task.id === highlightTaskId;
-            const rowSx = highlighted ? { bgcolor: highlight } : undefined;
-            return (
-              <Fragment key={task.id}>
-                <TableRow
-                  id={taskAnchorId(task.id)}
-                  className="task-main"
-                  aria-current={highlighted ? "true" : undefined}
-                  sx={rowSx}
-                >
-                  <TableCell sx={{ pr: 0, color: muted, fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-                    {index + 1}
-                  </TableCell>
-                  <TableCell sx={{ whiteSpace: "normal", fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-                    {task.description}
-                  </TableCell>
-                  <TableCell sx={{ minWidth: 200 }}>
-                    {onOwnerChange ? (
-                      <OwnerTypeahead
-                        value={task.delegate}
-                        onChange={(owner) => onOwnerChange(task.id, owner)}
-                        ariaLabel={`Owner of ${task.description}`}
-                      />
-                    ) : (
-                      <OwnerCell owner={task.delegate} />
-                    )}
-                  </TableCell>
-                  {showCc ? (
-                    <TableCell sx={{ whiteSpace: "normal" }}>{task.ccs.map((cc) => cc.label).join(", ")}</TableCell>
-                  ) : null}
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDate(task.deadline)}</TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {onStatusChange ? (
-                      <StatusMenu task={task} label={status.label} onChange={(next) => onStatusChange(task.id, next)} />
-                    ) : (
-                      <StatusIndicator color={STATUS_COLOR[status.label]} label={status.label} />
-                    )}
-                  </TableCell>
-                </TableRow>
-                <TableRow className="task-detail" sx={rowSx}>
-                  <TableCell />
-                  <TableCell colSpan={columns - 1} sx={{ pt: 0, whiteSpace: "normal" }}>
-                    <Stack direction="row" alignItems="baseline" justifyContent="space-between" gap={SPACE.block}>
-                      <Typography variant="body1" sx={{ color: muted }}>
-                        {detail === "done-when" ? (
-                          <>
-                            <Box component="span" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-                              Done when:{" "}
-                            </Box>
-                            {task.doneWhen}
-                          </>
-                        ) : (
-                          <>
-                            {summarize?.(task) ?? ""}
-                            <ReviewFileLink task={task} onOpenFile={onOpenFile} />
-                          </>
-                        )}
-                      </Typography>
-                      {detail === "status" && onOpenActivity ? (
-                        <Link
-                          component="button"
-                          type="button"
-                          underline="hover"
-                          onClick={() => onOpenActivity(task.id)}
-                          aria-label={`Open activity log for ${task.description}`}
-                          sx={{ flexShrink: 0, font: "inherit" }}
-                        >
-                          Open activity log
-                        </Link>
-                      ) : null}
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              </Fragment>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+        {label}
+      </Typography>
+      {children}
+    </Stack>
   );
 }
 
@@ -263,10 +290,10 @@ export function taskAnchorId(taskId: string): string {
   return `task-row-${taskId}`;
 }
 
-function OwnerCell({ owner }: { owner: TaskOwner }) {
+function OwnerValue({ owner }: { owner: TaskOwner }) {
   const { tokens } = useTheme();
   return (
-    <Stack>
+    <Stack gap={SPACE.pair}>
       <Typography variant="body1">{owner.label}</Typography>
       <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
         {owner.detail.split(" · ")[0]}
