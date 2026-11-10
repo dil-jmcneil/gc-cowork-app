@@ -25,14 +25,14 @@ const STATUS_COLOR: Record<TaskDisplayLabel, "subtle" | "information" | "warning
  * badge and the task's name with its status at the right; labeled Owner and
  * Deadline fields; then a closing line. In a draft that line says what done
  * looks like; once the workstream has started it's Cowork's summary of where
- * the task stands, with a link to its activity log. Pass `onOwnerChange` to
+ * the task stands, with its files. The activity log lives in one dialog
+ * for every task, opened from the Tasks header. Pass `onOwnerChange` to
  * make owners editable.
  */
 export function TaskTable({
   tasks,
   detail,
   onOwnerChange,
-  onOpenActivity,
   onOpenFile,
   onStatusChange,
   summarize,
@@ -45,8 +45,6 @@ export function TaskTable({
   detail: "done-when" | "status";
   ariaLabel?: string;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
-  /** Opens the task's activity log. */
-  onOpenActivity?: (taskId: string) => void;
   /** Makes each status a menu: Not started, In progress, Done. */
   onStatusChange?: (taskId: string, status: TaskStatus) => void;
   /** Opens a file; a task waiting on your review links its file from the status line. */
@@ -161,18 +159,6 @@ export function TaskTable({
                     </>
                   )}
                 </Typography>
-                {detail === "status" && onOpenActivity ? (
-                  <Link
-                    component="button"
-                    type="button"
-                    underline="hover"
-                    onClick={() => onOpenActivity(task.id)}
-                    aria-label={`Open activity log for ${task.description}`}
-                    sx={{ flexShrink: 0, font: "inherit" }}
-                  >
-                    Open activity log
-                  </Link>
-                ) : null}
               </Stack>
 
               {detail === "status" && onOpenFile ? <TaskFiles task={task} onOpenFile={onOpenFile} /> : null}

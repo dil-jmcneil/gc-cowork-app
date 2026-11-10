@@ -1,4 +1,6 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
+import FolderIcon from "@diligentcorp/atlas-react-bundle/icons/Folder";
+import HistoryIcon from "@diligentcorp/atlas-react-bundle/icons/History";
 import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import {
   Alert,
@@ -25,7 +27,7 @@ import { SectionCard } from "@/components/workstreams/SectionCard";
 import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
 import { RuleTable } from "@/components/workstreams/RuleTable";
-import { TaskActivityDialog } from "@/components/workstreams/TaskActivityDialog";
+import { ActivityLogDialog } from "@/components/workstreams/ActivityLogDialog";
 import { taskAnchorId, TaskTable } from "@/components/workstreams/TaskTable";
 import { useMvpScopeStore } from "@/demo/mvpScopeStore";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
@@ -65,7 +67,7 @@ export default function WorkstreamPage() {
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
-  const [activityTaskId, setActivityTaskId] = useState<string | null>(null);
+  const [showActivity, setShowActivity] = useState(false);
   const [showAllFiles, setShowAllFiles] = useState(false);
   const now = new Date();
   const focus = workstreamFocusFromSearch(search);
@@ -139,14 +141,27 @@ export default function WorkstreamPage() {
 
             <SectionCard
               title="Tasks"
+              titleSize="large"
               action={
-                <Stack direction="row" alignItems="center" gap={SPACE.block}>
+                <Stack direction="row" alignItems="center" gap={SPACE.item}>
                   {/* Each task shows its own files; this lists every file in one place. */}
-                  <Link component="button" type="button" underline="hover" onClick={() => setShowAllFiles(true)}>
-                    <Typography variant="body1" component="span" sx={{ color: "inherit" }}>
-                      All files ({workstreamFiles(tasks).length})
-                    </Typography>
-                  </Link>
+                  <Button
+                    variant="text"
+                    size="small"
+                    startIcon={<FolderIcon aria-hidden />}
+                    onClick={() => setShowAllFiles(true)}
+                  >
+                    All files ({workstreamFiles(tasks).length})
+                  </Button>
+                  {/* One activity log for every task, filterable to a single task. */}
+                  <Button
+                    variant="text"
+                    size="small"
+                    startIcon={<HistoryIcon aria-hidden />}
+                    onClick={() => setShowActivity(true)}
+                  >
+                    Activity log
+                  </Button>
                   {/* Post-MVP: the side chat replaces "Revise via chat". */}
                   {showPostMvpViews ? (
                     <Stack direction="row" gap={SPACE.item}>
@@ -176,7 +191,6 @@ export default function WorkstreamPage() {
                 detail="status"
                 summarize={(task) => summarizeTask(task, now)}
                 highlightTaskId={focus.taskId}
-                onOpenActivity={setActivityTaskId}
                 onOpenFile={openFile}
                 onStatusChange={(taskId, status) => {
                   const task = tasks.find((t) => t.id === taskId);
@@ -203,11 +217,7 @@ export default function WorkstreamPage() {
       )}
 
       <AllFilesDialog open={showAllFiles} tasks={tasks} onClose={() => setShowAllFiles(false)} onOpenFile={openFile} />
-      <TaskActivityDialog
-        task={tasks.find((t) => t.id === activityTaskId)}
-        now={now}
-        onClose={() => setActivityTaskId(null)}
-      />
+      <ActivityLogDialog open={showActivity} tasks={tasks} now={now} onClose={() => setShowActivity(false)} />
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
         <Alert severity="success" aria-live="polite" onClose={() => setToast(null)}>
           {toast}
