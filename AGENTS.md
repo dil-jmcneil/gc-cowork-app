@@ -131,6 +131,10 @@ Every link goes to the workstream page (`workstreamHref`, with `?task=` to open 
 
 Summaries lead with a bold headline that answers on its own (the GC's next action when there is one), then at most two supporting sentences (`src/workstreams/summary.ts`). Write all of Cowork's copy with the `smart-brevity` skill (`.claude/skills/smart-brevity/SKILL.md`). The workstream's status summary is derived live by `workstreamAttention`, not stored. Its panel uses Atlas status colors by `tone`: warning (yellow) when a step waits on the GC, error (red) when something blocks the work, information (blue) when it's on track.
 
+### Q4 MVP configuration
+
+A Demo settings switch (`useMvpScopeStore().q4Mvp`, under "Release scope") hides what isn't in the Q4 release. So far: the compliance calendar (widget and full page) shows only its Timeline view, with no view toggle; and the left nav has no Workstreams item, in either the expanded nav or the collapsed rail. Workstreams still exist; you reach one from its attention card or its tasks on the calendar. Add new Q4 cuts behind the same flag.
+
 ### Plans are tasks plus rule rows
 
 Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into Boxes and Arrows"):
