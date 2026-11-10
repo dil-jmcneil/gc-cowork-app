@@ -8,7 +8,7 @@ import { create } from "zustand";
  *   dialog, the older create page and "Revise via chat" stay in the code for
  *   later, hidden unless this switch shows them. (The signal dialog is back:
  *   attention cards open it.)
- * - Q4 MVP configuration: hides what isn't in the Q4 release. The compliance
+ * - Q4 MVP configuration (on by default): hides what isn't in the Q4 release. The compliance
  *   calendar shows only its Timeline view (no Swimlane or Calendar, and no view
  *   toggle), and the left nav has no Workstreams item; you reach a workstream
  *   from its attention card or its tasks on the calendar.
@@ -16,12 +16,14 @@ import { create } from "zustand";
 const POST_MVP_KEY = "gc-cowork-show-post-mvp-views";
 const Q4_MVP_KEY = "gc-cowork-q4-mvp";
 
-function readPersisted(key: string): boolean {
-  if (typeof window === "undefined") return false;
+/** A saved switch, or `fallback` when it's never been set. */
+function readPersisted(key: string, fallback = false): boolean {
+  if (typeof window === "undefined") return fallback;
   try {
-    return window.localStorage.getItem(key) === "true";
+    const saved = window.localStorage.getItem(key);
+    return saved === null ? fallback : saved === "true";
   } catch {
-    return false;
+    return fallback;
   }
 }
 
@@ -47,7 +49,8 @@ export const useMvpScopeStore = create<MvpScopeState>((set) => ({
     writePersisted(POST_MVP_KEY, showPostMvpViews);
     set({ showPostMvpViews });
   },
-  q4Mvp: readPersisted(Q4_MVP_KEY),
+  // On by default: the demo shows the Q4 release unless someone turns it off.
+  q4Mvp: readPersisted(Q4_MVP_KEY, true),
   setQ4Mvp: (q4Mvp) => {
     writePersisted(Q4_MVP_KEY, q4Mvp);
     set({ q4Mvp });

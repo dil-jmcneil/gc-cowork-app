@@ -18,13 +18,13 @@ test("setShowPostMvpViews persists across reloads", async () => {
   expect((await loadStore()).getState().showPostMvpViews).toBe(true);
 });
 
-test("the Q4 MVP configuration is off by default", async () => {
-  expect((await loadStore()).getState().q4Mvp).toBe(false);
+test("the Q4 MVP configuration is on by default", async () => {
+  expect((await loadStore()).getState().q4Mvp).toBe(true);
 });
 
-test("setQ4Mvp persists across reloads", async () => {
+test("turning the Q4 MVP configuration off persists across reloads", async () => {
   const store = await loadStore();
-  store.getState().setQ4Mvp(true);
-  expect(localStorage.getItem("gc-cowork-q4-mvp")).toBe("true");
-  expect((await loadStore()).getState().q4Mvp).toBe(true);
+  store.getState().setQ4Mvp(false);
+  expect(localStorage.getItem("gc-cowork-q4-mvp")).toBe("false");
+  expect((await loadStore()).getState().q4Mvp).toBe(false);
 });

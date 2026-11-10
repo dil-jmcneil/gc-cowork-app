@@ -133,7 +133,7 @@ Summaries lead with a bold headline that answers on its own (the GC's next actio
 
 ### Q4 MVP configuration
 
-A Demo settings switch (`useMvpScopeStore().q4Mvp`, under "Release scope") hides what isn't in the Q4 release. So far: the compliance calendar (widget and full page) shows only its Timeline view, with no view toggle; and the left nav has no Workstreams item, in either the expanded nav or the collapsed rail. Workstreams still exist; you reach one from its attention card or its tasks on the calendar. Add new Q4 cuts behind the same flag.
+A Demo settings switch (`useMvpScopeStore().q4Mvp`, under "Release scope", on by default) hides what isn't in the Q4 release. So far: the compliance calendar (widget and full page) shows only its Timeline view, with no view toggle; and the left nav has no Workstreams item, in either the expanded nav or the collapsed rail. Workstreams still exist; you reach one from its attention card or its tasks on the calendar. Add new Q4 cuts behind the same flag.
 
 ### Plans are tasks plus rule rows
 
