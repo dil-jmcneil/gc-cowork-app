@@ -14,6 +14,7 @@ import SearchIcon from "@diligentcorp/atlas-react-bundle/icons/Search";
 
 import { expandPrototypeSideNav } from "./configureAtlasPrototypeNav.js";
 import { DEFAULT_CHAT_PREVIEW, useChatStore, type ChatRecord } from "./chat/chatStore.js";
+import { useMvpScopeStore } from "./demo/mvpScopeStore.js";
 import { useWorkstreamStore } from "./workstreams/workstreamStore.js";
 import {
   commandCenterNavRowInnerSx,
@@ -76,6 +77,8 @@ export default function CommandCenterNavigation() {
   const { tokens } = useTheme();
   const navigate = useNavigate();
   const chats = useChatStore((s) => s.chats);
+  // Q4 MVP: no Workstreams nav item; you reach a workstream from its attention card or calendar tasks.
+  const q4Mvp = useMvpScopeStore((s) => s.q4Mvp);
 
   const chatHistoryItems = buildChatHistoryItems(chats);
   const chatHistoryVisibleItems = chatHistoryItems.slice(0, VISIBLE_HISTORY_COUNT);
@@ -105,7 +108,7 @@ export default function CommandCenterNavigation() {
         }}
       >
         <RoutedAINavLink to="/" label="Home" end icon={<HomeIcon slot="icon" />} />
-        <WorkstreamsNavSection />
+        {q4Mvp ? null : <WorkstreamsNavSection />}
         <RoutedAINavLink
           to="/compliance-calendar"
           label="Compliance calendar"
@@ -142,11 +145,13 @@ export default function CommandCenterNavigation() {
           icon={<HomeIcon aria-hidden fontSize="small" />}
           onClick={() => navigate("/")}
         />
-        <CommandCenterCompactNavButton
-          label="Workstreams"
-          icon={<ProjectsIcon aria-hidden fontSize="small" />}
-          onClick={() => expandPrototypeSideNav()}
-        />
+        {q4Mvp ? null : (
+          <CommandCenterCompactNavButton
+            label="Workstreams"
+            icon={<ProjectsIcon aria-hidden fontSize="small" />}
+            onClick={() => expandPrototypeSideNav()}
+          />
+        )}
         <CommandCenterCompactNavButton
           label="Compliance calendar"
           icon={<CalendarIcon aria-hidden fontSize="small" />}

@@ -9,11 +9,14 @@ import { SPACE } from "@/lib/layout";
  */
 export function SectionCard({
   title,
+  titleSize = "default",
   icon,
   action,
   children,
 }: {
   title: string;
+  /** "large" is the 16px heading (h5), for a page's main card such as Tasks. */
+  titleSize?: "default" | "large";
   icon?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
@@ -30,7 +33,7 @@ export function SectionCard({
           <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ minHeight: 32 }}>
             {icon}
             <Typography
-              variant="h6"
+              variant={titleSize === "large" ? "h5" : "h6"}
               component="h2"
               sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value, flex: 1 }}
             >

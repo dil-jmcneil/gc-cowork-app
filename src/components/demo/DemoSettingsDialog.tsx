@@ -31,6 +31,8 @@ export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
   const setShowRules = usePlanRulesStore((s) => s.setShowRules);
   const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
   const setShowPostMvpViews = useMvpScopeStore((s) => s.setShowPostMvpViews);
+  const q4Mvp = useMvpScopeStore((s) => s.q4Mvp);
+  const setQ4Mvp = useMvpScopeStore((s) => s.setQ4Mvp);
 
   const selectThemeVariant = (next: ThemeVariant) => {
     setThemeVariant(next);
@@ -102,6 +104,18 @@ export function DemoSettingsDialog({ open, onClose }: DemoSettingsDialogProps) {
                 />
               }
               label="Show Cowork's rules on plans"
+            />
+          </DemoSettingsSection>
+          <DemoSettingsSection label="Release scope">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={q4Mvp}
+                  onChange={(e) => setQ4Mvp(e.target.checked)}
+                  slotProps={{ input: { "aria-label": "Q4 MVP configuration" } }}
+                />
+              }
+              label="Q4 MVP configuration: Timeline-only compliance calendar, no Workstreams nav item"
             />
           </DemoSettingsSection>
           <DemoSettingsSection label="Workstreams">

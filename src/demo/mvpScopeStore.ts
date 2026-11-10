@@ -1,28 +1,36 @@
 import { create } from "zustand";
 
 /**
- * MVP scope (docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md):
- * every link goes to the workstream page. The task page, the task quick-view
- * dialog, the older create page and "Revise via chat" stay in the code for
- * later, hidden unless this Demo settings switch shows them. (The signal
- * dialog is back: attention cards open it.) Persisted in
- * localStorage.
+ * Demo switches for scope, persisted in localStorage.
+ *
+ * - Post-MVP views (docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md):
+ *   every link goes to the workstream page. The task page, the task quick-view
+ *   dialog, the older create page and "Revise via chat" stay in the code for
+ *   later, hidden unless this switch shows them. (The signal dialog is back:
+ *   attention cards open it.)
+ * - Q4 MVP configuration (on by default): hides what isn't in the Q4 release. The compliance
+ *   calendar shows only its Timeline view (no Swimlane or Calendar, and no view
+ *   toggle), and the left nav has no Workstreams item; you reach a workstream
+ *   from its attention card or its tasks on the calendar.
  */
-const STORAGE_KEY = "gc-cowork-show-post-mvp-views";
+const POST_MVP_KEY = "gc-cowork-show-post-mvp-views";
+const Q4_MVP_KEY = "gc-cowork-q4-mvp";
 
-function readPersisted(): boolean {
-  if (typeof window === "undefined") return false;
+/** A saved switch, or `fallback` when it's never been set. */
+function readPersisted(key: string, fallback = false): boolean {
+  if (typeof window === "undefined") return fallback;
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === "true";
+    const saved = window.localStorage.getItem(key);
+    return saved === null ? fallback : saved === "true";
   } catch {
-    return false;
+    return fallback;
   }
 }
 
-function writePersisted(show: boolean): void {
+function writePersisted(key: string, value: boolean): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, String(show));
+    window.localStorage.setItem(key, String(value));
   } catch {
     /* ignore quota or privacy errors */
   }
@@ -31,12 +39,20 @@ function writePersisted(show: boolean): void {
 type MvpScopeState = {
   showPostMvpViews: boolean;
   setShowPostMvpViews: (show: boolean) => void;
+  q4Mvp: boolean;
+  setQ4Mvp: (on: boolean) => void;
 };
 
 export const useMvpScopeStore = create<MvpScopeState>((set) => ({
-  showPostMvpViews: readPersisted(),
+  showPostMvpViews: readPersisted(POST_MVP_KEY),
   setShowPostMvpViews: (showPostMvpViews) => {
-    writePersisted(showPostMvpViews);
+    writePersisted(POST_MVP_KEY, showPostMvpViews);
     set({ showPostMvpViews });
+  },
+  // On by default: the demo shows the Q4 release unless someone turns it off.
+  q4Mvp: readPersisted(Q4_MVP_KEY, true),
+  setQ4Mvp: (q4Mvp) => {
+    writePersisted(Q4_MVP_KEY, q4Mvp);
+    set({ q4Mvp });
   },
 }));

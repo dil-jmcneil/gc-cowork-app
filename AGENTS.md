@@ -27,9 +27,9 @@ Please prompt the user to get a new key from the Atlas documentation on Confluen
 
 ## Atlas React Bundle dependency
 
-We're using an https dependency in the package.json file to install the `@diligentcorp/atlas-react-bundle` package.
+The `@diligentcorp/atlas-react-bundle` package is vendored: `package.json` installs it from `vendor/atlas-react-bundle-0.0.1.tgz` in this repo. On Nov 10, 2026 the hosted tarball (`https://atlas.diligent.com/react-bundle.tgz`) started shipping without its `dist/` folder, which broke every fresh install (and Vercel deploys) with "Cannot find module '@diligentcorp/atlas-react-bundle'". The vendored copy is the last good bundle (from Oct 30).
 
-The contents of the bundle might change over time, so the integrity information in the package lock file might become outdated. You can always use forced methods to update the dependency or packages. Package lock files are intentionally ignored in the .gitignore file.
+To update it once the hosted bundle is fixed: download it, check that `tar tzf react-bundle.tgz | grep dist/index.js` finds the build, replace the file in `vendor/`, and reinstall. Or point `package.json` back at the URL. Package lock files are intentionally ignored in the .gitignore file.
 
 ## Styling
 
@@ -123,13 +123,17 @@ The primary demo signal is the ATG v. Lane ruling on advance notice bylaws (`gc-
 
 ### Workstreams and history
 
-The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the UI calls this the **timeline** (`TimelineList`). It opens on the last two days, then steps to 10 more, then all. Each task's timeline opens from "Open activity log" on its row.
+The OOUX Project object is called a **workstream** everywhere: in the UI, in routes (`/workstreams/...`), and in code (`src/workstreams`, `Workstream`, `useWorkstreamStore`). Each task keeps a **history** of messages, actions (by Cowork or the GC, with the plan rule applied when there is one) and files; the UI calls this the **timeline** (`TimelineList`). It opens on the last two days, then steps to 10 more, then all. The activity log is one dialog for the whole workstream, opened from the Tasks header and filterable to one task.
 
 ### MVP scope: one workstream page
 
 Every link goes to the workstream page (`workstreamHref`, with `?task=` to open it on a task), except attention cards, which open the signal dialog (`SignalDialog`: the chat signal card's content, plus Create or View workstream). The page always has Cowork's chat on the right. A new signal opens Cowork's draft on the same page. The task page, task quick-view dialog, the older create page and "Revise via chat" are hidden, not deleted: `useMvpScopeStore().showPostMvpViews` (a Demo settings switch) brings them back. See `docs/superpowers/plans/2026-11-04-workstream-mvp-simplification.md`.
 
 Summaries lead with a bold headline that answers on its own (the GC's next action when there is one), then at most two supporting sentences (`src/workstreams/summary.ts`). Write all of Cowork's copy with the `smart-brevity` skill (`.claude/skills/smart-brevity/SKILL.md`). The workstream's status summary is derived live by `workstreamAttention`, not stored. Its panel uses Atlas status colors by `tone`: warning (yellow) when a step waits on the GC, error (red) when something blocks the work, information (blue) when it's on track.
+
+### Q4 MVP configuration
+
+A Demo settings switch (`useMvpScopeStore().q4Mvp`, under "Release scope", on by default) hides what isn't in the Q4 release. So far: the compliance calendar (widget and full page) shows only its Timeline view, with no view toggle; and the left nav has no Workstreams item, in either the expanded nav or the collapsed rail. Workstreams still exist; you reach one from its attention card or its tasks on the calendar. Add new Q4 cuts behind the same flag.
 
 ### Plans are tasks plus rule rows
 
@@ -141,7 +145,7 @@ Plans follow big-step / small-step orchestration ("Stop Turning Your Agents into
 
 ### Workstream layouts
 
-One page, two layouts. **Create** (a draft, `/workstreams/new?signal=`): what the signal is, why it matters and what Cowork suggests; the Source card as a horizontal strip across the top (`SourceStrip`, laid out like the signal dialog's header), with Relevance and Key Dates side by side under it; the Plan card (tasks as divided blocks: a numbered badge, the task name, status, labeled Owner and Deadline fields, then "Done when"); Accept and start. **View** (`/workstreams/:id`): the status summary across the top; the Tasks card, where each task lists its own files as chips and the header has "All files (N)" for every file at once (each task's second line is its status summary, with "Open activity log" in a dialog); Relevance, Key Dates and Source behind a plain header toggle (outside any card) that reveals the same cards as Create. Tasks are numbered in deadline order (`orderedTasks`), the same numbers chat uses ("remove task 4"). For the MVP, owners show as text and there's no CC column; the owner dropdown and CC return with post-MVP views on. "Accept and start" posts that request in the chat, and Cowork's reply lists the owners it's emailing (`startWorkstream`); typing "Start" does the same. The draft and the started workstream share one chat thread. In View, the status badge is a menu (Not started, In progress, Done; Done from the list counts as confirming). File chips, the All files dialog, and "Open the draft" on a task waiting on your review, open the file in the main panel (`?file=`) with a Back button; the chat stays open. Story files carry mock text (`src/workstreams/atgFiles.ts`).
+One page, two layouts. **Create** (a draft, `/workstreams/new?signal=`): what the signal is, why it matters and what Cowork suggests; the Source card as a horizontal strip across the top (`SourceStrip`, laid out like the signal dialog's header), with Relevance and Key Dates side by side under it; the Plan card (tasks as divided blocks: a numbered badge, the task name, status, labeled Owner and Deadline fields, then "Done when"); Accept and start. **View** (`/workstreams/:id`): the status summary across the top; the Tasks card (16px heading), where each task lists its own files as chips, and the header has two tertiary buttons: "All files (N)" and "Activity log", one dialog for every task's messages, actions and files, with a dropdown to narrow it to a single task by number and name (each task's second line is its status summary); Relevance, Key Dates and Source behind a plain header toggle (outside any card) that reveals the same cards as Create. Tasks are numbered in deadline order (`orderedTasks`), the same numbers chat uses ("remove task 4"). For the MVP, owners show as text and there's no CC column; the owner dropdown and CC return with post-MVP views on. "Accept and start" posts that request in the chat, and Cowork's reply lists the owners it's emailing (`startWorkstream`); typing "Start" does the same. The draft and the started workstream share one chat thread. In View, the status badge is a menu (Not started, In progress, Done; Done from the list counts as confirming). File chips, the All files dialog, and "Open the draft" on a task waiting on your review, open the file in the main panel (`?file=`) with a Back button; the chat stays open. Story files carry mock text (`src/workstreams/atgFiles.ts`).
 
 ## Writing style
 

@@ -84,7 +84,10 @@ export function ComplianceCalendar({
   const [searchParams] = useSearchParams();
   // "View on calendar" links pass ?date= so the page opens on that month.
   const linkedDate = variant === "page" ? searchParams.get("date") : null;
-  const [view, setView] = useState<CalendarView>(variant === "page" ? "calendar" : "timeline");
+  const [chosenView, setView] = useState<CalendarView>(variant === "page" ? "calendar" : "timeline");
+  // Q4 MVP: Timeline only, with no toggle to the other views.
+  const q4Mvp = useMvpScopeStore((s) => s.q4Mvp);
+  const view: CalendarView = q4Mvp ? "timeline" : chosenView;
   const [anchor, setAnchor] = useState(linkedDate && /^\d{4}-\d{2}-\d{2}$/.test(linkedDate) ? linkedDate : today);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
@@ -137,9 +140,11 @@ export function ComplianceCalendar({
         {headerAction}
       </Stack>
 
-      <Box>
-        <CalendarViewToggle value={view} onChange={setView} />
-      </Box>
+      {q4Mvp ? null : (
+        <Box>
+          <CalendarViewToggle value={view} onChange={setView} />
+        </Box>
+      )}
 
       <Box
         sx={{
