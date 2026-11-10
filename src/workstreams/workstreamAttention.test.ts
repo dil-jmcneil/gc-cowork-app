@@ -2,7 +2,7 @@ import { ATG_RULING } from "@/signals/signals";
 
 import { PAST_WORKSTREAMS } from "./pastWorkstreams";
 import { summarySentences } from "./summary";
-import { workstreamAttention } from "./workstreamAttention";
+import { workstreamAttention, workstreamStatus } from "./workstreamAttention";
 import { draftWorkstreamFromSignal } from "./workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "./workstreamStore";
 
@@ -87,5 +87,27 @@ describe("tone", () => {
   test("on track is informational", () => {
     const cyber = PAST_WORKSTREAMS.find((w) => w.name === "Cyber 8-K readiness")!;
     expect(workstreamAttention(cyber, NOW).tone).toBe("information");
+  });
+});
+
+describe("the overall status badge follows the summary's tone", () => {
+  test("a step waiting on you: Needs your review", () => {
+    expect(workstreamStatus(startAtgWorkstream(), NOW)).toEqual({ label: "Needs your review", color: "warning" });
+  });
+
+  test("an overdue owner: At risk", () => {
+    const climate = PAST_WORKSTREAMS.find((w) => w.name === "Climate disclosure readiness")!;
+    expect(workstreamStatus(climate, NOW)).toEqual({ label: "At risk", color: "error" });
+  });
+
+  test("nothing waiting: On track", () => {
+    const cyber = PAST_WORKSTREAMS.find((w) => w.name === "Cyber 8-K readiness")!;
+    expect(workstreamStatus(cyber, NOW)).toEqual({ label: "On track", color: "information" });
+  });
+
+  test("every task done: Done", () => {
+    const cyber = PAST_WORKSTREAMS.find((w) => w.name === "Cyber 8-K readiness")!;
+    const done = { ...cyber, plan: { ...cyber.plan, tasks: cyber.plan.tasks.map((t) => ({ ...t, status: "Done" as const })) } };
+    expect(workstreamStatus(done, NOW)).toEqual({ label: "Done", color: "success" });
   });
 });

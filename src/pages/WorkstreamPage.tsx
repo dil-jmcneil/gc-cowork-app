@@ -36,9 +36,9 @@ import { workstreamFocusFromSearch, workstreamHref } from "@/workstreams/links";
 import { planEditFromChat } from "@/workstreams/planChat";
 import { summarizeTask } from "@/workstreams/taskStatus";
 import type { HistoryFile } from "@/workstreams/thread";
-import type { PlanRule, WorkstreamDraft } from "@/workstreams/workstream";
+import type { PlanRule, Workstream, WorkstreamDraft } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
-import { workstreamAttention } from "@/workstreams/workstreamAttention";
+import { workstreamAttention, workstreamStatus } from "@/workstreams/workstreamAttention";
 import { asksToStart, startWorkstream } from "@/workstreams/startWorkstream";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { sendUserMessage } from "@/runtime/assistantReply";
@@ -126,7 +126,11 @@ export default function WorkstreamPage() {
       ) : (
         <Container maxWidth="xl" sx={{ py: SPACE.section }}>
           <Stack gap={SPACE.section}>
-            <PageHeader eyebrow="Workstream" title={workstream.name} />
+            <PageHeader
+              eyebrow="Workstream"
+              title={workstream.name}
+              action={<WorkstreamStatusBadge workstream={workstream} now={now} />}
+            />
 
             <StatusSummary
               {...workstreamAttention(workstream, now)}
@@ -138,6 +142,8 @@ export default function WorkstreamPage() {
                 setToast(`Nudge sent to ${task.delegate.label}.`);
               }}
             />
+
+            <ContextSection reasonsRelevant={workstream.reasonsRelevant} signal={signal} defaultOpen={false} />
 
             <SectionCard
               title="Tasks"
@@ -210,7 +216,6 @@ export default function WorkstreamPage() {
               />
             </SectionCard>
 
-            <RelevanceAndSources reasonsRelevant={workstream.reasonsRelevant} signal={signal} />
             <RulesCard rules={workstream.plan.rules} />
           </Stack>
         </Container>
@@ -287,16 +292,20 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
     >
       <Container maxWidth="xl" sx={{ py: SPACE.section }}>
         <Stack gap={SPACE.section}>
-          <PageHeader eyebrow={signal.title} title="Create workstream" />
+          <PageHeader
+            eyebrow="Create workstream"
+            title={signal.title}
+            action={
+              // The button sends the same message you could type, so the chat shows how to work this page.
+              <Button variant="contained" onClick={() => sendUserMessage(chatId, START_WORKSTREAM, start())}>
+                Start workstream
+              </Button>
+            }
+          />
 
           <StatusSummary label="Summary" summary={signal.plan.brief} />
 
-          <SourceSignalCard signal={signal} />
-
-          <PeerCards>
-            <RelevanceCard reasonsRelevant={draft.reasonsRelevant} />
-            <KeyDatesCard deadlines={signal.deadlines} />
-          </PeerCards>
+          <ContextSection reasonsRelevant={draft.reasonsRelevant} signal={signal} defaultOpen />
 
           <SectionCard title="Plan">
             <Typography variant="body1">{draft.plan.proposedApproach}</Typography>
@@ -325,21 +334,14 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
           </SectionCard>
 
           <RulesCard rules={draft.plan.rules} />
-
-          <Stack direction="row" justifyContent="flex-end">
-            {/* The button sends the same message you could type, so the chat shows how to work this page. */}
-            <Button variant="contained" onClick={() => sendUserMessage(chatId, ACCEPT_AND_START, start())}>
-              Accept and start
-            </Button>
-          </Stack>
         </Stack>
       </Container>
     </SideChatLayout>
   );
 }
 
-/** What the Accept and start button posts in chat, as if you'd typed it. */
-const ACCEPT_AND_START = "Accept the plan and start the workstream.";
+/** What the Start workstream button posts in chat, as if you'd typed it. */
+const START_WORKSTREAM = "Accept the plan and start the workstream.";
 
 /** A link to `?task=` scrolls the page to that task once it has laid out. */
 function useScrollToTask(taskId: string | undefined) {
@@ -353,7 +355,8 @@ function useScrollToTask(taskId: string | undefined) {
   }, [taskId]);
 }
 
-function PageHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
+/** The eyebrow, then the title with its action (Start workstream, or the status badge) on the title's baseline. */
+function PageHeader({ eyebrow, title, action }: { eyebrow: string; title: string; action?: ReactNode }) {
   const { tokens } = useTheme();
   return (
     <Stack gap={SPACE.pair}>
@@ -363,11 +366,22 @@ function PageHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
       >
         {eyebrow}
       </Typography>
-      <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
-        {title}
-      </Typography>
+      <Stack direction="row" alignItems="baseline" justifyContent="space-between" gap={SPACE.block}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          {title}
+        </Typography>
+        {action ? <Box sx={{ flexShrink: 0 }}>{action}</Box> : null}
+      </Stack>
     </Stack>
   );
+}
+
+/** The whole workstream's status, in the same color as its summary. */
+function WorkstreamStatusBadge({ workstream, now }: { workstream: Workstream; now: Date }) {
+  const { presets } = useTheme();
+  const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const status = workstreamStatus(workstream, now);
+  return <StatusIndicator color={status.color} label={status.label} />;
 }
 
 /** Hidden unless the Demo settings toggle is on. */
@@ -423,18 +437,30 @@ function PeerCards({ children }: { children: ReactNode }) {
   );
 }
 
-/** The signal, why it matters, its key dates and its source, collapsed: once the workstream has started, you know them. */
-function RelevanceAndSources({ reasonsRelevant, signal }: { reasonsRelevant: string[]; signal?: Signal }) {
+/**
+ * Context: the Source strip, then Relevance and Key Dates side by side, inside
+ * one accordion in the same spot on both layouts. Open on Create, where you're
+ * deciding; closed once the workstream has started, since you know them.
+ */
+function ContextSection({
+  reasonsRelevant,
+  signal,
+  defaultOpen,
+}: {
+  reasonsRelevant: string[];
+  signal?: Signal;
+  defaultOpen: boolean;
+}) {
   const { tokens } = useTheme();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const muted = tokens.semantic.color.type.muted.value;
   const Caret = open ? CaretDownIcon : CaretRightIcon;
   return (
-    <Stack component="section" aria-labelledby="relevance-sources-heading" gap={SPACE.block}>
-      {/* A header outside the cards; opening it shows them as laid out on Create. */}
+    <Stack component="section" aria-labelledby="context-heading" gap={SPACE.block}>
+      {/* A header outside the cards; opening it shows the cards. */}
       <ButtonBase
         aria-expanded={open}
-        aria-controls="relevance-sources-details"
+        aria-controls="context-details"
         onClick={() => setOpen((v) => !v)}
         sx={{
           alignSelf: "flex-start",
@@ -444,23 +470,16 @@ function RelevanceAndSources({ reasonsRelevant, signal }: { reasonsRelevant: str
         }}
       >
         <Caret aria-hidden style={{ width: 20, height: 20, flexShrink: 0, color: muted }} />
-        <Stack>
-          <Typography
-            id="relevance-sources-heading"
-            variant="h6"
-            component="h2"
-            sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
-          >
-            Relevance, Key Dates and Source
-          </Typography>
-          {signal ? (
-            <Typography variant="textMd" sx={{ color: muted }}>
-              {signal.title} · {signal.source}
-            </Typography>
-          ) : null}
-        </Stack>
+        <Typography
+          id="context-heading"
+          variant="h6"
+          component="h2"
+          sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}
+        >
+          Context
+        </Typography>
       </ButtonBase>
-      <Collapse in={open} id="relevance-sources-details" unmountOnExit>
+      <Collapse in={open} id="context-details" unmountOnExit>
         <Stack gap={SPACE.block}>
           {signal ? <SourceSignalCard signal={signal} /> : null}
           <PeerCards>

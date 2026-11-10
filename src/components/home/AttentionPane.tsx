@@ -26,11 +26,13 @@ import {
   useTheme,
 } from "@mui/material";
 import { useState, type MouseEvent, type ReactNode } from "react";
-import { Link as RouterLink } from "react-router";
+import { Link as RouterLink, useNavigate } from "react-router";
 
 import { SignalDialog } from "@/components/home/SignalDialog";
 import { ATTENTION_ITEMS, type AttentionItem } from "@/home/attentionItems";
 import { attentionView, nextMonday, useAttentionStore } from "@/home/attentionStore";
+import { useMvpScopeStore } from "@/demo/mvpScopeStore";
+import { workstreamActionForSignal } from "@/signals/signalActions";
 import { SIGNALS } from "@/signals/signals";
 import { SPACE } from "@/lib/layout";
 import type { Workstream } from "@/workstreams/workstream";
@@ -42,7 +44,7 @@ type Toast = { message: string; undo: () => void };
 
 /**
  * Figma "Attention pane" (AI agentic playground, 3274:11121): a plain title,
- * then one card per item. Each card opens the signal's dialog, and its menu snoozes
+ * then one card per item. Each card opens the signal's workstream, and its menu snoozes
  * the item until next Monday or dismisses it.
  */
 export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { heading?: string }) {
@@ -55,10 +57,20 @@ export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { headi
   const openSignal = SIGNALS.find((c) => c.id === openSignalId) ?? null;
   const muted = tokens.semantic.color.type.muted.value;
 
-  // Each card opens the signal's dialog; from there you create or view its workstream.
+  const navigate = useNavigate();
+  const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
+  const workstreams = useWorkstreamStore((s) => s.workstreams);
+
+  // MVP: each card goes straight to its workstream (Create or View). The signal
+  // dialog stays for post-MVP views, and for signals with nothing to start.
   const open = (id: string) => {
     store.markSeen(id);
-    setOpenSignalId(id);
+    const signal = SIGNALS.find((c) => c.id === id);
+    const action = signal
+      ? workstreamActionForSignal(signal, workstreams.find((w) => w.sourceSignalId === id))
+      : { kind: "none" as const };
+    if (!showPostMvpViews && action.kind !== "none") navigate(action.href);
+    else setOpenSignalId(id);
   };
   const snooze = (item: AttentionItem) => {
     store.snooze(item.id);
