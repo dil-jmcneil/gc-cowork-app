@@ -121,3 +121,17 @@ export function workstreamAttention(workstream: Workstream, now: Date): Workstre
   }
   return { summary: progressSummary(workstream), tone: "information", waitingOnYou, waitingOnOthers };
 }
+
+export type WorkstreamStatus = {
+  label: "Needs your review" | "At risk" | "On track" | "Done";
+  color: "warning" | "error" | "information" | "success";
+};
+
+/** One badge for the whole workstream, in the same Atlas status color as its summary. */
+export function workstreamStatus(workstream: Workstream, now: Date): WorkstreamStatus {
+  if (workstream.plan.tasks.every((t) => t.status === "Done")) return { label: "Done", color: "success" };
+  const { tone } = workstreamAttention(workstream, now);
+  if (tone === "warning") return { label: "Needs your review", color: "warning" };
+  if (tone === "error") return { label: "At risk", color: "error" };
+  return { label: "On track", color: "information" };
+}
