@@ -27,9 +27,9 @@ Please prompt the user to get a new key from the Atlas documentation on Confluen
 
 ## Atlas React Bundle dependency
 
-We're using an https dependency in the package.json file to install the `@diligentcorp/atlas-react-bundle` package.
+The `@diligentcorp/atlas-react-bundle` package is vendored: `package.json` installs it from `vendor/atlas-react-bundle-0.0.1.tgz` in this repo. On Nov 10, 2026 the hosted tarball (`https://atlas.diligent.com/react-bundle.tgz`) started shipping without its `dist/` folder, which broke every fresh install (and Vercel deploys) with "Cannot find module '@diligentcorp/atlas-react-bundle'". The vendored copy is the last good bundle (from Oct 30).
 
-The contents of the bundle might change over time, so the integrity information in the package lock file might become outdated. You can always use forced methods to update the dependency or packages. Package lock files are intentionally ignored in the .gitignore file.
+To update it once the hosted bundle is fixed: download it, check that `tar tzf react-bundle.tgz | grep dist/index.js` finds the build, replace the file in `vendor/`, and reinstall. Or point `package.json` back at the URL. Package lock files are intentionally ignored in the .gitignore file.
 
 ## Styling
 
