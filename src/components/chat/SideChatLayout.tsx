@@ -1,9 +1,8 @@
 import type { CannedReply } from "@/chat/chatTypes";
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { useEffect, type ReactNode } from "react";
 
 import { PrototypeChatThread, type PrototypeChatThreadProps } from "./PrototypeChatThread";
-import { SPACE } from "@/lib/layout";
 
 /** Scrolls the page content (not the window or the chat) so the element sits `offset` px below its top. */
 export function scrollContentTo(element: HTMLElement, offset = 24): void {
@@ -58,15 +57,6 @@ export function SideChatLayout({
           surface="default"
           onUserMessage={onUserMessage}
           onSurfaceAction={onSurfaceAction}
-          header={
-            <Typography
-              variant="h6"
-              component="h2"
-              sx={{ py: SPACE.group, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
-            >
-              Chat with Cowork
-            </Typography>
-          }
         />
       </Box>
     </Box>

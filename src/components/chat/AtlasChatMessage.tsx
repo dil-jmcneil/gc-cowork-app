@@ -5,14 +5,16 @@ import {
   AIChatMessageHeader,
   AIChatMessageTextBlock,
   AIChatReasoningBlock,
-  AIChatSuggestedActions,
   AIChatSystemMessage,
   AIChatUserMessage,
 } from "@diligentcorp/atlas-react-bundle";
+import AddUserIcon from "@diligentcorp/atlas-react-bundle/icons/AddUser";
 import CopyIcon from "@diligentcorp/atlas-react-bundle/icons/Copy";
 import DownloadIcon from "@diligentcorp/atlas-react-bundle/icons/Download";
+import EditIcon from "@diligentcorp/atlas-react-bundle/icons/Edit";
 import ExpandDownIcon from "@diligentcorp/atlas-react-bundle/icons/ExpandDown";
-import { Box, Button, Collapse, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
+import PlayIcon from "@diligentcorp/atlas-react-bundle/icons/Play";
+import { Box, Button, ButtonBase, Collapse, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useId, useState } from "react";
 
 import { extractTextFromParts } from "@/chat/chatMessageUtils";
@@ -27,6 +29,8 @@ import type {
 } from "@/chat/chatTypes";
 import { A2uiSurface } from "@/components/chat/A2uiSurface";
 import { useChatActions } from "@/components/chat/chatActions";
+import { SPACE } from "@/lib/layout";
+import { ADD_OWNERS, MAKE_CHANGES, START_WORKSTREAM_ACTION } from "@/workstreams/ownerForm";
 import { ToolCall, ToolGroup } from "@/components/chat/ToolCall";
 import { SignalList } from "@/components/chat/SignalList";
 import { chatBodyTypography } from "./chatTypography";
@@ -322,19 +326,46 @@ function WorkGroup({
   );
 }
 
-/** Atlas suggested actions: each button sends its label as your message. */
+/** An icon for each suggested action Cowork offers; anything else gets none. */
+const SUGGESTED_ACTION_ICONS: Record<string, typeof EditIcon> = {
+  [MAKE_CHANGES]: EditIcon,
+  [ADD_OWNERS]: AddUserIcon,
+  [START_WORKSTREAM_ACTION]: PlayIcon,
+};
+
+/** Suggested actions as a plain list of icon + label rows; each sends its label as your message. */
 function SuggestedActions({ actions }: { actions: string[] }) {
   const chat = useChatActions();
+  const { tokens } = useTheme();
   if (!chat) return null;
   return (
-    <AIChatSuggestedActions
-      label="Suggested actions"
-      buttons={actions.map((label) => (
-        <Button key={label} variant="outlined" size="small" onClick={() => chat.send(label)}>
-          {label}
-        </Button>
-      ))}
-    />
+    <Stack component="ul" aria-label="Suggested actions" sx={{ listStyle: "none", m: 0, p: 0 }}>
+      {actions.map((label) => {
+        const Icon = SUGGESTED_ACTION_ICONS[label];
+        return (
+          <li key={label}>
+            <ButtonBase
+              onClick={() => chat.send(label)}
+              sx={{
+                width: "100%",
+                justifyContent: "flex-start",
+                gap: SPACE.group,
+                py: SPACE.item,
+                px: SPACE.item,
+                mx: -SPACE.item,
+                borderRadius: tokens.semantic.radius.sm.value,
+                color: tokens.semantic.color.type.default.value,
+                textAlign: "left",
+                "&:hover": { bgcolor: tokens.semantic.color.action.secondary.hoverFill.value },
+              }}
+            >
+              {Icon ? <Icon aria-hidden style={{ width: 20, height: 20, flexShrink: 0 }} /> : null}
+              <Typography variant="body1">{label}</Typography>
+            </ButtonBase>
+          </li>
+        );
+      })}
+    </Stack>
   );
 }
 
@@ -530,7 +561,8 @@ export function AtlasChatMessage({
         )
       }
       footer={
-        !isStreaming && text ? (
+        // The side chat has no footer: no divider, no copy action.
+        !hideAgentHeader && !isStreaming && text ? (
           variant === "refreshed" ? (
             <Stack alignItems="flex-end">
               <CopyMessageAction text={text} />
