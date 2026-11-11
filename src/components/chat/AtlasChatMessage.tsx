@@ -8,14 +8,29 @@ import {
   AIChatSystemMessage,
   AIChatUserMessage,
 } from "@diligentcorp/atlas-react-bundle";
+import AddUserIcon from "@diligentcorp/atlas-react-bundle/icons/AddUser";
 import CopyIcon from "@diligentcorp/atlas-react-bundle/icons/Copy";
 import DownloadIcon from "@diligentcorp/atlas-react-bundle/icons/Download";
+import EditIcon from "@diligentcorp/atlas-react-bundle/icons/Edit";
 import ExpandDownIcon from "@diligentcorp/atlas-react-bundle/icons/ExpandDown";
-import { Box, Button, Collapse, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
+import PlayIcon from "@diligentcorp/atlas-react-bundle/icons/Play";
+import { Box, Button, ButtonBase, Collapse, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useId, useState } from "react";
 
 import { extractTextFromParts } from "@/chat/chatMessageUtils";
-import type { ChatMessage, ChatPart, ChatReasoningPart, ChatToolPart, ChatSignalListPart } from "@/chat/chatTypes";
+import type {
+  ChatA2uiPart,
+  ChatMessage,
+  ChatPart,
+  ChatReasoningPart,
+  ChatSignalListPart,
+  ChatSuggestedActionsPart,
+  ChatToolPart,
+} from "@/chat/chatTypes";
+import { A2uiSurface } from "@/components/chat/A2uiSurface";
+import { useChatActions } from "@/components/chat/chatActions";
+import { SPACE } from "@/lib/layout";
+import { ADD_OWNERS, MAKE_CHANGES, START_WORKSTREAM_ACTION } from "@/workstreams/ownerForm";
 import { ToolCall, ToolGroup } from "@/components/chat/ToolCall";
 import { SignalList } from "@/components/chat/SignalList";
 import { chatBodyTypography } from "./chatTypography";
@@ -165,7 +180,9 @@ type MessageSegment =
   | { kind: "reasoning"; key: string; reasoning: ChatReasoningPart[] }
   | { kind: "tools"; key: string; tools: ChatToolPart[] }
   | { kind: "text"; key: string; text: string }
-  | { kind: "signal-list"; key: string; part: ChatSignalListPart };
+  | { kind: "signal-list"; key: string; part: ChatSignalListPart }
+  | { kind: "suggested-actions"; key: string; part: ChatSuggestedActionsPart }
+  | { kind: "a2ui"; key: string; part: ChatA2uiPart };
 
 /**
  * Collapses the flat parts list into ordered, render-ready segments: runs of
@@ -188,6 +205,10 @@ function buildSegments(parts: ChatPart[]): MessageSegment[] {
       else segments.push({ kind: "text", key: `x-${index}`, text: part.text });
     } else if (part.type === "signal-list") {
       segments.push({ kind: "signal-list", key: `l-${index}`, part });
+    } else if (part.type === "suggested-actions") {
+      segments.push({ kind: "suggested-actions", key: `s-${index}`, part });
+    } else if (part.type === "a2ui") {
+      segments.push({ kind: "a2ui", key: `u-${index}`, part });
     }
   });
   return segments;
@@ -305,6 +326,49 @@ function WorkGroup({
   );
 }
 
+/** An icon for each suggested action Cowork offers; anything else gets none. */
+const SUGGESTED_ACTION_ICONS: Record<string, typeof EditIcon> = {
+  [MAKE_CHANGES]: EditIcon,
+  [ADD_OWNERS]: AddUserIcon,
+  [START_WORKSTREAM_ACTION]: PlayIcon,
+};
+
+/** Suggested actions as a plain list of icon + label rows; each sends its label as your message. */
+function SuggestedActions({ actions }: { actions: string[] }) {
+  const chat = useChatActions();
+  const { tokens } = useTheme();
+  if (!chat) return null;
+  return (
+    <Stack component="ul" aria-label="Suggested actions" sx={{ listStyle: "none", m: 0, p: 0 }}>
+      {actions.map((label) => {
+        const Icon = SUGGESTED_ACTION_ICONS[label];
+        return (
+          <li key={label}>
+            <ButtonBase
+              onClick={() => chat.send(label)}
+              sx={{
+                width: "100%",
+                justifyContent: "flex-start",
+                gap: SPACE.group,
+                py: SPACE.item,
+                px: SPACE.item,
+                mx: -SPACE.item,
+                borderRadius: tokens.semantic.radius.sm.value,
+                color: tokens.semantic.color.type.default.value,
+                textAlign: "left",
+                "&:hover": { bgcolor: tokens.semantic.color.action.secondary.hoverFill.value },
+              }}
+            >
+              {Icon ? <Icon aria-hidden style={{ width: 20, height: 20, flexShrink: 0 }} /> : null}
+              <Typography variant="body1">{label}</Typography>
+            </ButtonBase>
+          </li>
+        );
+      })}
+    </Stack>
+  );
+}
+
 function MessageTextSegment({ text }: { text: string }) {
   if (!text) return null;
 
@@ -355,8 +419,11 @@ export function AtlasChatMessage({
   message,
   showWorkingIndicator = false,
   hideAgentHeader = false,
+  isLatest = false,
 }: {
   message: ChatMessage;
+  /** Suggested actions show only on the latest message, so old ones can't be clicked out of order. */
+  isLatest?: boolean;
   /** The side chat shows agent messages without the timestamp header. */
   hideAgentHeader?: boolean;
   /** The conversation owns which single Working/Thinking block gets the mark. */
@@ -469,7 +536,9 @@ export function AtlasChatMessage({
   // yet (there's no non-work segment at all), which is also how we tell
   // "still working" from "done working, now writing the answer".
   const workEndIndex = (() => {
-    const idx = segments.findIndex((segment) => segment.kind === "text" || segment.kind === "signal-list");
+    const idx = segments.findIndex(
+      (segment) => segment.kind !== "reasoning" && segment.kind !== "tools",
+    );
     return idx === -1 ? segments.length : idx;
   })();
   const workSegments = segments.slice(0, workEndIndex);
@@ -492,7 +561,8 @@ export function AtlasChatMessage({
         )
       }
       footer={
-        !isStreaming && text ? (
+        // The side chat has no footer: no divider, no copy action.
+        !hideAgentHeader && !isStreaming && text ? (
           variant === "refreshed" ? (
             <Stack alignItems="flex-end">
               <CopyMessageAction text={text} />
@@ -538,6 +608,10 @@ export function AtlasChatMessage({
               <ToolCallList tools={segment.tools} />
             ) : segment.kind === "signal-list" ? (
               <SignalList items={segment.part.items} />
+            ) : segment.kind === "suggested-actions" ? (
+              isLatest && !isStreaming ? <SuggestedActions actions={segment.part.actions} /> : null
+            ) : segment.kind === "a2ui" ? (
+              <A2uiSurface surface={segment.part.surface} messageId={message.id} />
             ) : (
               <MessageTextSegment text={segment.text} />
             )}

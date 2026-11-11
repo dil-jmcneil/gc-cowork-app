@@ -1,19 +1,28 @@
+import type { CannedReply } from "@/chat/chatTypes";
 import { AIChatContent, AIChatContextProvider } from "@diligentcorp/atlas-react-bundle";
 import { Box, Stack } from "@mui/material";
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { AtlasChatBoxComposerInner } from "@/components/chat/AtlasChatBoxComposer";
 import { AtlasChatMessages } from "@/components/chat/AtlasChatMessages";
+import { ChatActionsContext, type ChatActions } from "@/components/chat/chatActions";
+import type { A2uiActionEvent } from "@/chat/a2ui";
+import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import { useChatRuntime } from "@/runtime/useChatRuntime";
 
-type PrototypeChatThreadProps = {
+export type PrototypeChatThreadProps = {
   chatId: string;
   header?: ReactNode;
   /** Page surface behind the thread: "subtle" (main chat) or "default" (white side panel). */
   surface?: "subtle" | "default";
   /** Runs when the user sends a message; a returned string becomes the assistant's reply. */
-  onUserMessage?: (text: string) => string | undefined;
+  onUserMessage?: (text: string) => CannedReply | undefined;
+  /** Runs when an A2UI surface in the thread fires its action: what to post as you, and the reply. */
+  onSurfaceAction?: (event: A2uiActionEvent) => SurfaceActionResult | undefined;
 };
+
+/** What a surface action posts in the thread: your message, then Cowork's reply. */
+export type SurfaceActionResult = { userText: string; reply?: CannedReply };
 
 // Shared content box so message bubbles and the composer share the same
 // horizontal bounds: the right edge of a user bubble lines up with the right
@@ -22,8 +31,33 @@ type PrototypeChatThreadProps = {
 const CHAT_CONTENT_MAX_WIDTH = 916;
 const CHAT_CONTENT_PX = { xs: 2, sm: 3 };
 
-export function PrototypeChatThread({ chatId, header, surface = "subtle", onUserMessage }: PrototypeChatThreadProps) {
+export function PrototypeChatThread({
+  chatId,
+  header,
+  surface = "subtle",
+  onUserMessage,
+  onSurfaceAction,
+}: PrototypeChatThreadProps) {
   const { messages, sendMessage, stop, isStreaming } = useChatRuntime(chatId);
+  const actions: ChatActions = {
+    send: (text) => {
+      if (!isStreaming) sendMessage(text, onUserMessage?.(text));
+    },
+    submitSurface: (messageId, data, event) => {
+      if (isStreaming) return;
+      // Keep what was entered, read-only, in the message.
+      useChatMessagesStore.getState().updateMessage(chatId, messageId, (message) => ({
+        ...message,
+        parts: message.parts.map((part) =>
+          part.type === "a2ui" && part.surface.surfaceId === event.surfaceId
+            ? { ...part, surface: { ...part.surface, dataModel: data, submitted: true } }
+            : part,
+        ),
+      }));
+      const result = onSurfaceAction?.(event);
+      if (result) sendMessage(result.userText, result.reply);
+    },
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Re-anchor to the bottom when messages change; a double rAF lets new
@@ -45,6 +79,7 @@ export function PrototypeChatThread({ chatId, header, surface = "subtle", onUser
 
   return (
     <AIChatContextProvider>
+      <ChatActionsContext.Provider value={actions}>
       <Stack
         sx={({ tokens }) => ({
           flex: 1,
@@ -127,6 +162,7 @@ export function PrototypeChatThread({ chatId, header, surface = "subtle", onUser
           </Box>
         </Box>
       </Stack>
+      </ChatActionsContext.Provider>
     </AIChatContextProvider>
   );
 }

@@ -1,3 +1,4 @@
+import type { CannedReply } from "@/chat/chatTypes";
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import type { ChatMessage } from "@/chat/chatTypes";
 import { sendUserMessage, stopAssistantReply } from "@/runtime/assistantReply";
@@ -7,7 +8,7 @@ const EMPTY_MESSAGES: ChatMessage[] = [];
 export type ChatRuntime = {
   messages: ChatMessage[];
   /** `replyText` overrides the mock reply. */
-  sendMessage: (text: string, replyText?: string) => void;
+  sendMessage: (text: string, replyText?: CannedReply) => void;
   stop: () => void;
   isStreaming: boolean;
 };

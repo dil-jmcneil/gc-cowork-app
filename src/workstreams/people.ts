@@ -95,3 +95,28 @@ export function suggestOwners(
 export function ownerShortName(owner: TaskOwner): string {
   return /[@.]/.test(owner.label) ? owner.label : owner.label.split(" ")[0];
 }
+
+/** A draft task nobody owns yet: Cowork doesn't know who should, so the GC adds owners in chat. */
+export const UNASSIGNED_OWNER: TaskOwner = { id: "unassigned", label: "Not assigned", detail: "", kind: "directory" };
+
+export function isUnassigned(owner: TaskOwner): boolean {
+  return owner.id === UNASSIGNED_OWNER.id;
+}
+
+export type OwnerEntry = { firstName: string; lastName: string; email: string };
+
+export const COMPANY_DOMAIN = "acme.com";
+
+/**
+ * The owner the GC typed in: the directory person when the email matches one,
+ * otherwise a new contact, inside Acme for an @acme.com address and outside
+ * (email only, the GC confirms their work) for anything else.
+ */
+export function ownerFromEntry(entry: OwnerEntry): TaskOwner {
+  const email = entry.email.trim().toLowerCase();
+  const label = `${entry.firstName.trim()} ${entry.lastName.trim()}`.trim();
+  const known = [...DIRECTORY, ...OUTSIDE_CONTACTS].find((p) => p.id === email || p.id === `email:${email}`);
+  if (known) return { ...known, label: label || known.label };
+  if (email.endsWith(`@${COMPANY_DOMAIN}`)) return { id: email, label, detail: `Acme · ${email}`, kind: "directory" };
+  return { id: `email:${email}`, label, detail: `Outside Acme · ${email}`, kind: "email" };
+}
