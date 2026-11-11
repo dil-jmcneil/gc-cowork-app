@@ -1,7 +1,8 @@
+import type { CannedReply } from "@/chat/chatTypes";
 import { Box, Typography, useTheme } from "@mui/material";
 import { useEffect, type ReactNode } from "react";
 
-import { PrototypeChatThread } from "./PrototypeChatThread";
+import { PrototypeChatThread, type PrototypeChatThreadProps } from "./PrototypeChatThread";
 import { SPACE } from "@/lib/layout";
 
 /** Scrolls the page content (not the window or the chat) so the element sits `offset` px below its top. */
@@ -21,10 +22,12 @@ export function scrollContentToTop(): void {
 export function SideChatLayout({
   chatId,
   onUserMessage,
+  onSurfaceAction,
   children,
 }: {
   chatId: string;
-  onUserMessage?: (text: string) => string | undefined;
+  onUserMessage?: (text: string) => CannedReply | undefined;
+  onSurfaceAction?: PrototypeChatThreadProps["onSurfaceAction"];
   children: ReactNode;
 }) {
   const { tokens } = useTheme();
@@ -54,6 +57,7 @@ export function SideChatLayout({
           chatId={chatId}
           surface="default"
           onUserMessage={onUserMessage}
+          onSurfaceAction={onSurfaceAction}
           header={
             <Typography
               variant="h6"

@@ -1,3 +1,4 @@
+import type { CannedReply } from "@/chat/chatTypes";
 import { makeMessageId } from "@/chat/chatMessageUtils";
 import { useChatMessagesStore } from "@/chat/chatMessagesStore";
 import { streamMockReply } from "@/chat/mockChatAdapter";
@@ -18,7 +19,7 @@ export function isChatStreaming(chatId: string): boolean {
  * Streams a mock reply to `prompt`, or `replyText` when the caller supplies its
  * own. Returns false if a reply is already streaming.
  */
-export function startAssistantReply(chatId: string, prompt: string, replyText?: string): boolean {
+export function startAssistantReply(chatId: string, prompt: string, replyText?: CannedReply): boolean {
   if (isChatStreaming(chatId)) return false;
   const store = useChatMessagesStore.getState();
   const assistantId = makeMessageId();
@@ -48,7 +49,7 @@ export function startAssistantReply(chatId: string, prompt: string, replyText?: 
 }
 
 /** Appends the user's message and starts a reply. False when blank or busy. */
-export function sendUserMessage(chatId: string, text: string, replyText?: string): boolean {
+export function sendUserMessage(chatId: string, text: string, replyText?: CannedReply): boolean {
   const trimmed = text.trim();
   if (!trimmed || isChatStreaming(chatId)) return false;
   useChatMessagesStore.getState().appendUserText(chatId, trimmed);

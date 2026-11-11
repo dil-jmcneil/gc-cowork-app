@@ -1,3 +1,4 @@
+import type { A2uiSurface } from "@/chat/a2ui";
 import type { Signal } from "@/signals/signal";
 
 /**
@@ -75,12 +76,29 @@ export type ChatSignalListPart = {
   items: Signal[];
 };
 
+/** Buttons under a message; clicking one sends its label as if you'd typed it. */
+export type ChatSuggestedActionsPart = {
+  type: "suggested-actions";
+  actions: string[];
+};
+
+/** An A2UI surface (v0.9 components plus its data model) rendered inside the message. */
+export type ChatA2uiPart = {
+  type: "a2ui";
+  surface: A2uiSurface;
+};
+
 export type ChatPart =
   | ChatTextPart
   | ChatReasoningPart
   | ChatToolPart
   | ChatSourcePart
-  | ChatSignalListPart;
+  | ChatSignalListPart
+  | ChatSuggestedActionsPart
+  | ChatA2uiPart;
+
+/** A scripted reply: plain text, or text followed by interactive parts. */
+export type CannedReply = string | { text: string; parts?: ChatPart[] };
 
 export type ChatMessageStatus = "streaming" | "done";
 
@@ -119,5 +137,6 @@ export type ChatStreamChunk =
   | { type: "source"; sourceId: string; url: string; title: string }
   | { type: "text-delta"; delta: string }
   | { type: "signal-list"; items: Signal[] }
+  | { type: "part"; part: ChatSuggestedActionsPart | ChatA2uiPart }
   | { type: "finish" }
   | { type: "abort" };

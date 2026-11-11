@@ -7,7 +7,7 @@ import { SPACE } from "@/lib/layout";
 import { orderedTasks, taskDisplayStatus, type TaskDisplayLabel } from "@/workstreams/taskStatus";
 import type { HistoryFile } from "@/workstreams/thread";
 import type { TaskStatus, WorkstreamTask } from "@/workstreams/workstream";
-import type { TaskOwner } from "@/workstreams/people";
+import { isUnassigned, type TaskOwner } from "@/workstreams/people";
 
 import { DocumentChip } from "./DocumentChip";
 import { OwnerTypeahead } from "./OwnerTypeahead";
@@ -311,6 +311,14 @@ export function taskAnchorId(taskId: string): string {
 
 function OwnerValue({ owner }: { owner: TaskOwner }) {
   const { tokens } = useTheme();
+  // Cowork doesn't know who owns a new draft's tasks; you add them in chat.
+  if (isUnassigned(owner)) {
+    return (
+      <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value, fontStyle: "italic" }}>
+        Not assigned
+      </Typography>
+    );
+  }
   return (
     <Stack>
       <Typography variant="body1">{owner.label}</Typography>

@@ -19,10 +19,11 @@ export function AtlasChatMessages({
   const placement = brandActivityPlacement(messages);
   return (
     <>
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <AtlasChatMessage
           key={message.id}
           message={message}
+          isLatest={index === messages.length - 1}
           hideAgentHeader={hideAgentHeader}
           showWorkingIndicator={refreshed && placement.kind === "working" && placement.messageId === message.id}
         />

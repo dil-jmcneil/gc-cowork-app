@@ -69,7 +69,7 @@ function CreateWorkstreamForm({ initialDraft }: { initialDraft: WorkstreamDraft 
   const signal = SIGNALS.find((c) => c.id === draft.sourceSignalId)!;
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
 
-  useEffect(() => seedDraftChat(signal), [signal]);
+  useEffect(() => seedDraftChat(signal, initialDraft.plan.tasks.length), [signal, initialDraft]);
 
   const setPlan = (patch: Partial<WorkstreamDraft["plan"]>) =>
     setDraft((d) => ({ ...d, plan: { ...d.plan, ...patch } }));

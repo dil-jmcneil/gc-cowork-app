@@ -34,9 +34,23 @@ import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { draftChatId, seedDraftChat } from "@/workstreams/draftChat";
 import { workstreamFocusFromSearch, workstreamHref } from "@/workstreams/links";
 import { planEditFromChat } from "@/workstreams/planChat";
-import { summarizeTask } from "@/workstreams/taskStatus";
+import { orderedTasks, summarizeTask } from "@/workstreams/taskStatus";
 import type { HistoryFile } from "@/workstreams/thread";
-import type { PlanRule, Workstream, WorkstreamDraft } from "@/workstreams/workstream";
+import type { CannedReply } from "@/chat/chatTypes";
+import {
+  ADD_OWNERS,
+  ASSIGN_OWNERS_EVENT,
+  asksToAddOwners,
+  asksToChangePlan,
+  assignOwners,
+  MAKE_CHANGES,
+  ownerFormSurface,
+  ownersFromContext,
+  START_WORKSTREAM_ACTION,
+  unassignedCount,
+} from "@/workstreams/ownerForm";
+import { isOutsideOwner, isUnassigned } from "@/workstreams/people";
+import type { PlanRule, Workstream, WorkstreamDraft, WorkstreamTask } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
 import { workstreamAttention, workstreamStatus } from "@/workstreams/workstreamAttention";
 import { asksToStart, startWorkstream } from "@/workstreams/startWorkstream";
@@ -266,10 +280,14 @@ export function DraftWorkstreamPage() {
 function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   const navigate = useNavigate();
   const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
-  const [draft, setDraft] = useState<WorkstreamDraft>(() => draftWorkstreamFromSignal(signal));
+  // Cowork doesn't know who should own each task: you add owners in chat.
+  const [draft, setDraft] = useState<WorkstreamDraft>(() =>
+    draftWorkstreamFromSignal(signal, { owners: "unassigned" }),
+  );
   const chatId = draftChatId(signal.id);
+  const missingOwners = unassignedCount(draft.plan.tasks);
 
-  useEffect(() => seedDraftChat(signal), [signal]);
+  useEffect(() => seedDraftChat(signal, signal.plan.tasks.length), [signal]);
 
   /** Start the workstream and open it; Cowork's reply in chat says what it's sending. */
   const start = () => {
@@ -283,11 +301,21 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
       chatId={chatId}
       onUserMessage={(text) => {
         // Typing "Start" here does the same as the button: the chat is how you work this page.
-        if (asksToStart(text)) return start();
+        if (asksToStart(text)) return missingOwners ? ownersFirstReply(missingOwners) : start();
+        if (asksToAddOwners(text)) return ownerFormReply(draft.plan.tasks);
+        if (asksToChangePlan(text)) return CHANGE_PLAN_REPLY;
         const edit = planEditFromChat(draft.plan, text);
         if (!edit) return undefined;
         setDraft((d) => ({ ...d, plan: edit.plan }));
-        return edit.reply;
+        return unassignedCount(edit.plan.tasks)
+          ? { text: edit.reply, parts: [{ type: "suggested-actions", actions: [ADD_OWNERS] }] }
+          : edit.reply;
+      }}
+      onSurfaceAction={(event) => {
+        if (event.name !== ASSIGN_OWNERS_EVENT) return undefined;
+        const tasks = assignOwners(draft.plan.tasks, ownersFromContext(event.context));
+        setDraft((d) => ({ ...d, plan: { ...d.plan, tasks } }));
+        return { userText: "Here are the owners.", reply: ownersAddedReply(tasks) };
       }}
     >
       <Container maxWidth="xl" sx={{ py: SPACE.section }}>
@@ -297,7 +325,12 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
             title={signal.title}
             action={
               // The button sends the same message you could type, so the chat shows how to work this page.
-              <Button variant="contained" onClick={() => sendUserMessage(chatId, START_WORKSTREAM, start())}>
+              // Held until every task has an owner: Cowork needs someone to email.
+              <Button
+                variant="contained"
+                disabled={missingOwners > 0}
+                onClick={() => sendUserMessage(chatId, START_WORKSTREAM, start())}
+              >
                 Start workstream
               </Button>
             }
@@ -327,10 +360,20 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
                   : undefined
               }
             />
-            <Alert severity="info">
-              When you start, Cowork emails each owner their task, its deadline and what done looks like, then follows
-              up until it's done. Nothing goes out before you start.
-            </Alert>
+            {missingOwners ? (
+              <Alert severity="warning">
+                {missingOwners === draft.plan.tasks.length
+                  ? "No tasks have owners yet."
+                  : `${missingOwners} of ${draft.plan.tasks.length} tasks don't have an owner yet.`}{" "}
+                Add owners in the chat, then start. Cowork emails each owner their task, deadline and what done looks
+                like.
+              </Alert>
+            ) : (
+              <Alert severity="info">
+                When you start, Cowork emails each owner their task, its deadline and what done looks like, then
+                follows up until it's done. Nothing goes out before you start.
+              </Alert>
+            )}
           </SectionCard>
 
           <RulesCard rules={draft.plan.rules} />
@@ -338,6 +381,35 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
       </Container>
     </SideChatLayout>
   );
+}
+
+const CHANGE_PLAN_REPLY =
+  'Tell me what to change, by task number. For example, "remove task 4", or "remove task 4 and move its closing step to task 3".';
+
+/** Cowork's reply to "Add owners to tasks": the A2UI owner form, one card per task. */
+function ownerFormReply(tasks: WorkstreamTask[]): CannedReply {
+  return {
+    text: "**Add an owner for each task.**\n\nI'll email each owner their task when you start.",
+    parts: [{ type: "a2ui", surface: ownerFormSurface(tasks) }],
+  };
+}
+
+function ownersFirstReply(missing: number): CannedReply {
+  return {
+    text: `**Add owners first.** ${missing === 1 ? "One task doesn't" : `${missing} tasks don't`} have an owner, so there's no one to email yet.`,
+    parts: [{ type: "suggested-actions", actions: [ADD_OWNERS] }],
+  };
+}
+
+function ownersAddedReply(tasks: WorkstreamTask[]): CannedReply {
+  const lines = orderedTasks(tasks).map(
+    (task, i) =>
+      `${i + 1}. ${task.description}: ${isUnassigned(task.delegate) ? "no owner yet" : task.delegate.label}${isOutsideOwner(task.delegate) && !isUnassigned(task.delegate) ? " (outside Acme: you'll see my first email before it goes)" : ""}`,
+  );
+  return {
+    text: [`**Owners added.** Start the workstream when the plan looks right.`, lines.join("\n")].join("\n\n"),
+    parts: [{ type: "suggested-actions", actions: [START_WORKSTREAM_ACTION, MAKE_CHANGES] }],
+  };
 }
 
 /** What the Start workstream button posts in chat, as if you'd typed it. */

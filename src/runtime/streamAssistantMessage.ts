@@ -103,6 +103,10 @@ export async function streamAssistantMessage(
           parts.push({ type: "signal-list", items: chunk.items });
           flush();
           break;
+        case "part":
+          parts.push(chunk.part);
+          flush();
+          break;
         case "source":
         case "finish":
         case "abort":
