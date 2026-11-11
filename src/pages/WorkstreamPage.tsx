@@ -15,7 +15,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 
 import { startChatFromPrompt } from "@/chat/startChat";
@@ -49,7 +49,7 @@ import {
   START_WORKSTREAM_ACTION,
   unassignedCount,
 } from "@/workstreams/ownerForm";
-import { isOutsideOwner, isUnassigned } from "@/workstreams/people";
+import { isOutsideOwner, isUnassigned, type TaskOwner } from "@/workstreams/people";
 import type { PlanRule, Workstream, WorkstreamDraft, WorkstreamTask } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
 import { workstreamAttention, workstreamStatus } from "@/workstreams/workstreamAttention";
@@ -286,6 +286,11 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   );
   const chatId = draftChatId(signal.id);
   const missingOwners = unassignedCount(draft.plan.tasks);
+  // Demo: the owners the story is written for pre-fill the owner form.
+  const demoOwners = useMemo(
+    () => Object.fromEntries(draftWorkstreamFromSignal(signal).plan.tasks.map((t) => [t.id, t.delegate])),
+    [signal],
+  );
 
   useEffect(() => seedDraftChat(signal, signal.plan.tasks.length), [signal]);
 
@@ -302,7 +307,7 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
       onUserMessage={(text) => {
         // Typing "Start" here does the same as the button: the chat is how you work this page.
         if (asksToStart(text)) return missingOwners ? ownersFirstReply(missingOwners) : start();
-        if (asksToAddOwners(text)) return ownerFormReply(draft.plan.tasks);
+        if (asksToAddOwners(text)) return ownerFormReply(draft.plan.tasks, demoOwners);
         if (asksToChangePlan(text)) return CHANGE_PLAN_REPLY;
         const edit = planEditFromChat(draft.plan, text);
         if (!edit) return undefined;
@@ -387,10 +392,10 @@ const CHANGE_PLAN_REPLY =
   'Tell me what to change, by task number. For example, "remove task 4", or "remove task 4 and move its closing step to task 3".';
 
 /** Cowork's reply to "Add owners to tasks": the A2UI owner form, one card per task. */
-function ownerFormReply(tasks: WorkstreamTask[]): CannedReply {
+function ownerFormReply(tasks: WorkstreamTask[], prefill: Record<string, TaskOwner>): CannedReply {
   return {
     text: "**Add an owner for each task.**\n\nI'll email each owner their task when you start.",
-    parts: [{ type: "a2ui", surface: ownerFormSurface(tasks) }],
+    parts: [{ type: "a2ui", surface: ownerFormSurface(tasks, prefill) }],
   };
 }
 

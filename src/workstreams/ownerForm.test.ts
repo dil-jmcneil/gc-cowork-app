@@ -60,3 +60,15 @@ test("the GC can ask for the owner form in their own words", () => {
   for (const text of ["Add owners to tasks", "assign owners", "Set the owners"]) expect(asksToAddOwners(text)).toBe(true);
   expect(asksToAddOwners("Who owns task 2?")).toBe(false);
 });
+
+test("for the demo, the form can start pre-filled with the story's owners", () => {
+  const suggested = draftWorkstreamFromSignal(ATG_RULING).plan.tasks;
+  const prefill = Object.fromEntries(suggested.map((t) => [t.id, t.delegate]));
+  const surface = ownerFormSurface(draft().plan.tasks, prefill);
+  expect((surface.dataModel.owners as { firstName: string; lastName: string; email: string }[])[0]).toMatchObject({
+    firstName: "Dana",
+    lastName: "Whitfield",
+    email: "dana.whitfield@whitfieldcrane.com",
+  });
+  expect(missingRequired(surface, surface.dataModel)).toEqual([]);
+});

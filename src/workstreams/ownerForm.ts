@@ -31,7 +31,11 @@ export function unassignedCount(tasks: WorkstreamTask[]): number {
  * The A2UI owner form: one card per task, in plan order, each asking for the
  * owner's first name, last name and email; one button submits them all.
  */
-export function ownerFormSurface(tasks: WorkstreamTask[]): A2uiSurface {
+export function ownerFormSurface(
+  tasks: WorkstreamTask[],
+  /** Demo: owners to pre-fill by task id, so the presenter doesn't type them all. You can still edit them. */
+  prefill: Record<string, TaskOwner> = {},
+): A2uiSurface {
   const ordered = orderedTasks(tasks);
   const components: A2uiComponent[] = [];
   const cards = ordered.map((task, i) => {
@@ -72,7 +76,10 @@ export function ownerFormSurface(tasks: WorkstreamTask[]): A2uiSurface {
     root: "root",
     components,
     dataModel: {
-      owners: ordered.map((task) => ({ taskId: task.id, ...entryFor(task.delegate) })),
+      owners: ordered.map((task) => ({
+        taskId: task.id,
+        ...entryFor(isUnassigned(task.delegate) && prefill[task.id] ? prefill[task.id] : task.delegate),
+      })),
     },
   };
 }
