@@ -1,6 +1,5 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
 import FolderIcon from "@diligentcorp/atlas-react-bundle/icons/Folder";
-import HistoryIcon from "@diligentcorp/atlas-react-bundle/icons/History";
 import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import {
   Alert,
@@ -27,7 +26,6 @@ import { SectionCard } from "@/components/workstreams/SectionCard";
 import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
 import { RuleTable } from "@/components/workstreams/RuleTable";
-import { ActivityLogDialog } from "@/components/workstreams/ActivityLogDialog";
 import { taskAnchorId, TaskTable } from "@/components/workstreams/TaskTable";
 import { useMvpScopeStore } from "@/demo/mvpScopeStore";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
@@ -49,7 +47,7 @@ import {
   START_WORKSTREAM_ACTION,
   unassignedCount,
 } from "@/workstreams/ownerForm";
-import { isOutsideOwner, isUnassigned, type TaskOwner } from "@/workstreams/people";
+import { isOutsideOwner, isUnassigned, ownerFromEntry, type OwnerEntry, type TaskOwner } from "@/workstreams/people";
 import type { PlanRule, Workstream, WorkstreamDraft, WorkstreamTask } from "@/workstreams/workstream";
 import { handleWorkstreamChatMessage, seedWorkstreamChat, workstreamChatId } from "@/workstreams/workstreamChat";
 import { workstreamAttention, workstreamStatus } from "@/workstreams/workstreamAttention";
@@ -81,7 +79,6 @@ export default function WorkstreamPage() {
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
-  const [showActivity, setShowActivity] = useState(false);
   const [showAllFiles, setShowAllFiles] = useState(false);
   const now = new Date();
   const focus = workstreamFocusFromSearch(search);
@@ -173,15 +170,6 @@ export default function WorkstreamPage() {
                   >
                     All files ({workstreamFiles(tasks).length})
                   </Button>
-                  {/* One activity log for every task, filterable to a single task. */}
-                  <Button
-                    variant="text"
-                    size="small"
-                    startIcon={<HistoryIcon aria-hidden />}
-                    onClick={() => setShowActivity(true)}
-                  >
-                    Activity log
-                  </Button>
                   {/* Post-MVP: the side chat replaces "Revise via chat". */}
                   {showPostMvpViews ? (
                     <Stack direction="row" gap={SPACE.item}>
@@ -209,6 +197,7 @@ export default function WorkstreamPage() {
               <TaskTable
                 tasks={tasks}
                 detail="status"
+                now={now}
                 summarize={(task) => summarizeTask(task, now)}
                 highlightTaskId={focus.taskId}
                 onOpenFile={openFile}
@@ -236,7 +225,6 @@ export default function WorkstreamPage() {
       )}
 
       <AllFilesDialog open={showAllFiles} tasks={tasks} onClose={() => setShowAllFiles(false)} onOpenFile={openFile} />
-      <ActivityLogDialog open={showActivity} tasks={tasks} now={now} onClose={() => setShowActivity(false)} />
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
         <Alert severity="success" aria-live="polite" onClose={() => setToast(null)}>
           {toast}
@@ -280,9 +268,35 @@ export function DraftWorkstreamPage() {
 function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   const navigate = useNavigate();
   const showPostMvpViews = useMvpScopeStore((s) => s.showPostMvpViews);
-  // Cowork doesn't know who should own each task: you add owners in chat.
-  const [draft, setDraft] = useState<WorkstreamDraft>(() =>
+  // Cowork doesn't know who should own each task: you type owners in, or add them in chat.
+  const [baseDraft, setDraft] = useState<WorkstreamDraft>(() =>
     draftWorkstreamFromSignal(signal, { owners: "unassigned" }),
+  );
+  // Demo: every task but the first starts with its owner filled in, so the presenter adds just one.
+  const [entries, setEntries] = useState<Record<string, OwnerEntry>>(() =>
+    Object.fromEntries(
+      orderedTasks(baseDraft.plan.tasks)
+        .slice(1)
+        .map((t) => {
+          const owner = draftWorkstreamFromSignal(signal).plan.tasks.find((d) => d.id === t.id)?.delegate;
+          return [t.id, owner ? { name: owner.label, email: owner.id.replace(/^email:/, "") } : { name: "", email: "" }];
+        }),
+    ),
+  );
+  const [toast, setToast] = useState<string | null>(null);
+  // A task has an owner once its name and email both have content.
+  const draft = useMemo<WorkstreamDraft>(
+    () => ({
+      ...baseDraft,
+      plan: {
+        ...baseDraft.plan,
+        tasks: baseDraft.plan.tasks.map((t) => {
+          const entry = entries[t.id];
+          return entry?.name.trim() && entry.email.trim() ? { ...t, delegate: ownerFromEntry(entry) } : t;
+        }),
+      },
+    }),
+    [baseDraft, entries],
   );
   const chatId = draftChatId(signal.id);
   const missingOwners = unassignedCount(draft.plan.tasks);
@@ -318,8 +332,14 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
       }}
       onSurfaceAction={(event) => {
         if (event.name !== ASSIGN_OWNERS_EVENT) return undefined;
-        const tasks = assignOwners(draft.plan.tasks, ownersFromContext(event.context));
-        setDraft((d) => ({ ...d, plan: { ...d.plan, tasks } }));
+        const owners = ownersFromContext(event.context);
+        const tasks = assignOwners(draft.plan.tasks, owners);
+        setEntries((e) => ({
+          ...e,
+          ...Object.fromEntries(
+            Object.entries(owners).map(([id, o]) => [id, { name: o.label, email: o.id.replace(/^email:/, "") }]),
+          ),
+        }));
         return { userText: "Here are the owners.", reply: ownersAddedReply(tasks) };
       }}
     >
@@ -328,62 +348,67 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
           <PageHeader
             eyebrow="Create workstream"
             title={signal.title}
-            action={
-              // The button sends the same message you could type, so the chat shows how to work this page.
-              // Held until every task has an owner: Cowork needs someone to email.
-              <Button
-                variant="contained"
-                disabled={missingOwners > 0}
-                onClick={() => sendUserMessage(chatId, START_WORKSTREAM, start())}
-              >
-                Start workstream
-              </Button>
-            }
           />
 
           <StatusSummary label="Summary" summary={signal.plan.brief} />
 
           <ContextSection reasonsRelevant={draft.reasonsRelevant} signal={signal} defaultOpen />
 
-          <SectionCard title="Plan">
+          <SectionCard
+            title="Plan"
+            action={
+              // Always active. The button sends the same message you could type, so the chat shows how to work this page.
+              <Button
+                variant="contained"
+                onClick={() => {
+                  if (missingOwners) {
+                    setToast(
+                      missingOwners === 1
+                        ? "Add an owner name and email for the task before you start."
+                        : `Add an owner name and email for all ${missingOwners} tasks that need one before you start.`,
+                    );
+                    return;
+                  }
+                  sendUserMessage(chatId, START_WORKSTREAM, start());
+                }}
+              >
+                Start work
+              </Button>
+            }
+          >
             <Typography variant="body1">{draft.plan.proposedApproach}</Typography>
-            <TaskTable
-              tasks={draft.plan.tasks}
-              detail="done-when"
-              showCc={showPostMvpViews}
-              // Post-MVP: owners are editable. The MVP shows them as text.
-              onOwnerChange={
-                showPostMvpViews
-                  ? (taskId, owner) =>
-                      setDraft((d) => ({
-                        ...d,
-                        plan: {
-                          ...d.plan,
-                          tasks: d.plan.tasks.map((t) => (t.id === taskId ? { ...t, delegate: owner } : t)),
-                        },
-                      }))
-                  : undefined
-              }
-            />
             {missingOwners ? (
               <Alert severity="warning">
                 {missingOwners === draft.plan.tasks.length
                   ? "No tasks have owners yet."
                   : `${missingOwners} of ${draft.plan.tasks.length} tasks don't have an owner yet.`}{" "}
-                Add owners in the chat, then start. Cowork emails each owner their task, deadline and what done looks
-                like.
+                Add an owner name and email to each task, or add them in the chat. Cowork emails each owner their task,
+                deadline and what done looks like.
               </Alert>
-            ) : (
+            ) : null}
+            <TaskTable
+              tasks={draft.plan.tasks}
+              detail="done-when"
+              ownerEntries={entries}
+              onOwnerEntryChange={(taskId, entry) => setEntries((e) => ({ ...e, [taskId]: entry }))}
+              showCc={showPostMvpViews}
+            />
+            {!missingOwners ? (
               <Alert severity="info">
                 When you start, Cowork emails each owner their task, its deadline and what done looks like, then
                 follows up until it's done. Nothing goes out before you start.
               </Alert>
-            )}
+            ) : null}
           </SectionCard>
 
           <RulesCard rules={draft.plan.rules} />
         </Stack>
       </Container>
+      <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
+        <Alert severity="warning" aria-live="polite" onClose={() => setToast(null)}>
+          {toast}
+        </Alert>
+      </Snackbar>
     </SideChatLayout>
   );
 }

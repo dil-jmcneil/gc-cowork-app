@@ -1,5 +1,6 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
-import { Box, ButtonBase, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
+import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
+import { Box, ButtonBase, Collapse, Link, Menu, MenuItem, Stack, TextField, Typography, useTheme } from "@mui/material";
 import { useState, type ReactNode } from "react";
 
 import { formatDate } from "@/lib/dates";
@@ -7,10 +8,11 @@ import { SPACE } from "@/lib/layout";
 import { orderedTasks, taskDisplayStatus, type TaskDisplayLabel } from "@/workstreams/taskStatus";
 import type { HistoryFile } from "@/workstreams/thread";
 import type { TaskStatus, WorkstreamTask } from "@/workstreams/workstream";
-import { isUnassigned, type TaskOwner } from "@/workstreams/people";
+import { isUnassigned, type OwnerEntry, type TaskOwner } from "@/workstreams/people";
 
 import { DocumentChip } from "./DocumentChip";
 import { OwnerTypeahead } from "./OwnerTypeahead";
+import { TimelineList } from "./Timeline";
 
 const STATUS_COLOR: Record<TaskDisplayLabel, "subtle" | "information" | "warning" | "error" | "success"> = {
   "Not started": "subtle",
@@ -25,19 +27,21 @@ const STATUS_COLOR: Record<TaskDisplayLabel, "subtle" | "information" | "warning
  * badge and the task's name with its status at the right; labeled Owner and
  * Deadline fields; then a closing line. In a draft that line says what done
  * looks like; once the workstream has started it's Cowork's summary of where
- * the task stands, with its files. The activity log lives in one dialog
- * for every task, opened from the Tasks header. Pass `onOwnerChange` to
- * make owners editable.
+ * the task stands, with its files, then its activity in a collapsed
+ * accordion. Pass `onOwnerChange` to make owners editable.
  */
 export function TaskTable({
   tasks,
   detail,
   onOwnerChange,
+  ownerEntries,
+  onOwnerEntryChange,
   onOpenFile,
   onStatusChange,
   summarize,
   highlightTaskId,
   showCc = false,
+  now,
   ariaLabel = "Tasks",
 }: {
   tasks: WorkstreamTask[];
@@ -45,6 +49,9 @@ export function TaskTable({
   detail: "done-when" | "status";
   ariaLabel?: string;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
+  /** A draft: owner name and email typed in on each task, by task id. */
+  ownerEntries?: Record<string, OwnerEntry>;
+  onOwnerEntryChange?: (taskId: string, entry: OwnerEntry) => void;
   /** Makes each status a menu: Not started, In progress, Done. */
   onStatusChange?: (taskId: string, status: TaskStatus) => void;
   /** Opens a file; a task waiting on your review links its file from the status line. */
@@ -55,6 +62,8 @@ export function TaskTable({
   showCc?: boolean;
   /** The task a link opened the page on; its block is tinted. */
   highlightTaskId?: string;
+  /** With `detail="status"`: when set, each task gets a collapsed activity accordion that reads from this moment. */
+  now?: Date;
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
@@ -116,7 +125,13 @@ export function TaskTable({
                 }}
               >
                 <Field label="Owner">
-                  {onOwnerChange ? (
+                  {onOwnerEntryChange ? (
+                    <OwnerEntryFields
+                      entry={ownerEntries?.[task.id] ?? { name: "", email: "" }}
+                      onChange={(entry) => onOwnerEntryChange(task.id, entry)}
+                      taskName={task.description}
+                    />
+                  ) : onOwnerChange ? (
                     <OwnerTypeahead
                       value={task.delegate}
                       onChange={(owner) => onOwnerChange(task.id, owner)}
@@ -162,6 +177,7 @@ export function TaskTable({
               </Stack>
 
               {detail === "status" && onOpenFile ? <TaskFiles task={task} onOpenFile={onOpenFile} /> : null}
+              {detail === "status" && now ? <TaskActivity task={task} now={now} /> : null}
             </Stack>
           </Box>
         );
@@ -189,6 +205,63 @@ function TaskFiles({ task, onOpenFile }: { task: WorkstreamTask; onOpenFile: (fi
         </li>
       ))}
     </Stack>
+  );
+}
+
+/**
+ * A task's messages, Cowork's actions and files, collapsed to one quiet row
+ * on a subtle surface; open it to read the timeline.
+ */
+function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
+  const { tokens } = useTheme();
+  const [open, setOpen] = useState(false);
+  const muted = tokens.semantic.color.type.muted.value;
+  const Caret = open ? CaretDownIcon : CaretRightIcon;
+  const panelId = `activity-${task.id}`;
+  // Files show as chips on the task and are already in the messages, so the log keeps messages and actions.
+  const history = task.history.filter((e) => e.kind !== "file");
+  if (!history.length) return null;
+  return (
+    <Box
+      sx={{
+        bgcolor: tokens.semantic.color.surface.subtle.value,
+        borderRadius: tokens.semantic.radius.sm.value,
+      }}
+    >
+      <ButtonBase
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={`Activity on ${task.description}, ${history.length}`}
+        onClick={() => setOpen((v) => !v)}
+        sx={{
+          width: "100%",
+          justifyContent: "flex-start",
+          gap: SPACE.item,
+          px: SPACE.group,
+          py: SPACE.item,
+          borderRadius: tokens.semantic.radius.sm.value,
+          textAlign: "left",
+        }}
+      >
+        <Caret aria-hidden style={{ width: 16, height: 16, flexShrink: 0, color: muted }} />
+        <Typography variant="body1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          Activity
+        </Typography>
+        <Typography variant="body1" sx={{ color: muted }}>
+          {history.length}
+        </Typography>
+      </ButtonBase>
+      <Collapse in={open} id={panelId} unmountOnExit>
+        <Box sx={{ px: SPACE.group, pb: SPACE.group }}>
+          <TimelineList
+            items={history.map((entry) => ({ entry }))}
+            ariaLabel={`Activity on ${task.description}`}
+            now={now}
+            pageSize={5}
+          />
+        </Box>
+      </Collapse>
+    </Box>
   );
 }
 
@@ -223,7 +296,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <Stack gap={SPACE.pair} sx={{ minWidth: 0 }}>
       <Typography
-        variant="textMd"
+        variant="body1"
         sx={{ color: tokens.semantic.color.type.muted.value, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
       >
         {label}
@@ -320,11 +393,45 @@ function OwnerValue({ owner }: { owner: TaskOwner }) {
     );
   }
   return (
-    <Stack>
+    <Stack direction="row" alignItems="baseline" columnGap={SPACE.item} flexWrap="wrap">
       <Typography variant="body1">{owner.label}</Typography>
-      <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-        {owner.detail.split(" · ")[0]}
+      {/* Just the email: we don't know their title. */}
+      <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value }}>
+        {owner.id.replace(/^email:/, "")}
       </Typography>
+    </Stack>
+  );
+}
+
+/** Owner name (first and last in one field) and email, typed in on a draft's task. */
+function OwnerEntryFields({
+  entry,
+  onChange,
+  taskName,
+}: {
+  entry: OwnerEntry;
+  onChange: (entry: OwnerEntry) => void;
+  taskName: string;
+}) {
+  return (
+    <Stack gap={SPACE.item}>
+      <TextField
+        size="small"
+        fullWidth
+        label="Owner name"
+        value={entry.name}
+        onChange={(e) => onChange({ ...entry, name: e.target.value })}
+        slotProps={{ htmlInput: { "aria-label": `Owner name for ${taskName}` } }}
+      />
+      <TextField
+        size="small"
+        fullWidth
+        type="email"
+        label="Owner email"
+        value={entry.email}
+        onChange={(e) => onChange({ ...entry, email: e.target.value })}
+        slotProps={{ htmlInput: { "aria-label": `Owner email for ${taskName}` } }}
+      />
     </Stack>
   );
 }

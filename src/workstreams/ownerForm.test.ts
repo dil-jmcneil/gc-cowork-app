@@ -13,7 +13,7 @@ test("a draft for the GC starts with no owners", () => {
   expect(unassignedCount(plan.tasks)).toBe(plan.tasks.length);
 });
 
-test("the form has a card per task, in plan order, each asking for first name, last name and email", () => {
+test("the form has a card per task, in plan order, each asking for owner name and email", () => {
   const surface = ownerFormSurface(draft().plan.tasks);
   const titles = surface.components.filter((c) => c.component === "Text" && c.variant === "h6");
   expect(titles.map((c) => (c.component === "Text" ? c.text : ""))).toEqual([
@@ -23,8 +23,8 @@ test("the form has a card per task, in plan order, each asking for first name, l
     "4 · Watch the nomination window",
   ]);
   const labels = surface.components.flatMap((c) => (c.component === "TextField" ? [c.label] : []));
-  expect(labels.slice(0, 3)).toEqual(["First name", "Last name", "Email"]);
-  expect(missingRequired(surface, surface.dataModel)).toHaveLength(12);
+  expect(labels.slice(0, 3)).toEqual(["Owner name", "Owner email", "Owner name"]);
+  expect(missingRequired(surface, surface.dataModel)).toHaveLength(8);
 });
 
 test("removing a task first leaves it out of the form", () => {
@@ -37,11 +37,9 @@ test("submitted owners land on their tasks; an email outside acme.com is an outs
   const { plan } = draft();
   const surface = ownerFormSurface(plan.tasks);
   let data = surface.dataModel;
-  data = setPath(data, "/owners/0/firstName", "Dana");
-  data = setPath(data, "/owners/0/lastName", "Whitfield");
+  data = setPath(data, "/owners/0/name", "Dana Whitfield");
   data = setPath(data, "/owners/0/email", "dana.whitfield@whitfieldcrane.com");
-  data = setPath(data, "/owners/1/firstName", "Jamie");
-  data = setPath(data, "/owners/1/lastName", "Fox");
+  data = setPath(data, "/owners/1/name", "Jamie Fox");
   data = setPath(data, "/owners/1/email", "jamie.fox@acme.com");
   const owners = ownersFromContext({ owners: (data as { owners: unknown }).owners });
   const tasks = assignOwners(plan.tasks, owners);
@@ -51,7 +49,7 @@ test("submitted owners land on their tasks; an email outside acme.com is an outs
 });
 
 test("a directory email keeps that person's role", () => {
-  expect(ownerFromEntry({ firstName: "Alex", lastName: "Kim", email: "Alex.Kim@acme.com" }).detail).toMatch(
+  expect(ownerFromEntry({ name: "Alex Kim", email: "Alex.Kim@acme.com" }).detail).toMatch(
     /Corporate secretary/,
   );
 });
@@ -65,9 +63,8 @@ test("for the demo, the form can start pre-filled with the story's owners", () =
   const suggested = draftWorkstreamFromSignal(ATG_RULING).plan.tasks;
   const prefill = Object.fromEntries(suggested.map((t) => [t.id, t.delegate]));
   const surface = ownerFormSurface(draft().plan.tasks, prefill);
-  expect((surface.dataModel.owners as { firstName: string; lastName: string; email: string }[])[0]).toMatchObject({
-    firstName: "Dana",
-    lastName: "Whitfield",
+  expect((surface.dataModel.owners as { name: string; email: string }[])[0]).toMatchObject({
+    name: "Dana Whitfield",
     email: "dana.whitfield@whitfieldcrane.com",
   });
   expect(missingRequired(surface, surface.dataModel)).toEqual([]);

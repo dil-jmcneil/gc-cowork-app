@@ -103,7 +103,7 @@ export function isUnassigned(owner: TaskOwner): boolean {
   return owner.id === UNASSIGNED_OWNER.id;
 }
 
-export type OwnerEntry = { firstName: string; lastName: string; email: string };
+export type OwnerEntry = { name: string; email: string };
 
 export const COMPANY_DOMAIN = "acme.com";
 
@@ -114,7 +114,7 @@ export const COMPANY_DOMAIN = "acme.com";
  */
 export function ownerFromEntry(entry: OwnerEntry): TaskOwner {
   const email = entry.email.trim().toLowerCase();
-  const label = `${entry.firstName.trim()} ${entry.lastName.trim()}`.trim();
+  const label = entry.name.trim();
   const known = [...DIRECTORY, ...OUTSIDE_CONTACTS].find((p) => p.id === email || p.id === `email:${email}`);
   if (known) return { ...known, label: label || known.label };
   if (email.endsWith(`@${COMPANY_DOMAIN}`)) return { id: email, label, detail: `Acme · ${email}`, kind: "directory" };

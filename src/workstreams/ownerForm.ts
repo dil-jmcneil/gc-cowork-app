@@ -29,7 +29,7 @@ export function unassignedCount(tasks: WorkstreamTask[]): number {
 
 /**
  * The A2UI owner form: one card per task, in plan order, each asking for the
- * owner's first name, last name and email; one button submits them all.
+ * owner's name (first and last in one field) and email; one button submits them all.
  */
 export function ownerFormSurface(
   tasks: WorkstreamTask[],
@@ -46,13 +46,11 @@ export function ownerFormSurface(
       { id: id("body"), component: "Column", children: [id("title"), id("due"), id("name"), id("email")] },
       { id: id("title"), component: "Text", text: `${i + 1} · ${task.description}`, variant: "h6" },
       { id: id("due"), component: "Text", text: `Due ${formatShortDate(task.deadline)}`, variant: "textMd", color: "muted" },
-      { id: id("name"), component: "Row", children: [id("first"), id("last")] },
-      { id: id("first"), component: "TextField", label: "First name", value: at("firstName"), required: true },
-      { id: id("last"), component: "TextField", label: "Last name", value: at("lastName"), required: true },
+      { id: id("name"), component: "TextField", label: "Owner name", value: at("name"), required: true },
       {
         id: id("email"),
         component: "TextField",
-        label: "Email",
+        label: "Owner email",
         value: at("email"),
         required: true,
         placeholder: "name@company.com",
@@ -86,16 +84,15 @@ export function ownerFormSurface(
 
 /** The form's starting values: blank for an unassigned task, else the owner you already added. */
 function entryFor(owner: TaskOwner): OwnerEntry {
-  if (isUnassigned(owner)) return { firstName: "", lastName: "", email: "" };
-  const [firstName = "", ...rest] = owner.label.split(" ");
-  return { firstName, lastName: rest.join(" "), email: owner.id.replace(/^email:/, "") };
+  if (isUnassigned(owner)) return { name: "", email: "" };
+  return { name: owner.label, email: owner.id.replace(/^email:/, "") };
 }
 
 /** The owner for each task id, from the form's submitted context. */
 export function ownersFromContext(context: Record<string, unknown>): Record<string, TaskOwner> {
   const rows = Array.isArray(context.owners) ? (context.owners as (OwnerEntry & { taskId: string })[]) : [];
   return Object.fromEntries(
-    rows.filter((row) => row.taskId && row.email?.trim()).map((row) => [row.taskId, ownerFromEntry(row)]),
+    rows.filter((row) => row.taskId && row.name?.trim() && row.email?.trim()).map((row) => [row.taskId, ownerFromEntry(row)]),
   );
 }
 
