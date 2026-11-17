@@ -67,7 +67,10 @@ export function HistoryCard({
         sx={{
           listStyle: "none",
           py: SPACE.group,
-          borderBottom: `3px solid ${tokens.semantic.color.surface.default.value}`,
+          // Bleed to the container's edges so the divider runs the full width.
+          mx: -SPACE.group,
+          px: SPACE.group,
+          borderBottom: `2px solid ${tokens.semantic.color.surface.default.value}`,
           "&:last-of-type": { borderBottom: 0 },
         }}
       >
