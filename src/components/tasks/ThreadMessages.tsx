@@ -67,7 +67,7 @@ export function HistoryCard({
         sx={{
           listStyle: "none",
           py: SPACE.group,
-          borderBottom: `1px solid ${tokens.semantic.color.surface.default.value}`,
+          borderBottom: `3px solid ${tokens.semantic.color.surface.default.value}`,
           "&:last-of-type": { borderBottom: 0 },
         }}
       >
