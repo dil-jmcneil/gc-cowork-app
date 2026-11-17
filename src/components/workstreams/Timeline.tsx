@@ -4,7 +4,7 @@ import { Button, ListItemText, Menu, MenuItem, Stack, Typography, useTheme } fro
 import { useMemo, useState } from "react";
 
 import { PersonLine } from "@/components/tasks/PersonLine";
-import { HistoryCard, ThreadMessage } from "@/components/tasks/ThreadMessages";
+import { FlatHistoryContext, HistoryCard, ThreadMessage } from "@/components/tasks/ThreadMessages";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
 import { SPACE } from "@/lib/layout";
 import {
@@ -38,6 +38,7 @@ export function TimelineList({
   now,
   initialStep = "recent",
   pageSize,
+  flat = false,
 }: {
   items: TimelineListItem[];
   ariaLabel: string;
@@ -46,6 +47,8 @@ export function TimelineList({
   initialStep?: TimelineStep;
   /** When set, shows this many newest entries at a time, with no filter or caption. */
   pageSize?: number;
+  /** Rows with dividers instead of a card each. */
+  flat?: boolean;
 }) {
   const { tokens } = useTheme();
   const muted = tokens.semantic.color.type.muted.value;
@@ -58,11 +61,13 @@ export function TimelineList({
     const shown = newest.slice(0, count);
     return (
       <Stack gap={SPACE.group}>
-        <Stack component="ol" gap={SPACE.item} aria-label={ariaLabel} sx={{ m: 0, p: 0 }}>
-          {shown.map(({ entry, context }) => (
-            <TimelineRow key={entry.id} entry={entry} context={context} />
-          ))}
-        </Stack>
+        <FlatHistoryContext.Provider value={flat}>
+          <Stack component="ol" gap={flat ? 0 : SPACE.item} aria-label={ariaLabel} sx={{ m: 0, p: 0 }}>
+            {shown.map(({ entry, context }) => (
+              <TimelineRow key={entry.id} entry={entry} context={context} />
+            ))}
+          </Stack>
+        </FlatHistoryContext.Provider>
         {newest.length > count ? (
           <Button
             variant="text"
