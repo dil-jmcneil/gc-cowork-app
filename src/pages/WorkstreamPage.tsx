@@ -272,7 +272,17 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
   const [baseDraft, setDraft] = useState<WorkstreamDraft>(() =>
     draftWorkstreamFromSignal(signal, { owners: "unassigned" }),
   );
-  const [entries, setEntries] = useState<Record<string, OwnerEntry>>({});
+  // Demo: every task but the first starts with its owner filled in, so the presenter adds just one.
+  const [entries, setEntries] = useState<Record<string, OwnerEntry>>(() =>
+    Object.fromEntries(
+      orderedTasks(baseDraft.plan.tasks)
+        .slice(1)
+        .map((t) => {
+          const owner = draftWorkstreamFromSignal(signal).plan.tasks.find((d) => d.id === t.id)?.delegate;
+          return [t.id, owner ? { name: owner.label, email: owner.id.replace(/^email:/, "") } : { name: "", email: "" }];
+        }),
+    ),
+  );
   const [toast, setToast] = useState<string | null>(null);
   // A task has an owner once its name and email both have content.
   const draft = useMemo<WorkstreamDraft>(
