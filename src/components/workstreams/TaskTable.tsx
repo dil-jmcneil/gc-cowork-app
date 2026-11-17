@@ -391,7 +391,7 @@ function OwnerValue({ owner }: { owner: TaskOwner }) {
     );
   }
   return (
-    <Stack>
+    <Stack direction="row" alignItems="baseline" columnGap={SPACE.item} flexWrap="wrap">
       <Typography variant="body1">{owner.label}</Typography>
       {/* Just the email: we don't know their title. */}
       <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value }}>
