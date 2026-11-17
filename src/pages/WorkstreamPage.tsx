@@ -1,5 +1,4 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
-import FolderIcon from "@diligentcorp/atlas-react-bundle/icons/Folder";
 import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import {
   Alert,
@@ -19,7 +18,6 @@ import { Link as RouterLink, Navigate, useLocation, useNavigate, useParams, useS
 
 import { startChatFromPrompt } from "@/chat/startChat";
 import { scrollContentTo, scrollContentToTop, SideChatLayout } from "@/components/chat/SideChatLayout";
-import { AllFilesDialog, workstreamFiles } from "@/components/workstreams/AllFilesDialog";
 import { FileView } from "@/components/workstreams/FileView";
 import { KeyDatesCard } from "@/components/workstreams/KeyDates";
 import { SectionCard } from "@/components/workstreams/SectionCard";
@@ -62,7 +60,7 @@ import { SPACE } from "@/lib/layout";
 /**
  * A started workstream (the View layout): the status summary across the top,
  * then the tasks, each with its owner, status line, files and activity log
- * (with "All files" for every file at once), then the signal's relevance,
+ * then the signal's relevance,
  * key dates and source, collapsed. Cowork's chat is
  * always open on the right. A link can open it on a task.
  */
@@ -79,7 +77,6 @@ export default function WorkstreamPage() {
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
-  const [showAllFiles, setShowAllFiles] = useState(false);
   const now = new Date();
   const focus = workstreamFocusFromSearch(search);
 
@@ -161,15 +158,6 @@ export default function WorkstreamPage() {
               titleSize="large"
               action={
                 <Stack direction="row" alignItems="center" gap={SPACE.item}>
-                  {/* Each task shows its own files; this lists every file in one place. */}
-                  <Button
-                    variant="text"
-                    size="small"
-                    startIcon={<FolderIcon aria-hidden />}
-                    onClick={() => setShowAllFiles(true)}
-                  >
-                    All files ({workstreamFiles(tasks).length})
-                  </Button>
                   {/* Post-MVP: the side chat replaces "Revise via chat". */}
                   {showPostMvpViews ? (
                     <Stack direction="row" gap={SPACE.item}>
@@ -224,7 +212,6 @@ export default function WorkstreamPage() {
         </Container>
       )}
 
-      <AllFilesDialog open={showAllFiles} tasks={tasks} onClose={() => setShowAllFiles(false)} onOpenFile={openFile} />
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
         <Alert severity="success" aria-live="polite" onClose={() => setToast(null)}>
           {toast}
