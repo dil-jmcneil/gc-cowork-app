@@ -1,6 +1,6 @@
 import OpenFileIcon from "@diligentcorp/atlas-react-bundle/icons/OpenFile";
-import { Card, CardContent, Chip, Stack, Typography, useTheme } from "@mui/material";
-import type { ReactNode } from "react";
+import { Box, Card, CardContent, Chip, Stack, Typography, useTheme } from "@mui/material";
+import { createContext, useContext, type ReactNode } from "react";
 
 import { SPACE } from "@/lib/layout";
 import { CHANNEL_LABEL, type MessageAuthorRole, type TaskMessage } from "@/workstreams/thread";
@@ -13,6 +13,9 @@ export const WHEN = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
 });
+
+/** Inside a flat list, entries drop their card: just rows with a divider between them. */
+export const FlatHistoryContext = createContext(false);
 
 const ROLE_LABEL: Record<MessageAuthorRole, string> = {
   cowork: "Cowork",
@@ -42,6 +45,36 @@ export function HistoryCard({
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
+  const flat = useContext(FlatHistoryContext);
+  const body = (
+    <Stack gap={SPACE.item}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.item}>
+        {header}
+        <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ flexShrink: 0 }}>
+          <StatusIndicator color="subtle" label={label} />
+          <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value, whiteSpace: "nowrap" }}>
+            {WHEN.format(new Date(sentAt))}
+          </Typography>
+        </Stack>
+      </Stack>
+      {children}
+    </Stack>
+  );
+  if (flat) {
+    return (
+      <Box
+        component="li"
+        sx={{
+          listStyle: "none",
+          py: SPACE.group,
+          borderBottom: `1px solid ${tokens.semantic.color.outline.default.value}`,
+          "&:last-of-type": { borderBottom: 0 },
+        }}
+      >
+        {body}
+      </Box>
+    );
+  }
   return (
     <Card
       component="li"
@@ -49,18 +82,7 @@ export function HistoryCard({
       sx={{ listStyle: "none", p: 0, bgcolor: subtle ? tokens.semantic.color.surface.subtle.value : undefined }}
     >
       <CardContent sx={{ p: SPACE.group, "&:last-child": { pb: SPACE.group } }}>
-        <Stack gap={SPACE.item}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={SPACE.item}>
-            {header}
-            <Stack direction="row" alignItems="center" gap={SPACE.item} sx={{ flexShrink: 0 }}>
-              <StatusIndicator color="subtle" label={label} />
-              <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value, whiteSpace: "nowrap" }}>
-                {WHEN.format(new Date(sentAt))}
-              </Typography>
-            </Stack>
-          </Stack>
-          {children}
-        </Stack>
+        {body}
       </CardContent>
     </Card>
   );

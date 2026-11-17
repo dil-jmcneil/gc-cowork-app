@@ -258,6 +258,7 @@ function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
             ariaLabel={`Activity on ${task.description}`}
             now={now}
             pageSize={5}
+            flat
           />
         </Box>
       </Collapse>
