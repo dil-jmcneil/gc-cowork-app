@@ -1,5 +1,6 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
-import { Box, ButtonBase, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
+import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
+import { Box, ButtonBase, Collapse, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
 import { useState, type ReactNode } from "react";
 
 import { formatDate } from "@/lib/dates";
@@ -11,6 +12,7 @@ import { isUnassigned, type TaskOwner } from "@/workstreams/people";
 
 import { DocumentChip } from "./DocumentChip";
 import { OwnerTypeahead } from "./OwnerTypeahead";
+import { TimelineList } from "./Timeline";
 
 const STATUS_COLOR: Record<TaskDisplayLabel, "subtle" | "information" | "warning" | "error" | "success"> = {
   "Not started": "subtle",
@@ -25,9 +27,8 @@ const STATUS_COLOR: Record<TaskDisplayLabel, "subtle" | "information" | "warning
  * badge and the task's name with its status at the right; labeled Owner and
  * Deadline fields; then a closing line. In a draft that line says what done
  * looks like; once the workstream has started it's Cowork's summary of where
- * the task stands, with its files. The activity log lives in one dialog
- * for every task, opened from the Tasks header. Pass `onOwnerChange` to
- * make owners editable.
+ * the task stands, with its files, then its activity in a collapsed
+ * accordion. Pass `onOwnerChange` to make owners editable.
  */
 export function TaskTable({
   tasks,
@@ -38,6 +39,7 @@ export function TaskTable({
   summarize,
   highlightTaskId,
   showCc = false,
+  now,
   ariaLabel = "Tasks",
 }: {
   tasks: WorkstreamTask[];
@@ -55,6 +57,8 @@ export function TaskTable({
   showCc?: boolean;
   /** The task a link opened the page on; its block is tinted. */
   highlightTaskId?: string;
+  /** With `detail="status"`: when set, each task gets a collapsed activity accordion that reads from this moment. */
+  now?: Date;
 }) {
   const { tokens, presets } = useTheme();
   const StatusIndicator = presets.StatusIndicatorPresets.components.StatusIndicator;
@@ -162,6 +166,7 @@ export function TaskTable({
               </Stack>
 
               {detail === "status" && onOpenFile ? <TaskFiles task={task} onOpenFile={onOpenFile} /> : null}
+              {detail === "status" && now ? <TaskActivity task={task} now={now} /> : null}
             </Stack>
           </Box>
         );
@@ -189,6 +194,61 @@ function TaskFiles({ task, onOpenFile }: { task: WorkstreamTask; onOpenFile: (fi
         </li>
       ))}
     </Stack>
+  );
+}
+
+/**
+ * A task's messages, Cowork's actions and files, collapsed to one quiet row
+ * on a subtle surface; open it to read the timeline.
+ */
+function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
+  const { tokens } = useTheme();
+  const [open, setOpen] = useState(false);
+  const muted = tokens.semantic.color.type.muted.value;
+  const Caret = open ? CaretDownIcon : CaretRightIcon;
+  const panelId = `activity-${task.id}`;
+  if (!task.history.length) return null;
+  return (
+    <Box
+      sx={{
+        bgcolor: tokens.semantic.color.surface.subtle.value,
+        borderRadius: tokens.semantic.radius.sm.value,
+      }}
+    >
+      <ButtonBase
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={`Activity on ${task.description}, ${task.history.length}`}
+        onClick={() => setOpen((v) => !v)}
+        sx={{
+          width: "100%",
+          justifyContent: "flex-start",
+          gap: SPACE.item,
+          px: SPACE.group,
+          py: SPACE.item,
+          borderRadius: tokens.semantic.radius.sm.value,
+          textAlign: "left",
+        }}
+      >
+        <Caret aria-hidden style={{ width: 16, height: 16, flexShrink: 0, color: muted }} />
+        <Typography variant="textMd" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+          Activity
+        </Typography>
+        <Typography variant="textMd" sx={{ color: muted }}>
+          {task.history.length}
+        </Typography>
+      </ButtonBase>
+      <Collapse in={open} id={panelId} unmountOnExit>
+        <Box sx={{ px: SPACE.group, pb: SPACE.group }}>
+          <TimelineList
+            items={task.history.map((entry) => ({ entry }))}
+            ariaLabel={`Activity on ${task.description}`}
+            now={now}
+            initialStep="ten"
+          />
+        </Box>
+      </Collapse>
+    </Box>
   );
 }
 

@@ -1,6 +1,5 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
 import FolderIcon from "@diligentcorp/atlas-react-bundle/icons/Folder";
-import HistoryIcon from "@diligentcorp/atlas-react-bundle/icons/History";
 import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
 import {
   Alert,
@@ -27,7 +26,6 @@ import { SectionCard } from "@/components/workstreams/SectionCard";
 import { SourceSignalCard } from "@/components/workstreams/SourceSignalCard";
 import { StatusSummary } from "@/components/workstreams/StatusSummary";
 import { RuleTable } from "@/components/workstreams/RuleTable";
-import { ActivityLogDialog } from "@/components/workstreams/ActivityLogDialog";
 import { taskAnchorId, TaskTable } from "@/components/workstreams/TaskTable";
 import { useMvpScopeStore } from "@/demo/mvpScopeStore";
 import { usePlanRulesStore } from "@/demo/planRulesStore";
@@ -81,7 +79,6 @@ export default function WorkstreamPage() {
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
-  const [showActivity, setShowActivity] = useState(false);
   const [showAllFiles, setShowAllFiles] = useState(false);
   const now = new Date();
   const focus = workstreamFocusFromSearch(search);
@@ -173,15 +170,6 @@ export default function WorkstreamPage() {
                   >
                     All files ({workstreamFiles(tasks).length})
                   </Button>
-                  {/* One activity log for every task, filterable to a single task. */}
-                  <Button
-                    variant="text"
-                    size="small"
-                    startIcon={<HistoryIcon aria-hidden />}
-                    onClick={() => setShowActivity(true)}
-                  >
-                    Activity log
-                  </Button>
                   {/* Post-MVP: the side chat replaces "Revise via chat". */}
                   {showPostMvpViews ? (
                     <Stack direction="row" gap={SPACE.item}>
@@ -209,6 +197,7 @@ export default function WorkstreamPage() {
               <TaskTable
                 tasks={tasks}
                 detail="status"
+                now={now}
                 summarize={(task) => summarizeTask(task, now)}
                 highlightTaskId={focus.taskId}
                 onOpenFile={openFile}
@@ -236,7 +225,6 @@ export default function WorkstreamPage() {
       )}
 
       <AllFilesDialog open={showAllFiles} tasks={tasks} onClose={() => setShowAllFiles(false)} onOpenFile={openFile} />
-      <ActivityLogDialog open={showActivity} tasks={tasks} now={now} onClose={() => setShowActivity(false)} />
       <Snackbar open={toast !== null} autoHideDuration={5000} onClose={() => setToast(null)}>
         <Alert severity="success" aria-live="polite" onClose={() => setToast(null)}>
           {toast}
