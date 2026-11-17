@@ -225,7 +225,8 @@ function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
     <Box
       sx={{
         bgcolor: tokens.semantic.color.surface.subtle.value,
-        borderRadius: tokens.semantic.radius.sm.value,
+        borderRadius: tokens.semantic.radius.lg.value,
+        overflow: "hidden",
       }}
     >
       <ButtonBase
