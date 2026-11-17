@@ -1,6 +1,6 @@
 import CaretDownIcon from "@diligentcorp/atlas-react-bundle/icons/CaretDown";
 import CaretRightIcon from "@diligentcorp/atlas-react-bundle/icons/CaretRight";
-import { Box, ButtonBase, Collapse, Link, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
+import { Box, ButtonBase, Collapse, Link, Menu, MenuItem, Stack, TextField, Typography, useTheme } from "@mui/material";
 import { useState, type ReactNode } from "react";
 
 import { formatDate } from "@/lib/dates";
@@ -8,7 +8,7 @@ import { SPACE } from "@/lib/layout";
 import { orderedTasks, taskDisplayStatus, type TaskDisplayLabel } from "@/workstreams/taskStatus";
 import type { HistoryFile } from "@/workstreams/thread";
 import type { TaskStatus, WorkstreamTask } from "@/workstreams/workstream";
-import { isUnassigned, type TaskOwner } from "@/workstreams/people";
+import { isUnassigned, type OwnerEntry, type TaskOwner } from "@/workstreams/people";
 
 import { DocumentChip } from "./DocumentChip";
 import { OwnerTypeahead } from "./OwnerTypeahead";
@@ -34,6 +34,8 @@ export function TaskTable({
   tasks,
   detail,
   onOwnerChange,
+  ownerEntries,
+  onOwnerEntryChange,
   onOpenFile,
   onStatusChange,
   summarize,
@@ -47,6 +49,9 @@ export function TaskTable({
   detail: "done-when" | "status";
   ariaLabel?: string;
   onOwnerChange?: (taskId: string, owner: TaskOwner) => void;
+  /** A draft: owner name and email typed in on each task, by task id. */
+  ownerEntries?: Record<string, OwnerEntry>;
+  onOwnerEntryChange?: (taskId: string, entry: OwnerEntry) => void;
   /** Makes each status a menu: Not started, In progress, Done. */
   onStatusChange?: (taskId: string, status: TaskStatus) => void;
   /** Opens a file; a task waiting on your review links its file from the status line. */
@@ -120,7 +125,13 @@ export function TaskTable({
                 }}
               >
                 <Field label="Owner">
-                  {onOwnerChange ? (
+                  {onOwnerEntryChange ? (
+                    <OwnerEntryFields
+                      entry={ownerEntries?.[task.id] ?? { name: "", email: "" }}
+                      onChange={(entry) => onOwnerEntryChange(task.id, entry)}
+                      taskName={task.description}
+                    />
+                  ) : onOwnerChange ? (
                     <OwnerTypeahead
                       value={task.delegate}
                       onChange={(owner) => onOwnerChange(task.id, owner)}
@@ -382,9 +393,43 @@ function OwnerValue({ owner }: { owner: TaskOwner }) {
   return (
     <Stack>
       <Typography variant="body1">{owner.label}</Typography>
+      {/* Just the email: we don't know their title. */}
       <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
-        {owner.detail.split(" · ")[0]}
+        {owner.id.replace(/^email:/, "")}
       </Typography>
+    </Stack>
+  );
+}
+
+/** Owner name (first and last in one field) and email, typed in on a draft's task. */
+function OwnerEntryFields({
+  entry,
+  onChange,
+  taskName,
+}: {
+  entry: OwnerEntry;
+  onChange: (entry: OwnerEntry) => void;
+  taskName: string;
+}) {
+  return (
+    <Stack gap={SPACE.item}>
+      <TextField
+        size="small"
+        fullWidth
+        label="Owner name"
+        value={entry.name}
+        onChange={(e) => onChange({ ...entry, name: e.target.value })}
+        slotProps={{ htmlInput: { "aria-label": `Owner name for ${taskName}` } }}
+      />
+      <TextField
+        size="small"
+        fullWidth
+        type="email"
+        label="Owner email"
+        value={entry.email}
+        onChange={(e) => onChange({ ...entry, email: e.target.value })}
+        slotProps={{ htmlInput: { "aria-label": `Owner email for ${taskName}` } }}
+      />
     </Stack>
   );
 }
