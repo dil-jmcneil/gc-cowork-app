@@ -218,7 +218,9 @@ function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
   const muted = tokens.semantic.color.type.muted.value;
   const Caret = open ? CaretDownIcon : CaretRightIcon;
   const panelId = `activity-${task.id}`;
-  if (!task.history.length) return null;
+  // Files show as chips on the task and are already in the messages, so the log keeps messages and actions.
+  const history = task.history.filter((e) => e.kind !== "file");
+  if (!history.length) return null;
   return (
     <Box
       sx={{
@@ -229,7 +231,7 @@ function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
       <ButtonBase
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label={`Activity on ${task.description}, ${task.history.length}`}
+        aria-label={`Activity on ${task.description}, ${history.length}`}
         onClick={() => setOpen((v) => !v)}
         sx={{
           width: "100%",
@@ -246,13 +248,13 @@ function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
           Activity
         </Typography>
         <Typography variant="body1" sx={{ color: muted }}>
-          {task.history.length}
+          {history.length}
         </Typography>
       </ButtonBase>
       <Collapse in={open} id={panelId} unmountOnExit>
         <Box sx={{ px: SPACE.group, pb: SPACE.group }}>
           <TimelineList
-            items={task.history.map((entry) => ({ entry }))}
+            items={history.map((entry) => ({ entry }))}
             ariaLabel={`Activity on ${task.description}`}
             now={now}
             pageSize={5}
