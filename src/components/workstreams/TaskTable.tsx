@@ -244,7 +244,7 @@ function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
             items={task.history.map((entry) => ({ entry }))}
             ariaLabel={`Activity on ${task.description}`}
             now={now}
-            initialStep="ten"
+            pageSize={5}
           />
         </Box>
       </Collapse>

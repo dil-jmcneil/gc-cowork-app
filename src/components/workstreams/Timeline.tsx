@@ -37,19 +37,45 @@ export function TimelineList({
   ariaLabel,
   now,
   initialStep = "recent",
+  pageSize,
 }: {
   items: TimelineListItem[];
   ariaLabel: string;
   now: Date;
   /** Where the list starts; a task's own activity log starts on its latest 10. */
   initialStep?: TimelineStep;
+  /** When set, shows this many newest entries at a time, with no filter or caption. */
+  pageSize?: number;
 }) {
   const { tokens } = useTheme();
   const muted = tokens.semantic.color.type.muted.value;
+  const [count, setCount] = useState(pageSize ?? 0);
   const [filter, setFilter] = useState<HistoryKind | "all">("all");
   const [step, setStep] = useState<TimelineStep>(initialStep);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const newest = useMemo(() => newestFirst(items, (i) => i.entry.sentAt), [items]);
+  if (pageSize) {
+    const shown = newest.slice(0, count);
+    return (
+      <Stack gap={SPACE.group}>
+        <Stack component="ol" gap={SPACE.item} aria-label={ariaLabel} sx={{ m: 0, p: 0 }}>
+          {shown.map(({ entry, context }) => (
+            <TimelineRow key={entry.id} entry={entry} context={context} />
+          ))}
+        </Stack>
+        {newest.length > count ? (
+          <Button
+            variant="text"
+            size="small"
+            onClick={() => setCount(count + pageSize)}
+            sx={{ alignSelf: "flex-start" }}
+          >
+            Show {Math.min(pageSize, newest.length - count)} more
+          </Button>
+        ) : null}
+      </Stack>
+    );
+  }
   const matching = filter === "all" ? newest : newest.filter((i) => i.entry.kind === filter);
   const view = timelineWindow(
     matching.map((i) => ({ ...i, sentAt: i.entry.sentAt })),
