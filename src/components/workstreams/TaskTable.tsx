@@ -242,10 +242,10 @@ function TaskActivity({ task, now }: { task: WorkstreamTask; now: Date }) {
         }}
       >
         <Caret aria-hidden style={{ width: 16, height: 16, flexShrink: 0, color: muted }} />
-        <Typography variant="textMd" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
+        <Typography variant="body1" sx={{ fontWeight: tokens.semantic.fontWeight.emphasis.value }}>
           Activity
         </Typography>
-        <Typography variant="textMd" sx={{ color: muted }}>
+        <Typography variant="body1" sx={{ color: muted }}>
           {task.history.length}
         </Typography>
       </ButtonBase>
@@ -294,7 +294,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <Stack gap={SPACE.pair} sx={{ minWidth: 0 }}>
       <Typography
-        variant="textMd"
+        variant="body1"
         sx={{ color: tokens.semantic.color.type.muted.value, fontWeight: tokens.semantic.fontWeight.emphasis.value }}
       >
         {label}
@@ -394,7 +394,7 @@ function OwnerValue({ owner }: { owner: TaskOwner }) {
     <Stack>
       <Typography variant="body1">{owner.label}</Typography>
       {/* Just the email: we don't know their title. */}
-      <Typography variant="textMd" sx={{ color: tokens.semantic.color.type.muted.value }}>
+      <Typography variant="body1" sx={{ color: tokens.semantic.color.type.muted.value }}>
         {owner.id.replace(/^email:/, "")}
       </Typography>
     </Stack>

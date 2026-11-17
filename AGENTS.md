@@ -57,6 +57,7 @@ Text stays between 12px and 18px. In this bundle the MUI variants render a step 
 | 14px (Type/Md) | `body1` | The default for content: values, table cells, messages, summaries. Add emphasis weight for names and subjects |
 | 12px | `textMd` | Sparingly, for helper text an experienced user can skip: field labels, timestamps, meta lines, table headers |
 
+- The task blocks (`TaskTable`) use nothing under 14px: field labels, the owner email and the Activity row are `body1`, with the muted token to step the hierarchy down.
 - Never use `textSm` (10px), `labelXs` (11px), or `h3` and larger (22px+) on these screens. The home hero is the one exception.
 - The attention card follows its Figma (3274:11121): 16px semibold title over a 16px regular muted summary.
 - `h5` and `h6` render at regular weight; add `fontWeight: tokens.semantic.fontWeight.emphasis.value` for headings.
