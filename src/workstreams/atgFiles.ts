@@ -4,7 +4,7 @@
  * paragraphs separated by blank lines; "## " starts a heading, "- " a bullet.
  */
 
-export const MEMO_FILE = "Memo and draft Article II, Section 8.pdf";
+export const MEMO_FILE = "Counsel memo and draft §8.pdf";
 
 export const MEMO_BODY = `Privileged and confidential · Attorney work product
 To: Peter, General Counsel, Acme Co., Inc.
@@ -36,7 +36,7 @@ Section 8(d). Extend the agreements disclosure in Section 9(b)(iv) to "any agree
 
 Once you approve the text, Alex Kim can update the nominee questionnaire to match, and the amendment can go to the Governance Committee on December 15.`;
 
-export const COMPARISON_FILE = "Bylaw comparison, Article II, Section 8 v. ATG v. Lane.docx";
+export const COMPARISON_FILE = "Bylaw comparison, Art. II §8.docx";
 
 export const COMPARISON_BODY = `Prepared by Cowork for Dana Whitfield · October 27, 2026
 
@@ -70,7 +70,7 @@ Regular meeting · December 15, 2026 · 10:00 a.m. ET
 
 A special board meeting is held for December 18 to adopt the amendment if the committee recommends it.`;
 
-export const OUTLINE_FILE = "Nomination notice review process (outline).docx";
+export const OUTLINE_FILE = "Nomination notice review outline.docx";
 
 export const OUTLINE_BODY = `Draft · Pete Lin · October 30, 2026
 
