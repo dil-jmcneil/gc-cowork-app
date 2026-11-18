@@ -1,7 +1,8 @@
-import { Box, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
 
 import { SPACE } from "@/lib/layout";
 import type { Summary } from "@/workstreams/summary";
+import type { WorkstreamTask } from "@/workstreams/workstream";
 import type { ActionLine, StatusSentences, SummaryTone } from "@/workstreams/workstreamAttention";
 
 /**
@@ -11,7 +12,7 @@ import type { ActionLine, StatusSentences, SummaryTone } from "@/workstreams/wor
  *
  * A started workstream passes `status`: two sentences, what's been done then
  * what's next with any blocker in bold, and `actions`: one line per blocked or
- * delayed task saying what it needs. The task cards below hold the buttons. A
+ * delayed task saying what it needs, with a Nudge button on the ones waiting on an owner. Reviews are confirmed on the task below. A
  * draft passes `summary`: a bold headline and its supporting sentences.
  */
 export function StatusSummary({
@@ -20,6 +21,8 @@ export function StatusSummary({
   summary,
   status,
   actions = [],
+  nudged,
+  onNudge,
 }: {
   /** The panel's heading: "Status Summary" for a started workstream, "Summary" for a draft. */
   label?: string;
@@ -28,6 +31,9 @@ export function StatusSummary({
   summary?: Summary;
   status?: StatusSentences;
   actions?: ActionLine[];
+  /** Task ids nudged on this visit; their button reads "Nudged". */
+  nudged?: Set<string>;
+  onNudge?: (task: WorkstreamTask) => void;
 }) {
   const { tokens } = useTheme();
   const info = tokens.component.statusIndicator.colors[tone];
@@ -71,13 +77,27 @@ export function StatusSummary({
 
         {actions.length ? (
           <Stack component="ul" gap={SPACE.item} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label="What needs action">
-            {actions.map(({ task, text }) => (
-              <Typography key={task.id} variant="body1" component="li">
-                <Box component="span" sx={{ fontWeight: emphasis }}>
-                  {task.description}
-                </Box>
-                {` · ${text}`}
-              </Typography>
+            {actions.map(({ task, text, action }) => (
+              <Stack key={task.id} component="li" direction="row" alignItems="center" gap={SPACE.group}>
+                <Typography variant="body1" sx={{ flex: 1, minWidth: 0 }}>
+                  <Box component="span" sx={{ fontWeight: emphasis }}>
+                    {task.description}
+                  </Box>
+                  {` · ${text}`}
+                </Typography>
+                {action === "nudge" ? (
+                  <Button
+                    variant="outlined"
+                    size="xsmall"
+                    disabled={nudged?.has(task.id)}
+                    onClick={() => onNudge?.(task)}
+                    aria-label={`Nudge ${task.delegate.label}`}
+                    sx={{ flexShrink: 0 }}
+                  >
+                    {nudged?.has(task.id) ? "Nudged" : "Nudge"}
+                  </Button>
+                ) : null}
+              </Stack>
             ))}
           </Stack>
         ) : null}

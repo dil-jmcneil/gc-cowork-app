@@ -24,7 +24,7 @@ export type SummaryTone = "warning" | "error" | "information";
 export type StatusSentences = { done: string; next?: string };
 
 /** One blocked or delayed task and the action it needs, for the panel's list. */
-export type ActionLine = { task: WorkstreamTask; text: string };
+export type ActionLine = { task: WorkstreamTask; text: string; action: AttentionItem["action"] };
 
 export type WorkstreamAttention = {
   summary: Summary;
@@ -166,7 +166,7 @@ export function workstreamAttention(workstream: Workstream, now: Date): Workstre
     done: doneSentence(workstream),
     next: nextSentence(workstream, now, waitingOnYou[0]?.task, waitingOnOthers[0]?.task),
   };
-  const actions = [...waitingOnYou, ...waitingOnOthers].map((item) => ({ task: item.task, text: actionText(item, now) }));
+  const actions = [...waitingOnYou, ...waitingOnOthers].map((item) => ({ task: item.task, action: item.action, text: actionText(item, now) }));
 
   const [mine] = waitingOnYou;
   if (mine) {
