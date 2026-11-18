@@ -74,8 +74,6 @@ export default function WorkstreamPage() {
   const assignTask = useWorkstreamStore((s) => s.assignTask);
   const setTaskStatus = useWorkstreamStore((s) => s.setTaskStatus);
   const confirmTaskDone = useWorkstreamStore((s) => s.confirmTaskDone);
-  const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
-  const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
   const now = new Date();
   const focus = workstreamFocusFromSearch(search);
@@ -111,6 +109,7 @@ export default function WorkstreamPage() {
           .map((file) => ({ file, task })),
       )[0]
     : undefined;
+  const attention = workstreamAttention(workstream, now);
   const confirm = (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     confirmTaskDone(workstream.id, taskId);
@@ -141,14 +140,9 @@ export default function WorkstreamPage() {
             />
 
             <StatusSummary
-              {...workstreamAttention(workstream, now)}
-              nudged={nudged}
-              onConfirm={({ task }) => confirm(task.id)}
-              onNudge={({ task }) => {
-                nudgeTask(workstream.id, task.id);
-                setNudged((prev) => new Set(prev).add(task.id));
-                setToast(`Nudge sent to ${task.delegate.label}.`);
-              }}
+              tone={attention.tone}
+              status={attention.status}
+              actions={attention.actions}
             />
 
             <ContextSection reasonsRelevant={workstream.reasonsRelevant} signal={signal} defaultOpen={false} />

@@ -111,3 +111,25 @@ describe("the overall status badge follows the summary's tone", () => {
     expect(workstreamStatus(done, NOW)).toEqual({ label: "Done", color: "success" });
   });
 });
+
+test("the status panel is two sentences: what's done, then what's next with the blocker", () => {
+  const all = [startAtgWorkstream(), ...PAST_WORKSTREAMS];
+  for (const workstream of all) {
+    const { status } = workstreamAttention(workstream, NOW);
+    expect(summarySentences(status.done), workstream.name).toBe(1);
+    if (status.next) expect(summarySentences(status.next), workstream.name).toBe(1);
+  }
+  const atg = workstreamAttention(startAtgWorkstream(), NOW).status;
+  expect(atg.done).toBe("Cowork has sent all 4 tasks to their owners.");
+  expect(atg.next).toMatch(/^Your review is holding up Alex Kim: review Dana's memo/);
+  const climate = workstreamAttention(PAST_WORKSTREAMS.find((w) => w.name === "Climate disclosure readiness")!, NOW);
+  expect(climate.status.done).toMatch(/^2 of 4 tasks are done/);
+  expect(climate.status.next).toMatch(/^Maya Chen is behind: "Choose a third-party assurance vendor" was due Nov 2/);
+});
+
+test("the action list says what each blocked or delayed task needs, yours first", () => {
+  const atg = workstreamAttention(startAtgWorkstream(), NOW).actions;
+  expect(atg.map((a) => a.text)).toEqual(["You: review Dana's memo and draft Section 8, then confirm."]);
+  const climate = workstreamAttention(PAST_WORKSTREAMS.find((w) => w.name === "Climate disclosure readiness")!, NOW);
+  expect(climate.actions.map((a) => a.text)).toEqual(["Nudge Maya: due Nov 2, not done yet."]);
+});
