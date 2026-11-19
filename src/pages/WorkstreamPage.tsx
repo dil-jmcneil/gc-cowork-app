@@ -365,7 +365,6 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
               </Button>
             }
           >
-            <Typography variant="body1">{draft.plan.proposedApproach}</Typography>
             {missingOwners ? (
               <Alert severity="warning">
                 {missingOwners === draft.plan.tasks.length
