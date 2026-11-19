@@ -20,8 +20,17 @@ export type AttentionItem = {
  */
 export type SummaryTone = "warning" | "error" | "information";
 
+/** The status panel's two sentences: what's been done, then what's next, with any blocker. */
+export type StatusSentences = { done: string; next?: string };
+
+/** One blocked or delayed task and the action it needs, for the panel's list. */
+export type ActionLine = { task: WorkstreamTask; text: string; action: AttentionItem["action"] };
+
 export type WorkstreamAttention = {
   summary: Summary;
+  status: StatusSentences;
+  /** Each blocked or delayed task and what it needs, yours first. No buttons: the task below has them. */
+  actions: ActionLine[];
   tone: SummaryTone;
   waitingOnYou: AttentionItem[];
   waitingOnOthers: AttentionItem[];
@@ -54,6 +63,61 @@ function nudgeHeadline(task: WorkstreamTask, now: Date): string {
     return `Nudge ${owner}: "${task.description}" was due ${formatShortDate(task.deadline)}.`;
   const n = unansweredFollowUps(task);
   return `Nudge ${owner}: no reply on "${task.description}" after ${n} follow-up${n === 1 ? "" : "s"}.`;
+}
+
+/** Names of the owners of open tasks that wait on this one. */
+function heldUpOwners(workstream: Workstream, task: WorkstreamTask): string {
+  const owners = [
+    ...new Set(
+      workstream.plan.tasks.filter((t) => t.waitingOn === task.id && t.status !== "Done").map((t) => t.delegate.label),
+    ),
+  ];
+  return owners.length > 1 ? `${owners.slice(0, -1).join(", ")} and ${owners[owners.length - 1]}` : (owners[0] ?? "");
+}
+
+function stripPeriod(text: string): string {
+  return text.replace(/\.$/, "");
+}
+
+/** Sentence one: what has been done so far. */
+function doneSentence(workstream: Workstream): string {
+  const { tasks } = workstream.plan;
+  const done = tasks.filter((t) => t.status === "Done");
+  if (done.length === tasks.length) return "Everything on the plan is done.";
+  if (!done.length) return `Cowork has sent all ${tasks.length} tasks to their owners.`;
+  const latest = [...done].sort((a, b) => b.deadline.localeCompare(a.deadline))[0];
+  return `${done.length} of ${tasks.length} tasks are done, most recently "${latest.description}".`;
+}
+
+/** Sentence two: what's next, leading with whatever blocks it. */
+function nextSentence(workstream: Workstream, now: Date, mine?: WorkstreamTask, theirs?: WorkstreamTask): string | undefined {
+  if (mine) {
+    const held = heldUpOwners(workstream, mine);
+    const todo = lowerFirst(reviewHeadline(mine));
+    return held ? `Your review is holding up ${held}: ${todo}` : `Next, you need to ${todo}`;
+  }
+  if (theirs) {
+    const held = heldUpOwners(workstream, theirs);
+    const why = isTaskOverdue(theirs, now)
+      ? `"${theirs.description}" was due ${formatShortDate(theirs.deadline)}`
+      : `hasn't replied on "${theirs.description}" after ${unansweredFollowUps(theirs)} follow-ups`;
+    const owner = theirs.delegate.label;
+    return `${isTaskOverdue(theirs, now) ? `${owner} is behind: ` : `${owner} `}${why}${held ? `, and ${held} can't move until it's done` : ""}.`;
+  }
+  const open = workstream.plan.tasks.filter((t) => t.status !== "Done");
+  if (!open.length) return undefined;
+  const next = open.sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
+  return `Next up: ${lowerFirst(next.description)} (${next.delegate.label}, due ${formatShortDate(next.deadline)}).`;
+}
+
+/** The action a blocked or delayed task needs, in a line. */
+function actionText(item: AttentionItem, now: Date): string {
+  const { task } = item;
+  if (item.action === "confirm") return `You: ${lowerFirst(stripPeriod(reviewHeadline(task)))}.`;
+  const first = task.delegate.label.split(" ")[0];
+  return isTaskOverdue(task, now)
+    ? `Nudge ${first}: due ${formatShortDate(task.deadline)}, not done yet.`
+    : `Nudge ${first}: no reply after ${unansweredFollowUps(task)} follow-ups.`;
 }
 
 /** Owners of open tasks that wait on this one, who can't move until it's done. */
@@ -98,6 +162,12 @@ export function workstreamAttention(workstream: Workstream, now: Date): Workstre
     .filter((t) => !t.awaitingReview && (isTaskOverdue(t, now) || unansweredFollowUps(t) > 0))
     .map((task) => ({ task, action: "nudge", detail: taskActivity(task, now) }));
 
+  const status: StatusSentences = {
+    done: doneSentence(workstream),
+    next: nextSentence(workstream, now, waitingOnYou[0]?.task, waitingOnOthers[0]?.task),
+  };
+  const actions = [...waitingOnYou, ...waitingOnOthers].map((item) => ({ task: item.task, action: item.action, text: actionText(item, now) }));
+
   const [mine] = waitingOnYou;
   if (mine) {
     return {
@@ -106,6 +176,8 @@ export function workstreamAttention(workstream: Workstream, now: Date): Workstre
         support: capSupport([mine.detail, heldUpBy(workstream, mine.task)]),
       },
       tone: "warning",
+      status,
+      actions,
       waitingOnYou,
       waitingOnOthers,
     };
@@ -115,11 +187,13 @@ export function workstreamAttention(workstream: Workstream, now: Date): Workstre
     return {
       summary: { headline: nudgeHeadline(theirs.task, now), support: capSupport([theirs.detail]) },
       tone: "error",
+      status,
+      actions,
       waitingOnYou,
       waitingOnOthers,
     };
   }
-  return { summary: progressSummary(workstream), tone: "information", waitingOnYou, waitingOnOthers };
+  return { summary: progressSummary(workstream), tone: "information", status, actions, waitingOnYou, waitingOnOthers };
 }
 
 export type WorkstreamStatus = {

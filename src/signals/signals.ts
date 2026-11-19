@@ -53,7 +53,7 @@ export const ATG_RULING: Signal = {
     tasks: [
       {
         id: "counsel",
-        description: "Get counsel's view",
+        description: "Evaluate the ruling",
         doneWhen:
           "Peter confirms whether the ruling affects Acme's bylaws, with counsel's memo and draft text in hand.",
         ownerEmail: "dana.whitfield@whitfieldcrane.com",

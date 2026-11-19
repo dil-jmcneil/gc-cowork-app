@@ -31,7 +31,7 @@ test("each task template becomes a draft task with its owner, CC, due date and w
 test("the plan is four big-picture tasks, and preparing the change waits on counsel's view", () => {
   const { plan } = draftWorkstreamFromSignal(ATG_RULING);
   expect(plan.tasks.map((t) => t.description)).toEqual([
-    "Get counsel's view",
+    "Evaluate the ruling",
     "Prepare the change",
     "Adopt and disclose the amendment",
     "Watch the nomination window",

@@ -17,7 +17,7 @@ test("the form has a card per task, in plan order, each asking for owner name an
   const surface = ownerFormSurface(draft().plan.tasks);
   const titles = surface.components.filter((c) => c.component === "Text" && c.variant === "h6");
   expect(titles.map((c) => (c.component === "Text" ? c.text : ""))).toEqual([
-    "1 · Get counsel's view",
+    "1 · Evaluate the ruling",
     "2 · Prepare the change",
     "3 · Adopt and disclose the amendment",
     "4 · Watch the nomination window",

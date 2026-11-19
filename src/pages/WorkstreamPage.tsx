@@ -73,7 +73,6 @@ export default function WorkstreamPage() {
   const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
   const assignTask = useWorkstreamStore((s) => s.assignTask);
   const setTaskStatus = useWorkstreamStore((s) => s.setTaskStatus);
-  const confirmTaskDone = useWorkstreamStore((s) => s.confirmTaskDone);
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
@@ -111,11 +110,7 @@ export default function WorkstreamPage() {
           .map((file) => ({ file, task })),
       )[0]
     : undefined;
-  const confirm = (taskId: string) => {
-    const task = tasks.find((t) => t.id === taskId);
-    confirmTaskDone(workstream.id, taskId);
-    if (task) setToast(`Closed "${task.description}".`);
-  };
+  const attention = workstreamAttention(workstream, now);
 
   return (
     <SideChatLayout
@@ -141,10 +136,11 @@ export default function WorkstreamPage() {
             />
 
             <StatusSummary
-              {...workstreamAttention(workstream, now)}
+              tone={attention.tone}
+              status={attention.status}
+              actions={attention.actions}
               nudged={nudged}
-              onConfirm={({ task }) => confirm(task.id)}
-              onNudge={({ task }) => {
+              onNudge={(task) => {
                 nudgeTask(workstream.id, task.id);
                 setNudged((prev) => new Set(prev).add(task.id));
                 setToast(`Nudge sent to ${task.delegate.label}.`);
@@ -363,7 +359,6 @@ function DraftWorkstream({ signal }: { signal: PlannedSignal }) {
               </Button>
             }
           >
-            <Typography variant="body1">{draft.plan.proposedApproach}</Typography>
             {missingOwners ? (
               <Alert severity="warning">
                 {missingOwners === draft.plan.tasks.length

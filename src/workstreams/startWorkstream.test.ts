@@ -13,7 +13,7 @@ test("starting creates the workstream, and Cowork says it's emailing each owner,
   expect(workstream.plan.status).toBe("accepted");
   expect(useWorkstreamStore.getState().getWorkstream(workstream.id)).toBeDefined();
   expect(reply).toMatch(/^Started\. I'm emailing each owner their task now\./);
-  expect(reply).toContain("1. Get counsel's view: Dana Whitfield, due Nov 6");
+  expect(reply).toContain("1. Evaluate the ruling: Dana Whitfield, due Nov 6");
   expect(reply).toContain("4. Watch the nomination window: Pete Lin, due Feb 6");
   expect(reply).toMatch(/follow up/);
   // The teaching moment: this chat is how you work the page.
