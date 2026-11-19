@@ -72,7 +72,7 @@ function heldUpOwners(workstream: Workstream, task: WorkstreamTask): string {
       workstream.plan.tasks.filter((t) => t.waitingOn === task.id && t.status !== "Done").map((t) => t.delegate.label),
     ),
   ];
-  return owners.length > 1 ? `${owners.slice(0, -1).join(", ")} and ${owners.at(-1)}` : (owners[0] ?? "");
+  return owners.length > 1 ? `${owners.slice(0, -1).join(", ")} and ${owners[owners.length - 1]}` : (owners[0] ?? "");
 }
 
 function stripPeriod(text: string): string {

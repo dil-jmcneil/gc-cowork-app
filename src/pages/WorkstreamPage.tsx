@@ -73,7 +73,6 @@ export default function WorkstreamPage() {
   const acceptPlan = useWorkstreamStore((s) => s.acceptPlan);
   const assignTask = useWorkstreamStore((s) => s.assignTask);
   const setTaskStatus = useWorkstreamStore((s) => s.setTaskStatus);
-  const confirmTaskDone = useWorkstreamStore((s) => s.confirmTaskDone);
   const nudgeTask = useWorkstreamStore((s) => s.nudgeTask);
   const [nudged, setNudged] = useState<Set<string>>(() => new Set());
   const [toast, setToast] = useState<string | null>(null);
@@ -112,11 +111,6 @@ export default function WorkstreamPage() {
       )[0]
     : undefined;
   const attention = workstreamAttention(workstream, now);
-  const confirm = (taskId: string) => {
-    const task = tasks.find((t) => t.id === taskId);
-    confirmTaskDone(workstream.id, taskId);
-    if (task) setToast(`Closed "${task.description}".`);
-  };
 
   return (
     <SideChatLayout
