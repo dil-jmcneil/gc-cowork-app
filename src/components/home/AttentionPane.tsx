@@ -50,7 +50,7 @@ type MenuAction = { label: string; detail: string; icon: ReactNode; onClick: () 
  * button changes with what it needs: View ruling (or rule, action, filing), Review, Nudge, or
  * View workstream. The row menu snoozes it until next Monday or dismisses it.
  */
-export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { heading?: string }) {
+export function AttentionPane({ heading = "Tasks and Signals" }: { heading?: string }) {
   const { tokens } = useTheme();
   const [openSignalId, setOpenSignalId] = useState<string | null>(null);
   const [showSnoozed, setShowSnoozed] = useState(false);
