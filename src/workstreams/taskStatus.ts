@@ -74,6 +74,14 @@ function latestFromOwner(task: WorkstreamTask) {
     .find((m) => m.authorRole === "delegate");
 }
 
+/** When the latest entry is Cowork's reminder, its date: the owner was just nudged, so don't recommend another. */
+function lastNudge(task: WorkstreamTask): string | undefined {
+  const last = task.history[task.history.length - 1];
+  return last && isMessage(last) && last.authorRole === "cowork" && /^Reminder:/.test(last.subject ?? "")
+    ? last.sentAt
+    : undefined;
+}
+
 /** One or two sentences on where a task stands, from its status, deadline and history. */
 export function summarizeTask(task: WorkstreamTask, now: Date): string {
   if (task.statusSummary) return task.statusSummary;
@@ -89,6 +97,8 @@ export function summarizeTask(task: WorkstreamTask, now: Date): string {
       .filter(isMessage)
       .filter((m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body)).length;
     const chased = reminders > 0 ? ` after ${reminders} reminder${reminders === 1 ? "" : "s"}` : "";
+    const nudged = lastNudge(task);
+    if (nudged) return `Past due since ${due}. Cowork followed up with ${owner} on ${formatShortDate(nudged)}.`;
     return `Past due since ${due}. ${owner} hasn't responded${chased} — a nudge is recommended.`;
   }
   if (task.status === "In progress") {
@@ -118,6 +128,8 @@ export function taskActivity(task: WorkstreamTask, now: Date): string {
       .filter(isMessage)
       .filter((m) => m.authorRole === "cowork" && /reminder|following up/i.test(m.body)).length;
     const chased = reminders > 0 ? ` after ${reminders} reminder${reminders === 1 ? "" : "s"}` : "";
+    const nudged = lastNudge(task);
+    if (nudged) return `Past due since ${due}. Cowork followed up on ${formatShortDate(nudged)}.`;
     return `Past due since ${due}, with no reply${chased}. A nudge is recommended.`;
   }
   if (reply) return `Latest update ${formatShortDate(reply.sentAt)}: "${clip(reply.body)}"`;

@@ -161,7 +161,7 @@ The Diligent writing style is following the Microsoft Writing Style Guide. Consu
 
 **Use sentence-style capitalization.** Everything is lowercase except the first word in a sentence and proper nouns.
 
-**Exception: card headers use Title Case.** Headers of cards and card-like sections (for example "Status Summary", "Communication Thread", "Your Diligent Daily Brief", dialog section labels) capitalize every major word; short articles, conjunctions, and prepositions stay lowercase ("Chat with Cowork"). Buttons, labels, and body text stay sentence case.
+**Exception: card headers use Title Case.** Headers of cards and card-like sections (for example "Status Summary", "Communication Thread", "Tasks and Signals", dialog section labels) capitalize every major word; short articles, conjunctions, and prepositions stay lowercase ("Chat with Cowork"). Buttons, labels, and body text stay sentence case.
 
 - ✅ Be friendly, concise, and solution-focused.
 - ✅ Use “you” and “we”; use contractions; use active voice.

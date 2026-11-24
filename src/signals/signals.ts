@@ -1,3 +1,4 @@
+import { EU_AI_ACT } from "./euAiAct";
 import type { Signal } from "./signal";
 
 /**
@@ -439,4 +440,4 @@ export const PAST_SIGNALS: Signal[] = [
 ];
 
 /** Every signal, in the order Cowork surfaced them, newest first. */
-export const SIGNALS: Signal[] = [ATG_RULING, ...PAST_SIGNALS];
+export const SIGNALS: Signal[] = [ATG_RULING, EU_AI_ACT, ...PAST_SIGNALS];

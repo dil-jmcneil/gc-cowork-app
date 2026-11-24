@@ -1,4 +1,5 @@
 import { signalType } from "@/signals/signal";
+import { EU_AI_ACT } from "@/signals/euAiAct";
 import { ATG_RULING } from "@/signals/signals";
 
 export type AttentionItem = {
@@ -26,5 +27,15 @@ export const ATTENTION_ITEMS: AttentionItem[] = [
     relatedPolicy: "Bylaws Article II, Section 8: advance notice of director nominations",
     whySurfaced:
       "Surfaced because Acme is a Delaware company, your advance notice bylaw predates the ruling, and you own the bylaws.",
+  },
+  {
+    id: EU_AI_ACT.id,
+    source: signalType(EU_AI_ACT),
+    receivedAt: "Nov 18",
+    badge: "New",
+    title: EU_AI_ACT.title,
+    summary: EU_AI_ACT.summary,
+    relatedPolicy: "AI Act Article 50(2): marking AI-generated content",
+    whySurfaced: "Surfaced because Acme's software has an AI assistant that generates text and images for EU customers.",
   },
 ];

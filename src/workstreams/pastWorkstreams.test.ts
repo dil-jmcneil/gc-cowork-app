@@ -1,6 +1,7 @@
 import { deriveCalendarEvents } from "@/calendar/complianceEvents";
 import { PAST_SIGNALS } from "@/signals/signals";
 
+import { EU_AI_ACT_WORKSTREAM } from "./euAiActWorkstream";
 import { PAST_WORKSTREAMS } from "./pastWorkstreams";
 import { SEED_WORKSTREAMS } from "./workstreamStore";
 
@@ -8,7 +9,7 @@ const NOW = new Date("2026-11-03T12:00:00Z");
 
 test("the two past workstreams are real workstreams when the app loads", () => {
   expect(PAST_WORKSTREAMS.map((w) => w.name)).toEqual(["Climate disclosure readiness", "Cyber 8-K readiness"]);
-  expect(SEED_WORKSTREAMS).toEqual(PAST_WORKSTREAMS);
+  expect(SEED_WORKSTREAMS).toEqual([EU_AI_ACT_WORKSTREAM, ...PAST_WORKSTREAMS]);
   for (const workstream of PAST_WORKSTREAMS) {
     expect(workstream.plan.status).toBe("accepted");
     expect(PAST_SIGNALS.some((s) => s.id === workstream.sourceSignalId)).toBe(true);
