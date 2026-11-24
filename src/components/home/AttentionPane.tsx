@@ -5,6 +5,7 @@ import SnoozeIcon from "@diligentcorp/atlas-react-bundle/icons/Snooze";
 import TrashIcon from "@diligentcorp/atlas-react-bundle/icons/Trash";
 import {
   Alert,
+  Box,
   Button,
   Card,
   Chip,
@@ -25,6 +26,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
@@ -45,7 +47,7 @@ type MenuAction = { label: string; detail: string; icon: ReactNode; onClick: () 
 /**
  * What the GC needs to move, as one Atlas table: new signals to turn into
  * workstreams, and tasks in any workstream that wait on them. Each row's
- * button changes with what it needs: Create workstream, Review, Nudge, or
+ * button changes with what it needs: View ruling (or rule, action, filing), Review, Nudge, or
  * View workstream. The row menu snoozes it until next Monday or dismisses it.
  */
 export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { heading?: string }) {
@@ -69,7 +71,7 @@ export function AttentionPane({ heading = "Your Diligent Daily Brief" }: { headi
     const { action } = row;
     if (action.kind === "nudge") {
       nudgeTask(action.workstreamId, action.taskId);
-      setToast({ message: `Cowork sent ${row.area.split(" · ").pop()} a reminder.` });
+      setToast({ message: `Cowork sent ${row.owner ?? "the owner"} a reminder.` });
       return;
     }
     // Post-MVP views open the signal first; the MVP goes straight to the workstream.
@@ -197,7 +199,7 @@ const NARROW = { width: "1%", whiteSpace: "nowrap" } as const;
 
 type TableEntry = { row: AttentionRow; chip: ReactNode; menu: MenuAction[] };
 
-/** Item, Area, Status, Action: one row per thing to move, inside an Atlas card. */
+/** Item, Source, Status, Action, then the row menu: one row per thing to move, inside an Atlas card. */
 function AttentionTable({
   ariaLabel,
   rows,
@@ -221,9 +223,14 @@ function AttentionTable({
           <TableHead>
             <TableRow>
               <TableCell>Item</TableCell>
-              <TableCell sx={{ width: "24%" }}>Area</TableCell>
+              <TableCell sx={{ width: "24%" }}>Source</TableCell>
               <TableCell sx={NARROW}>Status</TableCell>
               <TableCell sx={NARROW}>Action</TableCell>
+              <TableCell sx={NARROW}>
+                <Box component="span" sx={visuallyHidden}>
+                  More actions
+                </Box>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -271,24 +278,31 @@ function AttentionTableRow({ row, chip, menu, onAct }: TableEntry & { onAct: () 
           {chip}
         </Stack>
       </TableCell>
-      <TableCell sx={{ color: muted }}>{row.area}</TableCell>
+      <TableCell>
+        <Stack gap={SPACE.pair}>
+          <Typography variant="body1">{row.source.name}</Typography>
+          <Typography variant="body1" sx={{ color: muted }}>
+            {row.source.kind}
+          </Typography>
+        </Stack>
+      </TableCell>
       <TableCell sx={NARROW}>
         <StatusIndicator color={row.status.color} label={row.status.label} />
       </TableCell>
       <TableCell sx={NARROW}>
-        <Stack direction="row" alignItems="center" gap={SPACE.item}>
-          <Button variant="outlined" size="small" onClick={onAct} aria-describedby={titleId} sx={{ whiteSpace: "nowrap" }}>
-            {row.action.label}
-          </Button>
-          <IconButton
-            size="small"
-            aria-label={`More actions for ${row.title}`}
-            aria-haspopup="menu"
-            onClick={(e) => setMenuAnchor(e.currentTarget)}
-          >
-            <MoreIcon />
-          </IconButton>
-        </Stack>
+        <Button variant="outlined" size="small" onClick={onAct} aria-describedby={titleId} sx={{ whiteSpace: "nowrap" }}>
+          {row.action.label}
+        </Button>
+      </TableCell>
+      <TableCell sx={{ ...NARROW, textAlign: "right" }}>
+        <IconButton
+          size="small"
+          aria-label={`More actions for ${row.title}`}
+          aria-haspopup="menu"
+          onClick={(e) => setMenuAnchor(e.currentTarget)}
+        >
+          <MoreIcon />
+        </IconButton>
         <Menu
           anchorEl={menuAnchor}
           open={menuAnchor !== null}

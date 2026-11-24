@@ -1,3 +1,4 @@
+import { signalType, type SignalType } from "@/signals/signal";
 import { SIGNALS } from "@/signals/signals";
 import { workstreamAttention } from "@/workstreams/workstreamAttention";
 import { isTaskOverdue, taskActivity } from "@/workstreams/taskStatus";
@@ -11,7 +12,7 @@ export type AttentionRowStatus = {
 };
 
 export type AttentionRowAction =
-  | { kind: "create"; label: "Create workstream"; href: string }
+  | { kind: "create"; label: string; href: string }
   | { kind: "review"; label: "Review"; href: string }
   | { kind: "nudge"; label: "Nudge"; workstreamId: string; taskId: string }
   | { kind: "view"; label: "View workstream"; href: string };
@@ -22,8 +23,10 @@ export type AttentionRow = {
   id: string;
   title: string;
   summary: string;
-  /** Where it lives: the workstream and owner, or that it's a new signal and who issued it. */
-  area: string;
+  /** Where it comes from: who issued a signal and its type, or a task's workstream. */
+  source: { name: string; kind: SignalType | "Workstream" };
+  /** A task's owner, e.g. for the nudge confirmation. */
+  owner?: string;
   status: AttentionRowStatus;
   action: AttentionRowAction;
   /** Why Cowork surfaced a signal, for its info tooltip. */
@@ -40,6 +43,14 @@ const RANK: Record<AttentionRowStatus["label"], number> = {
   "On track": 4,
 };
 
+/** A new signal's button opens it, named for what it is. */
+const VIEW_LABEL: Record<SignalType, string> = {
+  "Court ruling": "View ruling",
+  "Regulatory change": "View rule",
+  "Enforcement action": "View action",
+  "Peer filing": "View filing",
+};
+
 const workstreamHref = (w: Workstream, task?: WorkstreamTask) =>
   `/workstreams/${w.id}${task ? `?task=${encodeURIComponent(task.id)}` : ""}`;
 
@@ -48,7 +59,8 @@ function taskRows(workstream: Workstream, now: Date): AttentionRow[] {
   const base = (task: WorkstreamTask) => ({
     id: `${workstream.id}:${task.id}`,
     title: task.description,
-    area: `${workstream.name} · ${task.delegate.label}`,
+    source: { name: workstream.name, kind: "Workstream" } as const,
+    owner: task.delegate.label,
     due: task.deadline,
   });
   return [
@@ -87,9 +99,9 @@ export function attentionRows(signalItems: AttentionItem[], workstreams: Workstr
         id: item.id,
         title: item.title,
         summary: signal?.plan?.brief.headline ?? item.summary,
-        area: `New signal · ${signal?.source ?? item.source}`,
+        source: { name: signal?.source ?? item.source, kind: signal ? signalType(signal) : (item.source as SignalType) },
         status: { label: "New", color: "information" },
-        action: { kind: "create", label: "Create workstream", href: `/workstreams/new?signal=${encodeURIComponent(item.id)}` },
+        action: { kind: "create", label: VIEW_LABEL[signal ? signalType(signal) : (item.source as SignalType)], href: `/workstreams/new?signal=${encodeURIComponent(item.id)}` },
         whySurfaced: item.whySurfaced,
         due: signal?.deadlines[0]?.date ?? "9999-12-31",
       });
@@ -102,7 +114,8 @@ export function attentionRows(signalItems: AttentionItem[], workstreams: Workstr
         id: item.id,
         title: workstream.name,
         summary: workstreamAttention(workstream, now).summary.headline,
-        area: `Workstream · ${next.delegate.label}`,
+        source: { name: workstream.name, kind: "Workstream" },
+        owner: next.delegate.label,
         status: { label: "On track", color: "information" },
         action: { kind: "view", label: "View workstream", href: workstreamHref(workstream) },
         due: next.deadline,

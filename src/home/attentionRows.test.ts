@@ -12,9 +12,10 @@ test("a new signal with no workstream offers to create one", () => {
   const rows = attentionRows(ATTENTION_ITEMS, SEED_WORKSTREAMS, NOW);
   const atg = rows.find((r) => r.id === ATG_RULING.id)!;
   expect(atg.status).toEqual({ label: "New", color: "information" });
+  expect(atg.source).toEqual({ name: "Delaware Court of Chancery", kind: "Court ruling" });
   expect(atg.action).toEqual({
     kind: "create",
-    label: "Create workstream",
+    label: "View ruling",
     href: `/workstreams/new?signal=${ATG_RULING.id}`,
   });
 });
@@ -24,7 +25,8 @@ test("a signal with a workstream gives way to the tasks that need you", () => {
   expect(rows.some((r) => r.id === EU_AI_ACT.id)).toBe(false);
   const review = rows.find((r) => r.id === "eu-ai-act-marking:provider")!;
   expect(review.title).toBe("Confirm who built the AI assistant");
-  expect(review.area).toBe("EU AI marking readiness · Chris Okafor");
+  expect(review.source).toEqual({ name: "EU AI marking readiness", kind: "Workstream" });
+  expect(review.owner).toBe("Chris Okafor");
   expect(review.status).toEqual({ label: "Needs your review", color: "warning" });
   expect(review.action).toEqual({
     kind: "review",
