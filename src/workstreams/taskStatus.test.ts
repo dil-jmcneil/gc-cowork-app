@@ -1,6 +1,7 @@
 import type { WorkstreamTask } from "@/workstreams/workstream";
 import { DIRECTORY } from "@/workstreams/people";
-import { orderedTasks, summarizeTask, taskAttention, taskDisplayStatus } from "@/workstreams/taskStatus";
+import { orderedTasks, summarizeTask, taskActivity, taskAttention, taskDisplayStatus } from "@/workstreams/taskStatus";
+import { reminderEmail } from "@/workstreams/threadMessages";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
 const MAYA = DIRECTORY.find((p) => p.label === "Maya Chen")!;
@@ -106,4 +107,11 @@ describe("orderedTasks", () => {
     ];
     expect(orderedTasks(tasks).map((t) => t.id)).toEqual(["a", "b1", "b2", "c"]);
   });
+});
+
+test("right after a nudge, an overdue task says Cowork followed up instead of recommending another", () => {
+  const overdue = task({ deadline: "2026-10-27", status: "In progress" });
+  const nudged = { ...overdue, history: [reminderEmail(overdue, "2026-10-30T09:00:00Z")] };
+  expect(taskActivity(nudged, NOW)).toBe("Past due since Oct 27. Cowork followed up on Oct 30.");
+  expect(summarizeTask(nudged, NOW)).toBe("Past due since Oct 27. Cowork followed up with Maya Chen on Oct 30.");
 });

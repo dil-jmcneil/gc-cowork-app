@@ -6,7 +6,7 @@ const TUESDAY = new Date(2026, 10, 3, 9, 30); // Tue Nov 3, 2026
 
 beforeEach(() => useAttentionStore.setState({ snoozedUntil: {}, backFromSnooze: {}, dismissed: {} }));
 
-const view = (now = TUESDAY) => attentionView(ATTENTION_ITEMS, useAttentionStore.getState(), now);
+const view = (now = TUESDAY) => attentionView([item], useAttentionStore.getState(), now);
 
 test("snoozes resurface at 8 am next Monday, and a Monday snooze waits a full week", () => {
   expect(nextMonday(TUESDAY)).toEqual(new Date(2026, 10, 9, 8, 0));

@@ -1,14 +1,16 @@
 import { summarizeTask } from "./taskStatus";
 import { draftWorkstreamFromSignal } from "@/workstreams/workstreamDraft";
 import { SEED_WORKSTREAMS, useWorkstreamStore } from "@/workstreams/workstreamStore";
+import { EU_AI_ACT } from "@/signals/euAiAct";
 import { ATG_RULING, SIGNALS } from "@/signals/signals";
 
 beforeEach(() => useWorkstreamStore.setState({ workstreams: [...SEED_WORKSTREAMS] }));
 
-test("only the past workstreams exist until the GC starts one", () => {
+test("only the seeded workstreams exist until the GC starts one", () => {
   const { getWorkstreamForSignal } = useWorkstreamStore.getState();
   for (const signal of SIGNALS) {
-    if (signal.pastWorkstream) expect(getWorkstreamForSignal(signal.id)?.name).toBe(signal.pastWorkstream.name);
+    if (signal.id === EU_AI_ACT.id) expect(getWorkstreamForSignal(signal.id)?.name).toBe("EU AI marking readiness");
+    else if (signal.pastWorkstream) expect(getWorkstreamForSignal(signal.id)?.name).toBe(signal.pastWorkstream.name);
     else expect(getWorkstreamForSignal(signal.id)).toBeUndefined();
   }
 });

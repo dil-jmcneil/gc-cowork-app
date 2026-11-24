@@ -51,18 +51,18 @@ export const useAttentionStore = create<AttentionState>((set) => ({
   markSeen: (id) => set((s) => ({ backFromSnooze: omit(s.backFromSnooze, id) })),
 }));
 
-export type AttentionView = {
-  active: { item: AttentionItem; backFromSnooze: boolean }[];
-  snoozed: { item: AttentionItem; until: string }[];
+export type AttentionView<T extends { id: string } = AttentionItem> = {
+  active: { item: T; backFromSnooze: boolean }[];
+  snoozed: { item: T; until: string }[];
 };
 
 /** Splits items into what shows now and what's snoozed. A snooze that has passed counts as back from snooze. */
-export function attentionView(
-  items: AttentionItem[],
+export function attentionView<T extends { id: string }>(
+  items: T[],
   state: Pick<AttentionState, "snoozedUntil" | "backFromSnooze" | "dismissed">,
   now: Date,
-): AttentionView {
-  const view: AttentionView = { active: [], snoozed: [] };
+): AttentionView<T> {
+  const view: AttentionView<T> = { active: [], snoozed: [] };
   for (const item of items) {
     if (state.dismissed[item.id]) continue;
     const until = state.snoozedUntil[item.id];

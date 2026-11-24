@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { SIGNALS } from "@/signals/signals";
 
 import { afterAtgTaskConfirmed, isAtgWorkstream, progressAtgWorkstream } from "./atgStory";
+import { EU_AI_ACT_WORKSTREAM } from "./euAiActWorkstream";
 import { PAST_WORKSTREAMS } from "./pastWorkstreams";
 import { ownerShortName, type TaskOwner } from "./people";
 import { formatShortDate } from "./taskStatus";
@@ -23,8 +24,8 @@ function makeId() {
   return `workstream-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** Workstreams that already exist when the app loads: the two from before the ATG story. */
-export const SEED_WORKSTREAMS: Workstream[] = PAST_WORKSTREAMS;
+/** Workstreams that already exist when the app loads: EU AI marking, plus the two from before the ATG story. */
+export const SEED_WORKSTREAMS: Workstream[] = [EU_AI_ACT_WORKSTREAM, ...PAST_WORKSTREAMS];
 
 type WorkstreamStoreState = {
   workstreams: Workstream[];
